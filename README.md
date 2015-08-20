@@ -1,9 +1,12 @@
 
-gibbonsecr: 
+gibbonsecr
 ===========
 
 SECR Analysis For Acoustic Gibbon Surveys
 
+<a href="#installation">1. Installation</a>
+
+<a name="installation"></a>
 
 ## Installation and launch instructions
 
