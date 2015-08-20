@@ -46,7 +46,8 @@ To download and install the `gibbonsecr` R package, open R (or RStudio) and run 
 
 ```{r}
 install.packages("devtools")
-devtools::install_github("dkidney/gibbonsecr", args = "--no-multiarch --with-keep.source")
+devtools::install_github(repo = "dkidney/gibbonsecr", 
+                         args = "--no-multiarch --with-keep.source")
 ```
 
 ### Launch the GUI
