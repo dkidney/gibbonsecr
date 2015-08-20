@@ -1,0 +1,9 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+checking
+data_raw
+debugging
+NEWS.md
+notes
+temp
+TODO.docx

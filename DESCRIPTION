@@ -1,0 +1,34 @@
+Package: gibbonsecr
+Type: Package
+Title: SECR Analysis For Acoustic Gibbon Surveys
+Version: 1.0
+Date: 2015-06-10
+Author: Darren Kidney
+Maintainer: Darren Kidney <darrenkidney@googlemail.com>
+Description: An implementation of Spatially Explicit Capture-Recapture (SECR) for the analyis of acoustic population surveys of gibbons.
+License: GPL (>= 2)
+LazyData: TRUE
+VignetteBuilder: knitr
+Depends: R (>= 3.0.0)
+LinkingTo: 
+    Rcpp, 
+    RcppArmadillo
+Imports: 
+    CircStats,
+    fields,
+    MASS,
+    methods,
+    mgcv,
+    parallel,
+    Rcpp (>= 0.11.6),
+    sp,
+    rgdal,
+    secr,
+    stats,
+    tcltk,
+    tcltk2,
+    tools,
+    utils
+Suggests: 
+    knitr,
+    testthat
