@@ -2,13 +2,15 @@
 gibbonsecr
 ===========
 
-SECR Analysis For Acoustic Gibbon Surveys
-
 <a href="#installation">1. Installation</a>
+
+<a href="#launch">2. Launch the GUI</a>
+
+<a href="#problems">3. Report problems</a>
 
 <a name="installation"></a>
 
-## Installation and launch instructions
+## 1. Installation
 
 To download and install the `gibbonsecr` package directly from github follow the instructions below.
 
