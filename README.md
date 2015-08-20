@@ -58,7 +58,9 @@ devtools::install_github(repo = "dkidney/gibbonsecr",
                          args = "--no-multiarch --with-keep.source")
 ```
 
-### Launch the GUI
+<a name="launch"></a>
+
+## 2. Launch the GUI
 
 Once everything has been successfully installed, load the package and run the `gibbonsecr` function.
 
