@@ -6,17 +6,31 @@ gibbonsecr
 
 To download and install the `gibbonsecr` package directly from github follow the instructions below.
 
+### Install R
+
+Make sure you have the latest version of **R** installed. 
+
+[Download R for Windows](https://cran.r-project.org/bin/windows/base/)
+
+[Download R for Mac](https://cran.r-project.org/bin/macosx/)
+
+**Note to windows users:** Make sure that the file path of your R installation has **no spaces**. This is necessary for RTools to work (see *Windows setup*) -- e.g. “C:/R/R-3.2.2” is fine, but “C:/Program files/R/R-3.2.2” won’t work.
+
+Optionally, you can also install **RStudio** which is a non-essential but more user-friendly front end for R.
+
+[Download RStudio](https://www.rstudio.com/products/rstudio/download/)
+
 ### Windows setup
 
 Windows users will need to have **RTools** installed.
 
 [Download RTools](https://cran.r-project.org/bin/windows/Rtools/)
 
-* Make sure that the version of RTools is compatible with your version of R -- the best way to ensure this is to install the most up-to-date versions of both
+* Make sure that the version of RTools is compatible with your version of R -- the best way to ensure this is to **install the most up-to-date versions** of both.
 
-* Make sure that the file path of your installation of R has **no spaces** in it -- e.g. "C:/R/R-3.1.1" is fine, but "C:/Program files/R/R-3.1.1" won't work
+* Make sure that the file path of your installation of R has **no spaces** in it.
 
-* During the installation of RTools make sure you allow the installer to update your system path
+* During the installation of RTools make sure you allow the installer to update your system path.
 
 ### Mac setup
 
@@ -28,11 +42,11 @@ Mac users using more recent versions of the OS may need to install **XQuartz** a
 
 ### Install the package
 
-To download and install the `gibbonsecr` R package, open R and run the code below.
+To download and install the `gibbonsecr` R package, open R (or RStudio) and run the code below.
 
 ```{r}
 install.packages("devtools")
-devtools::install_github("dkidney/gibbonsecr")
+devtools::install_github("dkidney/gibbonsecr", args = "--no-multiarch --with-keep.source")
 ```
 
 ### Launch the GUI
