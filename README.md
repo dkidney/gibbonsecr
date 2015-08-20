@@ -41,7 +41,7 @@ Once everything has been successfully installed, load the package and run the `g
 
 ```{r}
 library(gibbonsecr)
-gibbonsecr()
+gibbonsecr_gui()
 ```
 
 ### Problems
