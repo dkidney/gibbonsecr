@@ -1,0 +1,16 @@
+.Rbuildignore
+.Rproj.user
+.Rhistory
+.RData
+*.Rproj
+checking
+data_raw
+data/N.Siki.rda
+debugging
+notes
+src/*.dll
+src/*.o
+src/*.so
+temp
+TODO.docx
+vignettes
