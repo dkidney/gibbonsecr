@@ -22,11 +22,13 @@ Make sure you have the latest version of **R** installed.
 
 [Download R for Mac](https://cran.r-project.org/bin/macosx/)
 
-**Note to windows users:** Make sure that the file path of your R installation has **no spaces**. This is necessary for RTools to work (see *Windows setup*) -- e.g. “C:/R/R-3.2.2” is fine, but “C:/Program files/R/R-3.2.2” won’t work.
+**Note to windows users:** Make sure that the file path of your R installation has **no spaces**. This is necessary for RTools to work (see <a href="#windows setup">Windows setup</a>) -- e.g. “C:/R/R-3.2.2” is fine, but “C:/Program files/R/R-3.2.2” won’t work.
 
 Optionally, you can also install **RStudio** which is a non-essential but more user-friendly front end for R.
 
 [Download RStudio](https://www.rstudio.com/products/rstudio/download/)
+
+<a name="windows setup"></a>
 
 ### Windows setup
 
@@ -69,10 +71,20 @@ library(gibbonsecr)
 gibbonsecr_gui()
 ```
 
+You can open the GUI user manual using the help menu in the GUI itself, or by running the following code in the R console.
+
+```{r}
+vignette("gui", package = "gibbonsecr")
+```
+
 <a name="problems"></a>
 
 ## 3. Report problems
 
-If you experience any problems with the installation process please email me at darrenkidney@yahoo.co.uk (please inlcude the version numbers of R, RTools, XQuartz and Xcode you are using).  
+If you experience any problems with the installation process please email Darren at darrenkidney@yahoo.co.uk (please inlcude the version numbers of R, RTools, XQuartz and Xcode you are using).  
+
+
+
+[Manual](https://github.com/dkidney/gibbonsecr/tree/master/inst/doc/gibbonsecr_1.0-vignette.html)
 
 

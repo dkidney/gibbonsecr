@@ -8,7 +8,7 @@ using namespace Rcpp ;
 // -------------------------------------------------------------------------- //
 // -------------------------------------------------------------------------- //
 
-//' @export
+// @export
 // [[Rcpp::export]]
 NumericMatrix calc_bearings_rcpp(const NumericMatrix& A, const NumericMatrix& Z){
 
