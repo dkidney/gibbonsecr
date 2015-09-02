@@ -2,7 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_methods.r
 \name{logLik.gibbonsecr_fit}
 \alias{logLik.gibbonsecr_fit}
-\title{TODO}
+\title{Extract the log-likelihood}
 \usage{
 \method{logLik}{gibbonsecr_fit}(object, ...)
 }
@@ -12,7 +12,7 @@
 \item{...}{additional arguments (not used)}
 }
 \description{
-TODO
+Extract the log-likelihood from a model fitted with \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

@@ -2,8 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-gui.r
 \name{gibbonsecr_gui}
 \alias{gibbonsecr_gui}
-\title{Graphical user interface for fitting acoustic gibbon survey data using
-  the gibbonsSECR package}
+\title{Launch the graphical user interface}
 \usage{
 gibbonsecr_gui(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE)
 }
@@ -13,8 +12,11 @@ gibbonsecr_gui(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE)
 \item{quit.r.on.exit}{a logical scalar, determining whether the background R process should quit when the GUI window is closed (defaults to \code{FALSE})}
 }
 \description{
+Graphical user interface for fitting acoustic gibbon survey data using
+  the gibbonsSECR package
+}
+\details{
 Currently allows the inclusion of the following components:
-
   \itemize{
 
   \item{half normal and hazard rate detection function (with or without g0)}
@@ -33,9 +35,6 @@ Currently allows the inclusion of the following components:
   \item{saving and reloading of workspace}
 
   }
-}
-\details{
-Built using the \code{\link{tcltk}} package.
 }
 \section{Things still to be added}{
 

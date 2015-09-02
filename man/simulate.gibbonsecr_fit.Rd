@@ -2,19 +2,19 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_methods.r
 \name{simulate.gibbonsecr_fit}
 \alias{simulate.gibbonsecr_fit}
-\title{TODO}
+\title{Simulate data from a fitted model}
 \usage{
 \method{simulate}{gibbonsecr_fit}(object, nsim = 1, seed = NULL,
-  buffer = 6000, spacing = 10, beta = NULL, ...)
+  buffer = 6000, spacing = 10, beta = NULL, debug = FALSE, ...)
 }
 \arguments{
 \item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
 
-\item{nsim}{TODO}
+\item{nsim}{number of data sets to simulate (currently fixed at 1)}
 
-\item{seed}{TODO}
+\item{seed}{an integer to initialize the random number generator}
 
-\item{buffer}{TODO}
+\item{buffer}{buffer distance for use in generating the underlying population (see Details)}
 
 \item{spacing}{TODO}
 
@@ -23,6 +23,9 @@
 \item{...}{additional arguments (not used)}
 }
 \description{
+Simulate capture history data from a model fitted with \code{\link{gibbonsecr_fit}}
+}
+\details{
 TODO
 }
 \author{

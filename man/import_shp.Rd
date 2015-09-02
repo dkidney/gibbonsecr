@@ -2,12 +2,14 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_main.r
 \name{import_shp}
 \alias{import_shp}
-\title{Import shp files}
+\title{Import region and habitat shapefiles}
 \usage{
-import_shp(path, verbose = FALSE, ...)
+import_shp(filepath, type = c("region", "habitat"), verbose = FALSE, ...)
 }
 \arguments{
-\item{path}{file path}
+\item{filepath}{TODO}
+
+\item{type}{TODO}
 
 \item{verbose}{TODO}
 

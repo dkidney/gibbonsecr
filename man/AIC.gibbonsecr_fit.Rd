@@ -2,7 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_methods.r
 \name{AIC.gibbonsecr_fit}
 \alias{AIC.gibbonsecr_fit}
-\title{TODO}
+\title{Compute the AIC score}
 \usage{
 \method{AIC}{gibbonsecr_fit}(object, ..., k = 2)
 }
@@ -14,7 +14,7 @@
 \item{k}{the penalty per parameter to be used (defaults to k = 2)}
 }
 \description{
-TODO
+Compute the AIC score for a model fitted with \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

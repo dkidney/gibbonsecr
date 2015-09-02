@@ -2,11 +2,11 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_main.r
 \name{gibbonsecr_fit}
 \alias{gibbonsecr_fit}
-\title{Fit an SECR model}
+\title{Fit an SECR model to acoustic gibbon survey data}
 \usage{
 gibbonsecr_fit(capthist, model = list(), mask = NULL, fixed = list(),
   model.options = list(), mask.options = list(), fitting.options = list(),
-  start = NULL, trace = FALSE)
+  start = NULL, trace = FALSE, debug = TRUE)
 }
 \arguments{
 \item{capthist}{a \code{\link{capthist}} object}

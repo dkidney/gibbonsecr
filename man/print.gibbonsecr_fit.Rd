@@ -2,7 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_methods.r
 \name{print.gibbonsecr_fit}
 \alias{print.gibbonsecr_fit}
-\title{TODO}
+\title{Print a summary of a fitted model}
 \usage{
 \method{print}{gibbonsecr_fit}(x, ...)
 }
@@ -12,7 +12,7 @@
 \item{...}{additional arguments (not used)}
 }
 \description{
-TODO
+Print a summary of the results from a model fitted with \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

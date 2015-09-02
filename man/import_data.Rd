@@ -2,7 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_main.r
 \name{import_data}
 \alias{import_data}
-\title{Read in survey data from csv files}
+\title{Import survey data from csv files}
 \usage{
 import_data(detections, posts, covariates = NULL, details = list())
 }
@@ -18,13 +18,15 @@ bearings and distances}
 estiamted bearings and distances}
 }
 \description{
-Description...
+TODO
 }
 \details{
 Details - file paths will have been obtained via the browse button
   in the GUI
 }
 \examples{
+library(sp)
+library(secr)
 wd = setwd(system.file("extdata/N.annamensis", package = "gibbonsecr"))
 op = par(no.readonly = TRUE)
 
@@ -38,8 +40,8 @@ class(capthist)
 region = import_shp("region")
 
 par(mfrow = c(1,1), mar = c(0,0,0,0))
-sp::plot(region, add = TRUE)
-plot_traps(capthist, add = TRUE, pch = 15, cex = 0.5)
+plot(region)
+plot(traps(capthist), add = TRUE)
 
 setwd(wd)
 par(op)

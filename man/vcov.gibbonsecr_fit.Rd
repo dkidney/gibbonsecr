@@ -2,7 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_methods.r
 \name{vcov.gibbonsecr_fit}
 \alias{vcov.gibbonsecr_fit}
-\title{TODO}
+\title{Compute the variance-covariance matrix}
 \usage{
 \method{vcov}{gibbonsecr_fit}(object, ...)
 }
@@ -12,7 +12,7 @@
 \item{...}{additional arguments (not used)}
 }
 \description{
-TODO
+Compute the variance-covariance from a model fitted with \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

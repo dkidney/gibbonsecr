@@ -2,7 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_methods.r
 \name{coef.gibbonsecr_fit}
 \alias{coef.gibbonsecr_fit}
-\title{TODO}
+\title{Extract model parameters}
 \usage{
 \method{coef}{gibbonsecr_fit}(object, ...)
 }
@@ -12,7 +12,7 @@
 \item{...}{additional arguments (not used)}
 }
 \description{
-TODO
+Extract estimated parameters from a model fitted with \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

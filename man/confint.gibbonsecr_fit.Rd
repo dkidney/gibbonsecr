@@ -2,7 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_methods.r
 \name{confint.gibbonsecr_fit}
 \alias{confint.gibbonsecr_fit}
-\title{TODO}
+\title{Compute confidence intervals for model parameters}
 \usage{
 \method{confint}{gibbonsecr_fit}(object, parm, level = 0.95, ...)
 }
@@ -16,7 +16,10 @@
 \item{...}{additional arguments (not used)}
 }
 \description{
-TODO
+Compute confidence intervals stimated parameters from a model fitted with \code{\link{gibbonsecr_fit}}.
+}
+\details{
+Uses the delta method to obtain interval estimates on the link scale.
 }
 \examples{
 ## Not run: 

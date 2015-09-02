@@ -2,7 +2,7 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_methods.r
 \name{summary.gibbonsecr_fit}
 \alias{summary.gibbonsecr_fit}
-\title{TODO}
+\title{Summarise a fitted model}
 \usage{
 \method{summary}{gibbonsecr_fit}(object, ...)
 }
@@ -12,7 +12,7 @@
 \item{...}{additional arguments (not used)}
 }
 \description{
-TODO
+Summarise the results of a model fitted with \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

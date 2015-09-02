@@ -2,13 +2,14 @@
 % Please edit documentation in R/gibbonsecr_1.0-functions_plots.r
 \name{plot.gibbonsecr_fit}
 \alias{plot.gibbonsecr_fit}
-\title{Plot a fitted gibbon secr model}
+\title{Plot a fitted model}
 \usage{
-\method{plot}{gibbonsecr_fit}(fit, which = c("detectfn", "pdot", "bearings",
-  "distances", "density"), session = 1, use.global.par.settings = FALSE,
-  ...)
+\method{plot}{gibbonsecr_fit}(x, which = c("detectfn", "pdot", "bearings",
+  "distances", "density"), session = 1, use.global.par.settings = TRUE, ...)
 }
 \arguments{
+\item{x}{a \code{gibbonsecr} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
+
 \item{which}{TODO}
 
 \item{session}{TODO}
@@ -16,10 +17,6 @@
 \item{use.global.par.settings}{TODO}
 
 \item{...}{additional arguments (not used)}
-
-\item{CI}{TODO}
-
-\item{nx}{TODO}
 }
 \description{
 TODO

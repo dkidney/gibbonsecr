@@ -3,9 +3,9 @@
 \docType{package}
 \name{gibbonsecr-package}
 \alias{gibbonsecr-package}
-\title{SECR for acoustic gibbons surveys}
+\title{SECR for acoustic gibbon surveys}
 \description{
-An implementation of Spatially Explicit Capture-Recapture (SECR) for the analyis of data from acoustic population surveys of gibbons.
+An implementation of Spatially Explicit Capture-Recapture (SECR) for the analyis of data from acoustic surveys of gibbons.
 }
 \details{
 Describe one and multi-occasion surveys.
