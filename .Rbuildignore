@@ -1,9 +1,11 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 checking
-data_raw
+data/N.siki.rda
+data_prep
 debugging
 NEWS.md
 notes
 temp
 TODO.docx
+vignettes_prep
