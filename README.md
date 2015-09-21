@@ -85,6 +85,3 @@ If you experience any problems with the installation process please email Darren
 
 
 
-[Manual](https://github.com/dkidney/gibbonsecr/tree/master/inst/doc/gibbonsecr_1.0-vignette.html)
-
-
