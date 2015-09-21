@@ -35,6 +35,48 @@ add_distances = function(capthist, value){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+# update to addCovariates which allows for SpatialPointsDataFrame class
+add_covariates = function(x, shp){
+    if(!inherits(x, c("mask","traps")))
+        stop("expecting a mask or traps object")
+    if(!inherits(shp, c("SpatialPolygonsDataFrame","SpatialPointsDataFrame")))
+        stop("expecting a SpatialPolygonsDataFrame or SpatialPointsDataFrame object")
+    class  = if(inherits(x, "mask")) "mask" else "traps"
+    covnames = colnames(shp@data)
+    if(ms(x)){
+        x = lapply(x, function(x) add_covariates(x, shp))
+        class(x) = c("list", class)
+    }else{
+        # check mask covs for covnames
+        if(!is.null(covariates(x))){
+            for(j in covnames){
+                if(j %in% colnames(covariates(x))){
+                    warning(paste("overwriting existsing covariate", j, "in", class))
+                    covariates(x)[[j]] = NULL
+                }
+            }
+        }
+        if(inherits(shp, "SpatialPointsDataFrame")){
+            # secr::addCovariates doen't work for spatial points
+            # use nearest point method for assigning covariates to mask
+            distances = calc_distances_rcpp(as.matrix(x), as.matrix(shp@coords))
+            i = apply(distances, 2, which.min)
+            if(is.null(covariates(x))){
+                covariates(x) = shp@data[i,]
+                rownames(covariates(x)) = rownames(x)
+            }else{
+                covariates(x) = cbind(covariates(x), shp@data[i,])
+            }
+        }else{
+            x = addCovariates(x, shp)
+        }
+    }
+    return(x)
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
 #' @title Compute the AIC score
 #' @description Compute the AIC score for a model fitted with \code{\link{gibbonsecr_fit}}.
 #' @inheritParams coef.gibbonsecr_fit
@@ -296,7 +338,7 @@ covlevels = function(x){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "detectfn"){
+fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "detectfn", true.distance = 500){
 
     if(!which %in% c("detectfn","bearings","distances"))
         stop("which must be one of: 'detectfn', 'bearings', 'distances'")
@@ -321,7 +363,7 @@ fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "dete
         "bearings"  = list(dvm, dwrpcauchy)[[fit$model.options$bearings]],
         "distances" = list(dgamma, dlnorm)[[fit$model.options$distances]]
     )
-    EX = switch(which, "bearings" = 0, "distances" = 1000, NULL)
+    EX = switch(which, "bearings" = 0, "distances" = true.distance, NULL)
 
     ##################################################
     ## design matrices
@@ -623,11 +665,15 @@ mask_area = function(mask){
 
 mask_bbox = function(mask){
     if(!inherits(mask, "mask")) stop("mask object required")
-    if(!ms(mask)) mask = list(mask)
-    bbox = apply(do.call(rbind, lapply(mask, function(x){
-        apply(attr(x, "boundingbox"), 2, range)
-    })), 2, range)
-    bbox = as.matrix(expand.grid(x = bbox[,1], y = bbox[,2]))
+    if(ms(mask)){
+        bbox = sapply(mask, mask_bbox, simplify = FALSE)
+    }else{
+        spacing = attr(mask, "spacing")
+        if(is.null(spacing)) stop("no spacing attribute")
+        x = range(mask$x) + c(-1, 1) * spacing / 2
+        y = range(mask$y) + c(-1, 1) * spacing / 2
+        bbox = data.frame(x = x[c(1,2,2,1)], y = y[c(1,1,2,2)])
+    }
     return(bbox)
 }
 
@@ -668,6 +714,25 @@ mask_image = function(mask, values, plot = TRUE){
     invisible(list(x = x, y = y, z = z))
 }
 
+mask_meanSD = function(mask){
+    as.data.frame(apply(mask, 2, function(x) c(mean(x), sd(x))))
+}
+
+mask_na_rm = function(x){
+    if(!inherits(x, "mask")) stop("mask object required")
+    if(ms(x)){
+        x = sapply(x, mask_na_rm, simplify = FALSE)
+        class(x) = c("list","mask")
+    }else{
+        delete = is.na(x$x) | is.na(x$y)
+        if(!is.null(covariates(x)))
+            delete = delete | apply(covariates(x), 1, function(x) any(is.na(x)))
+        if(any(delete))
+            x = subset_mask(x, !delete)
+    }
+    return(x)
+}
+
 mask_npoints = function(mask){
     if(!inherits(mask, "mask")) stop("mask object required")
     if(!ms(mask)) mask = list(mask)
@@ -676,34 +741,19 @@ mask_npoints = function(mask){
     })
 }
 
-mask_rbind = function(mask){
+make_regionmask = function(mask){
     if(!inherits(mask, "mask")) stop("expecting a mask object")
-    if(!ms(mask)){
-        message("can't rbind single-session masks")
-        return(mask)
-    }
-    # check types
-    types = sapply(mask, mask_type)
-    if(!all(types == types[1]))
-        stop("can't rbind masks of different types")
-    # check spacing
-    spacings = sapply(mask, mask_spacing)
-    if(!all(spacings == spacings[1]))
-        stop("can't rbind masks with different spacings")
+    if(!ms(mask)) return(mask)
     # combine coordinates
     regionmask = do.call(rbind, lapply(mask, as.data.frame))
-    # add attributes
-    class(regionmask) = c("mask","data.frame")
-    covariates(regionmask) = do.call(rbind, lapply(mask, covariates))
-    attr(regionmask, "meanSD") = as.data.frame(rbind(
-        apply(regionmask, 2, mean),
-        apply(regionmask, 2, sd)
-    ))
-    lims = apply(do.call(rbind, lapply(mask, mask_bbox)), 2, range)
-    attr(regionmask, "boundingbox") = data.frame(
-        x = lims[c(1,2,2,1),1],
-        y = lims[c(1,1,2,2),2]
-    )
+    # combine covariates
+    if(!is.null(covariates(mask))){
+        covariates(regionmask) = do.call(rbind, covariates(mask))
+    }
+    # mask attributes
+    class(regionmask) = c("mask", "data.frame")
+    attr(regionmask, "meanSD") = mask_meanSD(regionmask)
+    attr(regionmask, "boundingbox") = mask_bbox(regionmask)
     return(regionmask)
 }
 
@@ -767,7 +817,7 @@ MS = function(x, session.names = NULL){
             y = attr(x, "session")
             if(is.null(y)) NA else y
         })
-    if(length(unique) != length(session.names) || any(is.na(session.names)))
+    if(length(unique(session.names)) != length(session.names) || any(is.na(session.names)))
         session.names = names(x)
     if(is.null(session.names)){
         message("using default session.names")
@@ -1224,26 +1274,26 @@ sim_capthist = function(beta, traps, model, model.options, fixed, n_occasions, s
 # @title SUbset a multi-session capthist
 # @description TODO
 # @param capthist a \code{\link{capthist}} object
-# @param index logical, integer or character vector indicating which capthist sessions (multi-session) or rows (single-session) to keep
+# @param keep logical, integer or character vector indicating which capthist sessions (multi-session) or rows (single-session) to keep
 # @author Darren Kidney \email{darrenkidney@@googlemail.com}
 # @export
 
-subset_capthist = function(capthist, index){
+subset_capthist = function(capthist, keep){
     if(!inherits(capthist, "capthist"))
         stop("capthist object required")
     attrs = attributes(capthist)
     if(ms(capthist)){
         # subset sessions
-        capthist = capthist[index] # ms(capthist) ; class(capthist)
+        capthist = capthist[keep] # ms(capthist) ; class(capthist)
         # sessioncov
         if(!is.null(attrs$sessioncov)){
-            attrs$sessioncov = attrs$sessioncov[index, , drop = FALSE]
+            attrs$sessioncov = attrs$sessioncov[keep, , drop = FALSE]
         }
     }else{
         # subset groups
-        capthist = capthist[index, , , drop = FALSE]
+        capthist = capthist[keep, , , drop = FALSE]
         if(!is.null(attrs$covariates))
-            attrs$covariates = attrs$covariates[index, , drop = FALSE]
+            attrs$covariates = attrs$covariates[keep, , drop = FALSE]
     }
     attributes(capthist) = attrs
     return(capthist)
@@ -1256,24 +1306,32 @@ subset_capthist = function(capthist, index){
 # @title Subset a mask
 # @description TODO
 # @param mask a \code{\link{mask}} object
-# @param index logical, integer or character vector indicating which mask sessions (multi-session) or points (single-session) to keep
+# @param keep logical, integer or character vector indicating which mask sessions (multi-session) or points (single-session) to keep
 # @author Darren Kidney \email{darrenkidney@@googlemail.com}
 # @export
 
-subset_mask = function(mask, index){
+subset_mask = function(mask, keep){
     if(!inherits(mask, "mask"))
         stop("mask object required")
-    attrs = attributes(mask)
     if(ms(mask)){
-        # subset sessions
-        mask = mask[index]
+        # delete sessions
+        mask = mask[keep]
+        # return lost attribute
+        attr(mask, "class") = c("list", "mask")
     }else{
-        # subset points
-        mask = mask[index, , drop = FALSE]
-        if(!is.null(attrs$covariates))
-            attrs$covariates = attrs$covariates[index, , drop = FALSE]
+        # delete mask points
+        mask = mask[keep, , drop = FALSE]
+        if(!is.null(covariates(mask))){
+            # delete rows in covariates
+            covariates(mask) = covariates(mask)[keep, , drop = FALSE]
+        }
+        # update attributes
+        attr(mask, "boundingbox") = data.frame(
+            x = (range(mask$x) + c(-1,1) * attr(mask, "spacing") / 2)[c(1,2,2,1)],
+            y = (range(mask$y) + c(-1,1) * attr(mask, "spacing") / 2)[c(1,1,2,2)]
+        )
+        attr(mask, "meanSD") = as.data.frame(apply(mask, 2, function(x) c(mean(x), sd(x))))
     }
-    attributes(mask) = attrs
     return(mask)
 }
 
@@ -1512,7 +1570,7 @@ summary.gibbonsecr_fit = function(object, ...){
         cat("\nEffective sampling area:", round(mean(esa), 1), "sq km (average per array)\n")
         cat("\nAIC =", AIC(object), "\n")
         cat("\nTime taken: ", round(object$run.time,1), " ", attr(object$run.time, "units"), " (", object$nlm$iterations, " iterations)\n", sep = "")
-        cat("\n")
+        # cat("\n")
 
     }else{
         warning("Fitting algorithm did not converge")
@@ -1671,7 +1729,7 @@ trapcov = function(capthist){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-traps_rbind = function(traps){
+make_regiontraps = function(traps){
     if(!inherits(traps, "traps")) stop("expecting a traps object")
     if(!ms(traps)){
         message("can't rbind single-session traps")

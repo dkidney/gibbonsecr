@@ -576,6 +576,8 @@ gibbonsecr_fit = function(capthist, model = list(), mask = NULL, fixed = list(),
 
 gibbonsecr_sim = function(fit, nsims = 99, ncores = NULL, buffer = 6000, spacing = 10, use.secr.fit = FALSE, simname = "testsim", beta = NULL){
 
+    start = Sys.time()
+
     ##################################################
     ## check inputs
 
@@ -755,6 +757,9 @@ gibbonsecr_sim = function(fit, nsims = 99, ncores = NULL, buffer = 6000, spacing
     message("- closing cluster...")
 
     parallel::stopCluster(cl)
+
+    run.time = difftime(Sys.time(), start)
+    message("Time taken: ", round(run.time, 1), " ", attr(run.time, "units"))
 
     return(results)
 
@@ -1099,12 +1104,13 @@ import_shp = function(filepath, type = c("region","habitat"), verbose = FALSE, .
     if(!file.exists(filepath))
         stop("can't find file - check file path", call. = FALSE)
     x = try({
-        rgdal::readOGR(
-            dsn     = dirname(filepath),
-            layer   = tools::file_path_sans_ext(basename(filepath)),
-            verbose = verbose,
-            ...
-        )
+        raster::shapefile(filepath, verbose = verbose, ...)
+#         rgdal::readOGR(
+#             dsn     = dirname(filepath),
+#             layer   = tools::file_path_sans_ext(basename(filepath)),
+#             verbose = verbose,
+#             ...
+#         )
     }, TRUE)
     if(inherits(x, "try-error"))
         stop("couldn't import shapefile", call. = FALSE)
@@ -1125,6 +1131,7 @@ import_shp = function(filepath, type = c("region","habitat"), verbose = FALSE, .
             message("- no habitat variable in shp data so using polygon IDs")
             IDs = sapply(x@polygons, function(x) x@ID)
             data = data.frame(habitat = factor(IDs), row.names = IDs)
+            colnames(data) = tools::file_path_sans_ext(basename(filepath))
             if(!spdf)
                 x = sp::SpatialPolygonsDataFrame(x, data)
             if(!habcol)
@@ -1152,9 +1159,9 @@ make_design_matrices = function(model, model.frames, smooth.setup = NULL, sessio
         # session = names(model.frames)[1]
         sapply(submodels, function(submodel){
             make_model_matrix(
-                model[[submodel]],
-                model.frames[[session]][[submodel]],
-                smooth.setup[[submodel]]
+                formula      = model[[submodel]],
+                data         = model.frames[[session]][[submodel]],
+                smooth.setup = smooth.setup[[submodel]]
             )
         }, simplify = FALSE)
     }, simplify = FALSE)
@@ -1173,7 +1180,7 @@ make_design_matrices = function(model, model.frames, smooth.setup = NULL, sessio
                 nrows = nrow(model.frames[[session]][[submodel]])
                 result = try(all(nrow(temp) == nrows), TRUE)
                 if(inherits(result, "try-error") || !result)
-                    stop("something went wrong with make_design_matrices for '",
+                    stop("nrow(design.matrix) not equal to nrow(model.frame) for '",
                          submodel, "' in session '", session, "'")
             }
         }
@@ -1459,8 +1466,8 @@ make_regular_regionmask = function(mask, traps){ # mask=fit$mask; traps=fit$capt
         traps = traps(traps)
     if(!all(session(mask) == session(traps)))
         stop("!all(session(mask) == session(traps))")
-    regionmask = mask_rbind(mask)
-    regiontraps = traps_rbind(traps)
+    regionmask = make_regionmask(mask)
+    regiontraps = make_regiontraps(traps)
     regularmask = make.mask(regiontraps,
                      buffer  = mask_buffer(regionmask, regiontraps),
                      spacing = mask_spacing(regionmask),

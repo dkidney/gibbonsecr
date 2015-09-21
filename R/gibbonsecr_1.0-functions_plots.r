@@ -1,7 +1,95 @@
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-plot_bearings = function(capthist, session = NULL, group = NULL, length = 0.05, legend = TRUE, buffer = 6000, add = FALSEL){
+add_category_legend = function(names, col, ...){
+    pop = par(no.readonly = TRUE)
+    par(xpd = TRUE)
+    legend(par("usr")[2], mean(par("usr")[3:4]), legend = names, col = col, pch = 15, yjust = 0.5, ...)
+    par(pop)
+    invisible()
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+# # Example
+# x = rnorm(1000)
+# y = rnorm(1000)
+# z = dnorm(x) * dnorm(y) / (dnorm(0)^2)
+# zlim = c(0,1)
+# ncol = 100
+# col = rainbow(ncol, start = 0, end = .7)
+# i = cut(z, breaks = seq(min(zlim), max(zlim), length = ncol + 1))
+# cols = col[i]
+# par(mar = c(4,2,1,5))
+# plot(x, y, pch = 19, cex = 0.5, col = cols)
+# add_number_legend(zlim, col, yscale = 0.8)
+
+add_number_legend = function(zlim, col, border = 1, xscale = 1, yscale = 0.8, xadj = 1){
+
+    pop = par(no.readonly = TRUE)
+
+    ##################################################
+    ## legend bounding box
+
+    # coordinates of inner window
+    usr = par("usr") ; usr
+    # coordinates of outer window as percentages
+    plt = par("plt")
+    # outer window width
+    winw = diff(usr[1:2]) / diff(plt[1:2])
+    # bbox width
+    w = xscale * winw / 50
+    # bbox height
+    h = yscale * diff(usr[3:4])
+    # bbox coords
+    x0 = usr[2] + winw / 100 * xadj
+    x1 = x0 + w
+    y0 = usr[3] + h * (1 - yscale) / 2
+    y1 = y0 + h
+    # make bbox
+    bbox = data.frame(x = c(x0, x0, x1, x1),
+                      y = c(y0, y1, y1, y0))
+
+    ##################################################
+    ## add color cells
+
+    ncol = length(col)
+    xs = range(bbox$x)
+    ys = seq(min(bbox$y), max(bbox$y), length = ncol + 1)
+    # cols = palette(ncols)
+    par(xpd = TRUE)
+    for(i in 1:ncol){ # i=1
+        cell = cbind(x = xs[c(1, 1,   2,   2)],
+                     y = ys[c(i, i+1, i+1, i)]) ; cell
+        polygon(cell, col = col[i], border = col[i])
+    }
+    polygon(bbox, border = border)
+
+    ##################################################
+    ## legend axis
+
+    ticks = pretty(zlim)
+    # make sure tick marks don't go outside zlim
+    ticks = ticks[ticks >= min(zlim) & ticks <= max(zlim)]
+    # convert ticks to tickmark y-axis coords
+    ty = bbox$y[1] + diff(range(bbox$y)) * (ticks - min(zlim)) / diff(zlim)
+    # make tickmark x-axis coords
+    tx = bbox$x[4] + c(0, 1) * diff(range(bbox$x)) / 2
+    # plot tickmarks
+    segments(x0 = tx[1], x1 = tx[2], y0 = ty, y1 = ty)
+    # plot tickmar labels
+    text(tx[2], ty, as.character(ticks), pos = 4)
+
+    par(pop)
+    invisible()
+
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+plot_bearings = function(capthist, session = NULL, group = NULL, length = 0.05, legend = TRUE, buffer = 6000, add = FALSE){
     if(!inherits(capthist, "capthist"))
         stop("expecting a capthist object")
     capthist = MS(capthist)
@@ -155,7 +243,7 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
             which,
             "detectfn"  = "Detection function",
             "bearings"  = "Bearing error distribution",
-            "distances" = "Distance error distribution (truth = 1000m)"
+            "distances" = "Distance error distribution (truth = 500m)"
         )
         if(is.null(plotargs$xlab)) plotargs$xlab = switch(
             which,
@@ -341,7 +429,6 @@ plot.gibbonsecr_sim = function(x, CI = TRUE, exp = FALSE, use.global.par.setting
 
     if(!use.global.par.settings){
         title(attr(x, "simname"), outer = TRUE)
-        par(op)
     }
 
     invisible()
@@ -370,29 +457,47 @@ plot.gibbonsecr_sim = function(x, CI = TRUE, exp = FALSE, use.global.par.setting
 # @param yaxs TODO
 # @author Darren Kidney \email{darrenkidney@@googlemail.com}
 # @export
-plot_mask = function(mask, session = NULL, traps = NULL, region = NULL, add = FALSE, covariate = NULL, col = NULL, pch = 15, bty = "n", axes = FALSE, xlab = "", ylab = "", main = "", legend = TRUE, xaxs = "r", yaxs = "r", type = "p"){
+plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = NULL, pch = 15, bty = "n", axes = TRUE, xlab = "", ylab = "", main = "", legend = TRUE, xaxs = "r", yaxs = "r", type = "p"){
+    # session = NULL; add = FALSE; col = NULL; pch = 15; bty = "n"; axes = FALSE; xlab = ""; ylab = ""; main = ""; legend = TRUE; xaxs = "r"; yaxs = "r"; type = "p"
     if(!inherits(mask, "mask"))
         stop("requires a mask object", call. = FALSE)
-    if(ms(mask) && !is.null(session)) mask = mask[[session]]
+    if(ms(mask) && !is.null(session))
+        mask = mask[[session]]
+    regionmask = make_regionmask(mask)
     if(!add){
-        bbox = mask_bbox(mask)
-        plot(bbox, type = "n", asp = 1, bty = bty, axes = axes, xlab = xlab, ylab = ylab, main = main, xaxs = xaxs, yaxs = yaxs)
+        bbox = mask_bbox(regionmask)
+        plot(bbox, type = "n", asp = 1, bty = bty, axes = axes, xlab = xlab,
+             ylab = ylab, main = main, xaxs = xaxs, yaxs = yaxs)
     }
     if(type != "n"){
         if(!is.null(covariate)){
-            present = if(ms(mask)){
-                !is.null(covariates(mask[[1]])[[covariate]])
-            }else{
-               !is.null(covariates(mask)[[covariate]])
-            }
-            if(!present){
+            # check covariate exists
+            if(is.null(covariates(regionmask)) ||
+               !covariate %in% colnames(covariates(regionmask))){
                 message("cant find covariate: ", covariate)
                 covariate = NULL
+                main = ""
             }
         }
-        plot(mask, add = TRUE, pch = pch, covariate = covariate, col = col, legend = legend)
-        if(!is.null(traps)) plot_traps(traps, add = TRUE)
-        if(!is.null(region)) sp::plot(region, add = TRUE)
+        if(is.null(covariate)){
+            cols = "grey"
+        }else{
+            if(is.null(col)){
+                var = covariates(regionmask)[[covariate]]
+                number = inherits(var, c("integer", "numeric"))
+                ncol = 25
+                palette = if(number) colorRampPalette(c("blue","red")) else terrain.colors
+                cols = var2col(var, palette = palette, ncol = ncol)
+            }
+        }
+        points(regionmask, pch = pch, col = cols, cex = 0.5)
+        if(!is.null(covariate)){
+            if(number){
+                add_number_legend(range(var), attr(cols, "col"))
+            }else{
+                add_category_legend(levels(var), attr(cols, "col"))
+            }
+        }
     }
     invisible()
 }
@@ -407,28 +512,53 @@ plot_mask = function(mask, session = NULL, traps = NULL, region = NULL, add = FA
 # @param add TODO
 # @author Darren Kidney \email{darrenkidney@@googlemail.com}
 # @export
-plot_shp = function(shp, traps = NULL, add = FALSE){
-    if(!inherits(shp, c("SpatialPolygons")))
-        stop("requires a SpatialPolygons object", call. = FALSE)
-    if(!add){
-        plot(t(attr(shp, "bbox")), type = "n", asp = 1)
+plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = NULL){
+    # check class
+    if(!inherits(shp, c("SpatialPolygons", "SpatialPoints")))
+        stop("method only works for SpatialPolygons or SpatialPoints")
+
+    # check covariate exists
+    if(!is.null(covariate)){
+        if(!"data" %in% slotNames(shp) || !covariate %in% colnames(shp@data)){
+            warning("covariate not found")
+            covariate = NULL
+        }else{
+            x = shp@data[[covariate]]
+        }
     }
-    n_layers = length(shp@polygons)
-    col = if(n_layers == 1) NA else terrain.colors(n_layers)
-    sp::plot(shp, col = col, add = TRUE)
-#     lapply(1:n_layers, function(i){ # i=1
-#         lapply(shp@polygons[[i]]@Polygons, function(x){
-#             # x = shp@polygons[[i]]@Polygons[[1]]
-#             # x = shp@polygons[[i]]@Polygons[[2]]
-#             polygon(x@coords, col = col[i], border = NA)
-#             # points(x@coords, col = col[i])
-#         })
-#     })
-    if(!is.null(traps)){
-        plot_traps(traps, add = TRUE)
+
+    # make cols
+    if(is.null(covariate)){
+        cols = "grey"
+    }else{
+        number = inherits(x, c("integer","numeric"))
+        cols = if(number){
+            if(is.null(zlim)) zlim = range(x)
+            var2col(x, palette = palette, ncol = ncol, zlim = zlim)
+        }else{
+            var2col(x, palette = palette)
+        }
     }
-    invisible()
+
+    # draw plot
+    if(inherits(shp, "SpatialPolygons")){
+        sp::plot(shp, col = cols, usePolypath = FALSE)
+    }else{
+        sp::plot(shp, col = cols, pch = 15, cex = 0.5)
+    }
+
+    # add legend
+    if(!is.null(covariate)){
+        col = attr(cols, "col")
+        if(number){
+            add_number_legend(zlim, col = col)
+        }else{
+            add_category_legend(names = levels(x), col = col)
+        }
+    }
+
 }
+
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -442,7 +572,7 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
 
     if(which == "density"){
         # use regiontraps and regular regionmask
-        traps = traps_rbind(traps(fit$capthist))
+        traps = make_regiontraps(traps(fit$capthist))
         mask  = make_regular_regionmask(fit$mask, fit$capthist)
     }
     if(which == "pdot"){
@@ -459,7 +589,8 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
     ##################################################
     ## delta method
 
-    deltaargs = list(beta = coef(fit), fit = fit, session = session, mask = mask, traps = traps, which = which)
+    deltaargs = list(beta = coef(fit), fit = fit, session = session,
+                     mask = mask, traps = traps, which = which)
     if(CI){
         deltaargs$f = fitted_surface_values
         deltaargs$vcov = vcov(fit)
@@ -492,7 +623,8 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
         if(is.null(plotargs$bty))  plotargs$bty  = "n"
     }
     if(is.null(plotargs$nlevel)) plotargs$nlevel = 25
-    if(is.null(plotargs$col))    plotargs$col    = heat.colors(plotargs$nlevel)
+    if(is.null(plotargs$col))
+        plotargs$col    = colorRampPalette(c("blue","red"))(plotargs$nlevel)
     if(is.null(plotargs$ylim))   plotargs$zlim   = switch(
         which,
         "pdot"    = c(0,1),
@@ -597,6 +729,34 @@ plot_traps = function(x, session = NULL, buffer = 1000, ...){
     }
     invisible()
 }
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+var2col = function(x, col = NULL, palette = NULL, ncol = NULL, zlim = NULL){
+    if(inherits(x, c("integer","numeric"))){
+        if(is.null(zlim)) zlim = range(x)
+        if(is.null(col)){
+            if(is.null(ncol)) ncol = 25
+            if(is.null(palette)) palette = colorRampPalette(c("blue","red"))
+            col = palette(ncol)
+        }
+        i = cut(x, include.lowest = TRUE,
+                breaks = seq(min(zlim), max(zlim), length = length(col) + 1))
+        cols = col[i]
+    }else{
+        x = as.factor(x)
+        if(is.null(col)){
+            ncol = length(levels(x))
+            if(is.null(palette)) palette = terrain.colors
+            col = palette(ncol)
+        }
+        cols = col[x]
+    }
+    attr(cols, "col") = col
+    return(cols)
+}
+
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##

@@ -319,7 +319,7 @@ check_fixed = function(fixed, model.options, capthist, locations = FALSE){
     for(i in names(fixed)){
         if(i %in% c("g0","pcall") || (i == "bearings" && model.options$bearings == 2)){
             if(fixed[[i]] <= 0 || fixed[[i]] > 1)
-                stop("fixed value for ", i, " must be between 0 and 1", call. = FALSE)
+                stop("fixed value for ", i, " must be greater than 0 and less than or equal to 1", call. = FALSE)
         }else{
             if(fixed[[i]] <= 0)
                 stop("fixed value for ", i, " must be positive", call. = FALSE)
@@ -375,22 +375,22 @@ check_mask = function(mask, capthist, mask.options = list()){
     ## remove mask points with missing covariates
 
     if(!is.null(covariates(mask[[1]]))){
-        if(is.null(mask.options$remove.missing))
-            mask.options$remove.missing = TRUE
-        if(mask.options$remove.missing){
-            missing = sapply(mask, function(x){
+        # if(is.null(mask.options$remove.missing))
+            # mask.options$remove.missing = TRUE
+        # if(mask.options$remove.missing){
+            missing = sapply(covariates(mask), function(x){
                 any(apply(x, 1, function(x){
                     any(is.na(x))
                 }))
             })
-            if(any(any(missing))){
+            if(any(missing)){
                 message("removing mask points with missing covariate values")
-                for(i in 1:length(mask)){ # i=1
-                    keep = !apply(covariates(mask[[i]]), 1, function(x) any(is.na(x)))
-                    mask[[i]] = subset_mask(mask[[i]], keep)
+                for(session in session(mask)){ # session = "2"
+                    keep = !apply(covariates(mask[[session]]), 1, function(x) any(is.na(x)))
+                    mask[[session]] = subset_mask(mask = mask[[session]], index = keep)
                 }
             }
-        }
+        # }
     }
 
     return(mask)
