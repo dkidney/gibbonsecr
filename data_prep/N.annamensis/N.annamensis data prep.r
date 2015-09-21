@@ -29,13 +29,14 @@ writeOGR(obj = habitat, dsn = dsn.extdata, layer = "habitat", driver = "ESRI Sha
 
 # use import_data ---------------------------------------------------------
 
-# dir(system.file("extdata", package = "gibbonsecr")) 
-# dir(system.file("extdata/gis", package = "gibbonsecr")) 
+# dir(system.file("extdata", package = "gibbonsecr"))
+# dir(system.file("extdata/gis", package = "gibbonsecr"))
 
-setwd(system.file("extdata/N.annamensis", package = "gibbonsecr"))
-detections = "example_detections_file.csv"
-posts      = "example_posts_file.csv"     
-covariates = "example_covariates_file.csv"
+# setwd(system.file("extdata/N.annamensis", package = "gibbonsecr"))
+setwd(file.path(main.folder, "inst/extdata/N.annamensis"))
+detections = "detections.csv"
+posts      = "posts.csv"
+covariates = "covariates.csv"
 # region     = file.path(main.folder, "inst/extdata/N.annamensis/region.shp")
 # habitat    = file.path(main.folder, "inst/extdata/N.annamensis/habitat.shp")
 
@@ -57,11 +58,11 @@ details = list(
 )
 
 N.annamensis = import_data(
-    detections = detections, 
-    posts      = posts, 
+    detections = detections,
+    posts      = posts,
     covariates = covariates,
-    # region     = region, 
-    # habitat    = habitat, 
+    # region     = region,
+    # habitat    = habitat,
     details    = details
 )
 
@@ -77,5 +78,5 @@ save(N.annamensis, file = file.path(main.folder, "data/N.annamensis.rda"))
 setwd(wd)
 options(op)
 
-## ************************************************************************** ## 
-## ************************************************************************** ## 
+## ************************************************************************** ##
+## ************************************************************************** ##
