@@ -11,5 +11,5 @@ LazyData: TRUE
 VignetteBuilder: knitr
 Depends: R (>= 3.0.0)
 LinkingTo: Rcpp, RcppArmadillo
-Imports: CircStats, fields, MASS, methods, mgcv, parallel, Rcpp, sp, rgdal, secr, stats, tcltk, tcltk2, tools, utils
+Imports: CircStats, fields, MASS, methods, mgcv, parallel, raster, Rcpp, sp, secr, stats, tcltk, tcltk2, tools, utils
 Suggests: knitr, testthat
