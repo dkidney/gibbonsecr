@@ -7,10 +7,11 @@ checking
 data_raw
 data/N.Siki.rda
 debugging
+development
 notes
 src/*.dll
 src/*.o
 src/*.so
 temp
 TODO.docx
-vignettes
+vignettes_prep
