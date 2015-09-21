@@ -285,10 +285,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     data_import = function(){
-            cursor("wait") ; on.exit(cursor("normal"))
-
-        print_to_console("Importing data...", dashes = TRUE)
-
+        cursor("wait") ; on.exit(cursor("normal"))
+        print_to_console("Importing data...")
         for(file in c("detections","posts")){ # file = "posts"
             path = tclvalue(tvar[[paste0(file, ".path")]])
             if(!file.exists(path)){
@@ -296,7 +294,6 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 stop(.call = FALSE)
             }
         }
-
         result = try({
             utils::capture.output({
                 robj$capthist = import_data(
