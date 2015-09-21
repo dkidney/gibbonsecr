@@ -1,0 +1,321 @@
+## -------------------------------------------------------------------------- ##
+## gui functions which are independent of the gui environment
+## -------------------------------------------------------------------------- ##
+
+center_window = function(tt){
+    winw = as.numeric(tclvalue(tkwinfo("width", tt)))
+    winh = as.numeric(tclvalue(tkwinfo("height", tt)))
+    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+    tkwm.geometry(tt, paste0(winw, "x", winh, "+", round((scrw - winw) / 2), "+", round((scrh - winh) / 2)))
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+# Popup menu to allow choice of covariate class
+# Example
+# x = data.frame(
+#     colours = c("red", "green", "blue"),
+#     fruits  = c("Apple", "Orange", "Banana", "Pear", "Cherry", "eggs"),
+#     names   = c("Alice","Darren"),
+#     numbers = 1:6
+# )
+# str(x)
+# classes = check_covariate_classes(x)
+# print(classes)
+
+check_covariate_classes = function(x){
+
+    tt = tktoplevel()
+    tkwm.title(tt, "Check covariate classes")
+    w = 400
+    h = 121
+    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+    tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+    # tkwm.geometry(tt, "")
+    tcl("wm", "attributes", tt, topmost = TRUE)
+    tcl("wm", "attributes", tt, topmost = FALSE)
+    tkwm.geometry(tt, "")
+    tkfocus(tt)
+    main = ttkframe(tt)
+
+    ##################################################
+    ## upper frame for entry and combo boxes
+
+    upper = ttkframe(main, padding = c(5,5))
+    tkgrid(ttklabel(upper, text = "Name"), row = 0, column = 1, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Type"), row = 0, column = 2, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Use"),  row = 0, column = 3, sticky = "w")
+    combo.char = ifelse(sapply(x, is.numeric), "number", "factor")
+    entry.char = colnames(x)
+    combo.tvar = list()
+    entry.tvar = list()
+    check.tvar = list()
+    entry = list()
+    combo = list()
+    check = list()
+    for(j in 1:ncol(x)){ # j=1
+        entry.tvar[[j]] = tclVar(entry.char[j])
+        entry[[j]] = ttkentry(upper, textvariable = entry.tvar[[j]], width = 30,
+                             state = "normal")
+        tkgrid(entry[[j]], row = j, column = 1)
+        combo.tvar[[j]] = tclVar(combo.char[j])
+        combo[[j]] = ttkcombobox(upper, textvariable = combo.tvar[[j]], width = 10,
+                             state = "normal", values = c("number", "factor"))
+        tkgrid(combo[[j]], row = j, column = 2)
+        check.tvar[[j]] = tclVar(1)
+        check[[j]] = ttkcheckbutton(upper, variable = check.tvar[[j]],
+                             state = "normal")
+        tkgrid(check[[j]], row = j, column = 3)
+    }
+
+    ##################################################
+    ## lower frame for buttons
+
+    lower = ttkframe(main, padding = c(5,5))
+    done = tclVar(0)
+    ok = ttkbutton(
+        lower, text = "OK", state = "normal", width = 10, command = function(){
+            names = sapply(entry.tvar, tclvalue)
+            duplicates = duplicated(names)
+            if(any(duplicates)){
+                tkmessageBox(title = "Error", icon = "error", type = "ok",
+                             message = "Duplicate names not allowed")
+                stop(.call = FALSE)
+            }
+            tclvalue(done) = 1
+        }
+    )
+    cancel = ttkbutton(
+        lower, text = "Cancel", state = "normal", width = 10, command = function(){
+            tclvalue(done) = 2
+        }
+    )
+
+    ##################################################
+    # packing etc.
+
+    tkgrid(ok, cancel)
+    tkpack(upper)
+    tkpack(lower)
+    tkpack(main)
+    tkwm.resizable(tt, 0, 0)
+    tkwm.protocol(tt, "WM_DELETE_WINDOW", function(){
+        tclvalue(done) = 2
+    })
+    tkwait.variable(done)
+
+    ##################################################
+    # return clasess
+
+    result = if(tclvalue(done) == 1){
+        list(
+            name  = sapply(entry.tvar, tclvalue),
+            class = sapply(combo.tvar, tclvalue),
+            use   = sapply(check.tvar, tclvalue) == "1"
+        )
+    }else{
+        list(
+            name  = entry.char,
+            class = combo.char,
+            use   = rep(TRUE, ncol(x))
+        )
+    }
+
+    tkdestroy(tt)
+    return(result)
+
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+# Popup menu to allow choice of covariate values when making predictions
+# Example
+# x = data.frame(
+#     colours = c("red", "green", "blue"),
+#     fruits  = c("Apple", "Orange", "Banana", "Pear", "Cherry", "eggs"),
+#     names   = c("Alice","Darren"),
+#     numbers = 1:6
+# )
+# str(x)
+# newdata = choose_covariate_values(x)
+# print(newdata)
+# str(newdata)
+
+choose_covariate_values = function(x){
+    main = tktoplevel()
+
+    ##################################################
+    ## upper frame for entry and combo boxes
+
+    upper = tkframe(main, padding = c(5,5))
+    ncols = ncol(x)
+    covnames = colnames(x)
+    value  = widget = setNames(vector("list", ncols), covnames)
+    factor = sapply(x, class) == "factor"
+    for(j in 1:ncols){ #
+        tkgrid(tklabel(upper, text = covnames[j]), row = j, column = 1,
+               sticky = "w")
+        if(factor[j]){
+            value[[j]] = tclVar(levels(x[[j]])[1])
+            widget[[j]] = tkcombo(upper, textvariable = value[[j]],
+                                      values = levels(x[[j]]))
+        }else{
+            value[[j]] = tclVar(mean(x[[j]]))
+            widget[[j]] = tkentry(upper, textvariable = value[[j]])
+        }
+        tkgrid(widget[[j]], row = j, column = 2, sticky = "w")
+    }
+
+    ##################################################
+    ## lower frame for buttons
+
+    lower = tkframe(main, padding = c(5,5))
+    done = tclVar(0)
+    ok = ttkbutton(lower, text = "OK", command = function(){
+        # check entries for numeric covariates
+        nvalue = suppressWarnings(sapply(covnames, function(j){
+            as.numeric(tclvalue(value[[j]]))
+        }))
+        invalid = is.na(nvalue) & !factor
+        if(any(invalid)){
+            tkmessageBox(
+                title = "Error", icon = "error", type = "ok",
+                message = paste0("invalid entry for:\n -",
+                                 paste(covnames[invalid], sep = "\n -"))
+            )
+            stop(.call = FALSE)
+        }
+        outside = sapply(covnames, function(j){ # j=4
+            if(factor[j]) FALSE else{
+                nvalue[j] < min(x[[j]]) || nvalue[j] > max(x[[j]])
+            }
+        })
+        if(any(outside)){
+            tkmessageBox(
+                title = "Error", icon = "error", type = "ok",
+                message = paste0("entry outside observed range:\n -",
+                                 paste(covnames[outside], sep = "\n -"))
+            )
+            stop(.call = FALSE)
+        }
+        tclvalue(done) = 1
+    })
+    cancel = ttkbutton(lower, text = "Cancel", command = function(){
+        tclvalue(done) = 2
+    })
+
+    ##################################################
+    # packing etc.
+
+    tkgrid(ok, cancel)
+    tkpack(upper)
+    tkpack(lower)
+    tkwm.protocol(main, "WM_DELETE_WINDOW", function(){
+        tclvalue(done) = 2
+    })
+    tkwait.variable(done)
+
+    ##################################################
+    # make newdata
+
+    newdata = if(tclvalue(done) == 1){
+        # based on entry/combo values
+        do.call(data.frame, sapply(covnames, function(j){
+            if(factor[j]){
+                factor(tclvalue(value[[j]]), levels = levels(x[[j]]))
+            }else{
+                as.numeric(tclvalue(value[[j]]))
+            }
+        }, simplify = FALSE))
+    }else{
+        # using reference levels (factors) or averages (numeric)
+        do.call(data.frame, sapply(covnames, function(j){
+            if(factor[j]){
+                factor(levels(x[[j]])[1], levels = levels(x[[j]]))
+            }else{
+                mean(x[[j]])
+            }
+        }, simplify = FALSE))
+    }
+
+    tkdestroy(main)
+    return(newdata)
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+# platform-specific appearance setting for tcltk widgets
+# .Tcl("ttk::style theme names")
+# sort(as.character(tkfont.families()))
+
+gui_appearance_settings = function(){
+
+    .Tcl(paste("source", system.file("doc/tcl/gibbonsecr_theme.tcl", package = "gibbonsecr")))
+
+    general = list(
+        frame.padding = c(5,5),
+        console.fg    = "grey80",
+        console.bg    = "grey15",
+        relief        = "flat"
+    )
+
+    if(.Platform$OS.type == "windows"){
+
+        specific = list(
+            WIDTH  = 1000,
+            HEIGHT = 525,
+            lhs.width = 335,
+            rhs.width = 525 - 335,
+            button.width = 9,
+            combo.width  = 15,
+            entry.width  = 15,
+            grid.padx    = 1,
+            grid.pady    = 1,
+            normal.font          = tkfont.create(size = 10, family = "Trebuchet MS"),
+            heading.font         = tkfont.create(size = 10, family = "Trebuchet MS", slant = "roman", weight = "bold"),
+            console.normal.font  = tkfont.create(size = 9,  family = "Lucida Console"),
+            console.heading.font = tkfont.create(size = 10, family = "Lucida Console"),
+            console.bold.font    = tkfont.create(size = 9,  family = "Lucida Console", slant = "roman")
+            )
+        .Tcl("ttk::style configure TButton       -padding {0 1}")
+        .Tcl("ttk::style configure TCombobox     -padding {5 2}")
+        .Tcl("ttk::style configure TEntry        -padding {5 2}")
+        .Tcl("ttk::style configure TNotebook.Tab -padding {1 1 1 1}")
+        .Tcl("ttk::style map       TNotebook.Tab -padding [list selected {2 3 2 3}]")
+
+    }else{
+
+        specific = list(
+            WIDTH  = 1000,
+            HEIGHT = 550,
+            lhs.width = 410,
+            rhs.width = 575 - 410,
+            button.width = 8,
+            combo.width  = 12,
+            entry.width  = 15,
+            grid.padx    = 2,
+            grid.pady    = 2,
+            heading.font         = tkfont.create(size = 10, family = "Lucida Grande", slant  = "roman", weight = "bold"),
+            console.normal.font  = tkfont.create(size = 10, family = "Courier"),
+            console.heading.font = tkfont.create(size = 11, family = "Courier"),
+            console.bold.font    = tkfont.create(size = 10, family = "Courier", slant  = "roman", weight = "bold")
+)
+        .Tcl("ttk::style configure TButton       -padding {0 3}")
+        .Tcl("ttk::style configure TEntry        -padding {5 4}")
+        .Tcl("ttk::style configure TCombobox     -padding {5 4}")
+        .Tcl("ttk::style configure TNotebook.Tab -padding {2 2 2 2}")
+        .Tcl("ttk::style map       TNotebook.Tab -padding [list selected {3 4 3 4}]")
+
+    }
+
+    return(c(general,specific))
+
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
