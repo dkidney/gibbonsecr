@@ -4,7 +4,7 @@
 .RData
 *.Rproj
 checking
-data_raw
+data_prep
 data/N.Siki.rda
 debugging
 development
