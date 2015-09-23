@@ -20,6 +20,8 @@
 
 \item{beta}{TODO}
 
+\item{debug}{TODO}
+
 \item{...}{additional arguments (not used)}
 }
 \description{

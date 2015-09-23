@@ -26,6 +26,8 @@ gibbonsecr_fit(capthist, model = list(), mask = NULL, fixed = list(),
 \item{start}{TODO}
 
 \item{trace}{TODO}
+
+\item{debug}{TODO}
 }
 \description{
 TODO

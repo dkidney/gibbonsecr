@@ -28,12 +28,12 @@ Details - file paths will have been obtained via the browse button
 library(sp)
 library(secr)
 wd = setwd(system.file("extdata/N.annamensis", package = "gibbonsecr"))
-op = par(no.readonly = TRUE)
+pop = par(no.readonly = TRUE)
 
 capthist = import_data(
-    detections = "example_detections_file.csv",
-    posts      = "example_posts_file.csv",
-    covariates = "example_covariates_file.csv"
+    detections = "detections.csv",
+    posts      = "posts.csv",
+    covariates = "covariates.csv"
 )
 class(capthist)
 
@@ -44,7 +44,7 @@ plot(region)
 plot(traps(capthist), add = TRUE)
 
 setwd(wd)
-par(op)
+par(pop)
 }
 \author{
 Darren Kidney \email{darrenkidney@googlemail.com}
