@@ -51,7 +51,8 @@ add_covariates = function(x, shp){
         if(!is.null(covariates(x))){
             for(j in covnames){
                 if(j %in% colnames(covariates(x))){
-                    warning(paste("overwriting existsing covariate", j, "in", class))
+                    warning(paste0("overwriting existsing covariate '", j,
+                                   "' in", class))
                     covariates(x)[[j]] = NULL
                 }
             }
@@ -78,7 +79,8 @@ add_covariates = function(x, shp){
 ## -------------------------------------------------------------------------- ##
 
 #' @title Compute the AIC score
-#' @description Compute the AIC score for a model fitted with \code{\link{gibbonsecr_fit}}.
+#' @description Compute the AIC score for a model fitted with
+#'   \code{\link{gibbonsecr_fit}}.
 #' @inheritParams coef.gibbonsecr_fit
 #' @param k the penalty per parameter to be used (defaults to k = 2)
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
@@ -176,7 +178,8 @@ calc_bearings = function(x, y, ...){
 # @export
 calc_bearings.default = function(x, y, ...){
     warning.text = "x and y must be matrices or data.frames"
-    if(!inherits(x, c("matrix", "data.frame")) || !inherits(y, c("matrix", "data.frame")))
+    if(!inherits(x, c("matrix", "data.frame")) ||
+       !inherits(y, c("matrix", "data.frame")))
         stop(warning.text)
     if(ncol(x) != 2 || ncol(y) != 2)
         stop(warning.text)
@@ -226,7 +229,8 @@ calc_distances = function(x, y, ...){
 # @export
 calc_distances.default = function(x, y, ...){
     warning.text = "x and y must be matrices or data.frames"
-    if(!inherits(x, c("matrix", "data.frame")) || !inherits(y, c("matrix", "data.frame")))
+    if(!inherits(x, c("matrix", "data.frame")) ||
+       !inherits(y, c("matrix", "data.frame")))
         stop(warning.text)
     if(ncol(x) != 2 || ncol(y) != 2)
         stop(warning.text)
@@ -263,10 +267,10 @@ calc_distances.traps = function(x, y, ...){
         )
         dimnames(dists) = list(rownames(y), rownames(x))
         return(dists)
-#         x = calc_distances_rcpp(
-#             as.matrix(if(ms(x)) x[[i]] else x),
-#             as.matrix(if(ms(y)) y[[i]] else y)
-#         )
+        #         x = calc_distances_rcpp(
+        #             as.matrix(if(ms(x)) x[[i]] else x),
+        #             as.matrix(if(ms(y)) y[[i]] else y)
+        #         )
     }), session.names)
     if(!ms(x) && !ms(y)) distances = distances[[1]]
     return(distances)
@@ -276,8 +280,10 @@ calc_distances.traps = function(x, y, ...){
 ## -------------------------------------------------------------------------- ##
 
 #' @title Extract model parameters
-#' @description Extract estimated parameters from a model fitted with \code{\link{gibbonsecr_fit}}.
-#' @param object a \code{gibbonsecr_fit} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)
+#' @description Extract estimated parameters from a model fitted with
+#'   \code{\link{gibbonsecr_fit}}.
+#' @param object a \code{gibbonsecr_fit} model object (i.e. an object returned
+#'   from the \code{\link{gibbonsecr_fit}} function)
 #' @param ... additional arguments (not used)
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @example inst/examples/example_fit.r
@@ -292,10 +298,13 @@ coef.gibbonsecr_fit = function(object, ...){
 ## -------------------------------------------------------------------------- ##
 
 #' @title Compute confidence intervals for model parameters
-#' @description Compute confidence intervals stimated parameters from a model fitted with \code{\link{gibbonsecr_fit}}.
-#' @details Uses the delta method to obtain interval estimates on the link scale.
+#' @description Compute confidence intervals stimated parameters from a model
+#'   fitted with \code{\link{gibbonsecr_fit}}.
+#' @details Uses the delta method to obtain interval estimates on the link
+#'   scale.
 #' @inheritParams coef.gibbonsecr_fit
-#' @param parm parameters (see documentation for the \code{\link{confint}} generic)
+#' @param parm parameters (see documentation for the \code{\link{confint}}
+#'   generic)
 #' @param level the confidence level
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @example inst/examples/example_fit.r
@@ -338,6 +347,34 @@ covlevels = function(x){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+covtable = function(data, w = 50){
+    covtable = do.call(rbind, lapply(colnames(data), function(i){
+        factor = inherits(data[[i]], "factor")
+        info = c(Name = paste0("'", i, "'"),
+                 Type = if(factor) "category" else "number",
+                 Details = if(factor){
+                     paste0(length(levels(data[[i]])), " levels: ",
+                            paste0(levels(data[[i]]),
+                                   collapse = ","))
+                 }else{
+                     paste0("range: ",
+                            paste(prettyNum(range(data[[i]])),
+                                  collapse = " to "))
+                 })
+        if(nchar(info["Details"]) > w){
+            commas = gregexpr(",", info["Details"])[[1]]
+            j = which(commas <= w)
+            j = j[length(j)]
+            info["Details"] = paste0(substr(info["Details"], 1, commas[j]), "...")
+        }
+        return(info)
+    }))
+    return(covtable)
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
 fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "detectfn", true.distance = 500){
 
     if(!which %in% c("detectfn","bearings","distances"))
@@ -374,9 +411,12 @@ fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "dete
             model.frame = data.frame(matrix(0, nrow = 1, ncol = 0))
         }else{
             # all covariates (from all sessions)
-            model.frame = do.call(rbind, lapply(fit$model.frames, function(x) x[[submodel]])) # head(model.frame)
+            model.frame = do.call(rbind, lapply(fit$model.frames, function(x){
+                x[[submodel]]
+            })) # head(model.frame)
             # extract reference level (factors) or mean (numeric) for each cov
-            model.frame = do.call(cbind, sapply(covs, function(cov){ # cov = covs[1] ; cov
+            model.frame = do.call(cbind, sapply(covs, function(cov){
+                # cov = covs[1] ; cov
                 out = list()
                 out[[cov]] = if(inherits(model.frame[[cov]], "factor")){
                     levs = levels(model.frame[[cov]])
@@ -387,7 +427,9 @@ fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "dete
                 as.data.frame(out)
             }, simplify = FALSE)) # str(model.frame)
         }
-        make_model_matrix(fit$model[[submodel]], model.frame, fit$smooth.setup[[submodel]])
+        make_model_matrix(fit$model[[submodel]],
+                          model.frame,
+                          fit$smooth.setup[[submodel]])
     }, simplify = FALSE)
     # get submodel arrays - each array will be a 1 by 1 matrix
     design.matrices = list("1" = design.matrices)
@@ -395,9 +437,58 @@ fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "dete
     ##################################################
     ## convert to submodel arrays and return function values
 
-    submodel.arrays = make_submodel_arrays2(beta = beta, parindx = fit$parindx, fixed = fit$fixed, design.matrices, fit$inv.link, S = c("1" = 1), K = c("1" = 1))[[1]]
+    submodel.arrays = make_submodel_arrays(
+        beta            = beta,
+        parindx         = fit$parindx,
+        fixed           = fit$fixed,
+        design.matrices = design.matrices,
+        inv.link        = fit$inv.link,
+        S               = c("1" = 1),
+        K               = c("1" = 1),
+        submodels       = submodels,
+        sessions        = "1")[["1"]]
     par = as.numeric(submodel.arrays)
     FUN(x, par, EX)
+
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+fitted_submodel_values = function(beta, fit, newdata = NULL, submodel = "D"){
+
+    ##################################################
+    ## checks
+
+    if(!submodel %in% names(fit$parindx))
+        stop("no model for ", submodel)
+    if(is.null(newdata))
+        newdata = make_newdata(fit, submodel)
+
+    ##################################################
+    ## model matrix
+
+    # use list("1" = ... to make dummy session
+    desmat = list("1" = sapply(submodel, function(submodel){
+        make_model_matrix(formula      = fit$model[[submodel]],
+                          data         = newdata,
+                          smooth.setup = fit$smooth.setup[[submodel]])
+    }, simplify = FALSE))
+
+    ##################################################
+    ## submodel arrays
+
+    as.numeric(make_submodel_arrays(
+        beta            = beta,
+        parindx         = fit$parindx,
+        fixed           = fit$fixed,
+        design.matrices = desmat,
+        inv.link        = setNames(list(function(x) x), submodel),
+        S               = c("1" = nrow(newdata)),
+        K               = c("1" = 1),
+        sessions        = "1",
+        submodels       = submodel
+    )[["1"]][[submodel]])
 
 }
 
@@ -454,7 +545,7 @@ fitted_surface_values = function(beta, fit, session, mask, traps, which = "pdot"
     K = n_traps(fit$capthist)
     submodel.arrays = make_submodel_arrays(
         beta            = beta,
-        par.labels      = fit$par.labels,
+        parindx         = fit$parindx,
         fixed           = fit$fixed,
         design.matrices = design.matrices,
         inv.link        = fit$inv.link,
@@ -498,7 +589,7 @@ fitted_pdot_values = function(beta, fit, session = 1){ # beta = coef(fit)
 
     submodel.arrays = make_submodel_arrays(
         beta            = beta,
-        par.labels      = fit$par.labels,
+        parindx         = fit$parindx,
         fixed           = fit$fixed,
         design.matrices = fit$design.matrices[session],
         inv.link        = fit$inv.link,
@@ -604,7 +695,7 @@ get_esa = function(fit){
     esa = calc_esa(
         beta            = coef(fit),
         detectfn        = fit$model.options$detectfn,
-        par.labels      = fit$par.labels,
+        parindx         = fit$parindx,
         fixed           = fit$fixed,
         design.matrices = fit$design.matrices,
         distances       = calc_distances(traps(fit$capthist), fit$mask),
@@ -622,7 +713,8 @@ get_esa = function(fit){
 ## -------------------------------------------------------------------------- ##
 
 #' @title Extract the log-likelihood
-#' @description Extract the log-likelihood from a model fitted with \code{\link{gibbonsecr_fit}}.
+#' @description Extract the log-likelihood from a model fitted with
+#'   \code{\link{gibbonsecr_fit}}.
 #' @inheritParams coef.gibbonsecr_fit
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @example inst/examples/example_fit.r
@@ -635,6 +727,37 @@ logLik.gibbonsecr_fit = function(object, ...){
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
+
+make_newdata = function(fit, submodels = NULL){
+    if(!inherits(fit, "gibbonsecr_fit"))
+        stop("gibbonsecr_fit object required")
+    if(is.null(submodels))
+        submodels = names(fit$model)
+    newdata = do.call(cbind, sapply(submodels, function(submodel){
+        # if no covariates, use model frame with no columns
+        # otherwise make big model frame by collapsing sessions
+        # and get average / reference level for each covariate
+        covnames = all.vars(fit$model[[submodel]])
+        if(length(covnames) == 0){
+            data.frame(matrix(0, nrow = 1, ncol = 0))
+        }else{
+            big.mf = do.call(rbind, lapply(fit$model.frames, function(x){
+                x[[submodel]]
+            }))
+            do.call(cbind, sapply(covnames, function(cov){
+                out = list()
+                out[[cov]] = if(inherits(big.mf[[cov]], "factor")){
+                    levs = levels(big.mf[[cov]])
+                    factor(levs[1], levels = levs)
+                }else{
+                    mean(big.mf[,cov])
+                }
+                as.data.frame(out)
+            }, simplify = FALSE))
+        }
+    }, simplify = FALSE))
+    return(newdata)
+}
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -785,6 +908,26 @@ mask_type = function(mask){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+# extract mask covarates including x and y coordinates
+
+maskcov = function(mask){
+    if(!inherits(mask, "mask")) stop("mask object required")
+    if(ms(mask)){
+        lapply(mask, maskcov)
+    }else{
+        if(is.null(covariates(mask))){
+            as.data.frame(mask)
+        }else{
+            cbind(as.data.frame(mask), covariates(mask))
+        }
+    }
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+# convert a list of capthists, traps or mask to a multi-session object
+
 MS = function(x, session.names = NULL){
 
     ##################################################
@@ -817,7 +960,8 @@ MS = function(x, session.names = NULL){
             y = attr(x, "session")
             if(is.null(y)) NA else y
         })
-    if(length(unique(session.names)) != length(session.names) || any(is.na(session.names)))
+    if(length(unique(session.names)) != length(session.names) ||
+       any(is.na(session.names)))
         session.names = names(x)
     if(is.null(session.names)){
         message("using default session.names")
@@ -827,7 +971,7 @@ MS = function(x, session.names = NULL){
     if(length(session.names) != length(unique(session.names)))
         stop("session.names not unique")
     if(length(session.names) != length(x))
-        if(incorrect.length) stop("session.names of incorrect length")
+        stop("session.names of incorrect length")
     # update session names
     for(i in 1:length(x))
         attr(x[[i]], "session") = session.names[i]
@@ -876,7 +1020,7 @@ n_occasions = function(x){
 
 n_traps = function(x){
     if(!inherits(x, c("capthist","traps")))
-       stop("capthist or traps object required")
+        stop("capthist or traps object required")
     x = MS(x)
     sapply(x, function(x){
         if(inherits(x, "capthist")){
@@ -890,9 +1034,96 @@ n_traps = function(x){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+predict.gibbonsecr_fit = function(object, newdata = NULL, submodels = NULL, se.fit = TRUE, alpha = 0.05, ...){
+
+    if(is.null(submodels))
+        submodels = names(object$parindx)
+    # if newdata not supplied, make default dataframe of covariate values
+    # using averages / factor reference levels
+    if(is.null(newdata))
+        newdata = make_newdata(object, submodels)
+
+    ##################################################
+    ## check bounds
+    # warn if outside observed range
+    # check_newdata(newdata, object)
+
+    ##################################################
+    ## point and interval estimates
+
+    # link scale point and interval estimates
+    delta = sapply(submodels, function(submodel){ # submodel = "D"
+        deltaargs = list(beta     = coef(object),
+                         fit      = object,
+                         newdata  = newdata,
+                         submodel = submodel)
+        if(se.fit){
+            deltaargs$f    = fitted_submodel_values
+            deltaargs$vcov = vcov(object)
+            delta = do.call(delta_method, deltaargs)
+            zvalue = qnorm(1 - alpha / 2)
+            delta$lower = delta$est - zvalue * delta$se
+            delta$upper = delta$est + zvalue * delta$se
+            delta$se = NULL
+        }else{
+            delta = list(est = do.call(fitted_submodel_values, deltaargs))
+        }
+        return(delta)
+    }, simplify = FALSE)
+
+    # apply inverse link
+    delta = sapply(submodels, function(submodel){ # submodel = "D"
+        lapply(delta[[submodel]], object$inv.link[[submodel]])
+    }, simplify = FALSE)
+
+    # reshape
+    index = if(se.fit) c("lower","upper","est") else "est"
+    preds = sapply(index, function(i){ # i="est"
+        x = do.call(cbind, sapply(delta, function(x) x[[i]], simplify = FALSE))
+        rownames(x) = rownames(newdata)
+        return(x)
+    }, simplify = FALSE)
+
+    #     # make model matrices
+    #     # use list("1" = ... to make dummy session
+    #     desmat = list("1" = sapply(submodels, function(submodel){
+    #         make_model_matrix(formula      = object$model[[submodel]],
+    #                           data         = newdata,
+    #                           smooth.setup = object$smooth.setup[[submodel]])
+    #     }, simplify = FALSE))
+    #
+    #     # make submodel arrays
+    #     preds = make_submodel_arrays(
+    #         beta            = coef(object),
+    #         parindx         = object$parindx,
+    #         fixed           = object$fixed,
+    #         design.matrices = desmat,
+    #         inv.link        = object$inv.link,
+    #         S               = c("1" = nrow(newdata)),
+    #         K               = c("1" = 1),
+    #         sessions        = "1",
+    #         submodels       = submodels
+    #     )[["1"]]
+    #
+    #     ##################################################
+    #     # return summary table
+    #
+    #     preds = do.call(cbind, preds)
+    #     colnames(preds) = submodels
+    #     rownames(preds) = rownames(newdata)
+
+    return(preds)
+
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
 #' @title Print a summary of a fitted model
-#' @description Print a summary of the results from a model fitted with \code{\link{gibbonsecr_fit}}.
-#' @param x a \code{gibbonsecr} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)
+#' @description Print a summary of the results from a model fitted with
+#'   \code{\link{gibbonsecr_fit}}.
+#' @param x a \code{gibbonsecr} model object (i.e. an object returned from the
+#'   \code{\link{gibbonsecr_fit}} function)
 #' @param ... additional arguments (not used)
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @example inst/examples/example_fit.r
@@ -941,13 +1172,16 @@ pretty_numbers = function(x, width){
 ## -------------------------------------------------------------------------- ##
 
 #' @title Simulate data from a fitted model
-#' @description Simulate capture history data from a model fitted with \code{\link{gibbonsecr_fit}}
+#' @description Simulate capture history data from a model fitted with
+#'   \code{\link{gibbonsecr_fit}}
 #' @inheritParams coef.gibbonsecr_fit
 #' @param nsim number of data sets to simulate (currently fixed at 1)
 #' @param seed an integer to initialize the random number generator
-#' @param buffer buffer distance for use in generating the underlying population (see Details)
+#' @param buffer buffer distance for use in generating the underlying population
+#'   (see Details)
 #' @param spacing TODO
 #' @param beta TODO
+#' @param debug TODO
 #' @details TODO
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @seealso \link{gibbonsecr_fit}
@@ -968,6 +1202,7 @@ simulate.gibbonsecr_fit = function(object, nsim = 1, seed = NULL, buffer = 6000,
         model         = object$model,
         model.options = object$model.options,
         fixed         = object$fixed,
+        parindx       = object$parindx,
         n_occasions   = n_occasions(object$capthist),
         sessioncov    = sessioncov(object$capthist),
         timecov       = timecov(object$capthist),
@@ -984,7 +1219,7 @@ simulate.gibbonsecr_fit = function(object, nsim = 1, seed = NULL, buffer = 6000,
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-sim_capthist = function(beta, traps, model, model.options, fixed, n_occasions, sessioncov = NULL, timecov = NULL, smooth.setup = NULL, buffer = 6000, spacing = 10, usage.prob = NULL, seed = NULL, debug = FALSE){
+sim_capthist = function(beta, traps, model, model.options, fixed, parindx, n_occasions, sessioncov = NULL, timecov = NULL, smooth.setup = NULL, buffer = 6000, spacing = 10, usage.prob = NULL, seed = NULL, debug = FALSE){
 
     ##################################################
     ## check inputs
@@ -1021,7 +1256,8 @@ sim_capthist = function(beta, traps, model, model.options, fixed, n_occasions, s
             tvc = timevaryingcov(traps)[[session]]
             for(cov in names(tvc))
                 if(length(tvc[[cov]]) != n_occasions[session])
-                    stop("length(timevaryingcov(traps)[['", session, "']][['", cov, "']]) != n_occasions['", session, "']")
+                    stop("length(timevaryingcov(traps)[['", session, "']][['",
+                         cov, "']]) != n_occasions['", session, "']")
         }
     }
 
@@ -1059,7 +1295,7 @@ sim_capthist = function(beta, traps, model, model.options, fixed, n_occasions, s
 
     submodel.arrays = make_submodel_arrays(
         beta            = beta,
-        par.labels      = par.labels,
+        parindx         = parindx,
         fixed           = fixed,
         design.matrices = design.matrices,
         inv.link        = inv.link,
@@ -1352,6 +1588,8 @@ summary_capthist = function(capthist){
     ##################################################
     ## check inputs
 
+    if(inherits(capthist, "gibbonsecr_fit"))
+        capthist = capthist$capthist
     if(!inherits(capthist, "capthist"))
         stop("requires 'capthist' object")
     if(detector(traps(capthist)) != "proximity")
@@ -1363,14 +1601,18 @@ summary_capthist = function(capthist){
 
     cat("Detections:\n")
     detections.table = rbind(
-        ngroups     = n_groups(capthist),
-        ndetections = n_detections(capthist),
-        ndays       = n_occasions(capthist),
-        nposts      = n_traps(capthist)
+        "ngroups"     = n_groups(capthist),
+        "ndetections" = n_detections(capthist),
+        "ndays"       = n_occasions(capthist),
+        "nposts"      = n_traps(capthist)
     )
-    detections.table = cbind(detections.table, total = apply(detections.table, 1, sum))
-    print(detections.table)
-    cat("\nRecaptures =", round(100 * mean(do.call(c, lapply(capthist, as.numeric)), na.rm = TRUE), 1), "%\n\n")
+    detections.table = cbind(detections.table,
+                             total = apply(detections.table, 1, sum))
+    detections.table = cbind(array = c("ngroups","ndetections","ndays","nposts"),
+                             detections.table)
+    print(as.data.frame(detections.table), quote = FALSE, row.names = FALSE)
+    cat("\nRecaptures =", round(100 * mean(do.call(c, lapply(capthist, as.numeric)),
+                                           na.rm = TRUE), 1), "%\n\n")
 
     ##################################################
     ## bearings and distances
@@ -1379,31 +1621,29 @@ summary_capthist = function(capthist){
         any(sapply(capthist, function(x) !is.null(attr(x, aux))))
     })
     if(any(aux.data)){
-        cat("Auxilliary data:")
-        temp = do.call(rbind, sapply(c("bearings", "distances"), function(aux){
-            # aux = "bearings"
-            if(aux.data[aux]){
-                temp = c(
-                    units = unique(do.call(c, lapply(capthist, function(x){
-                        if(is.null(attr(x, aux))) NULL else{
-                            attr(attr(x, aux), "details")$units
-                        }
-                    }))),
-                    type = unique(do.call(c, lapply(capthist, function(x){
-                        if(is.null(attr(x, aux))) NULL else{
-                            attr(attr(x, aux), "details")$type
-                        }
-                    })))
-                )
-                range = paste(round(range(sapply(capthist, function(x){
-                    as.numeric(attr(x, aux))
-                }), na.rm = TRUE), 1), collapse = ", ")
-                temp["range"] = paste0("(", range, ")")
-            }else temp = NULL
-            return(temp)
+        cat("Auxilliary data:\n")
+        auxtable = do.call(rbind, sapply(names(aux.data)[aux.data], function(i){
+            # i="bearings"
+            units = unique(do.call(c, lapply(capthist, function(x){
+                if(is.null(attr(x, i))) NULL else{
+                    attr(attr(x, i), "details")$units
+                }
+            })))
+            type = unique(do.call(c, lapply(capthist, function(x){
+                if(is.null(attr(x, i))) NULL else{
+                    attr(attr(x, i), "details")$type
+                }
+            })))
+            details = if(type == "continuous"){
+                paste("range:", paste(prettyNum(range(sapply(capthist, function(x){
+                    as.numeric(attr(x, i))
+                }), na.rm = TRUE), 1), collapse = " to "))
+            }else{
+                stop("not implemented for interval data")
+            }
+            c(" " = i, Units = units, Type = type, Details = details)
         }, simplify = FALSE))
-        cat("\n")
-        print(temp, quote = FALSE)
+        print(as.data.frame(auxtable), row.names = FALSE, right = FALSE)
     }else{
         cat("\nNo auxilliary data\n")
     }
@@ -1411,28 +1651,33 @@ summary_capthist = function(capthist){
     ##################################################
     ## covariates
 
-    covlevels = covlevels(capthist)
     if(is.null(covlevels)){
         cat("\nNo covariate data\n")
     }else{
         cat("\nCovariates:\n")
-        for(covlevel in names(covlevels)){
-            # covlevel = "timevaryingcov"
-            cat("* ", switch(covlevel,
-                             "sessioncov"     = "array-level",
-                             "trapcov"        = "post-level",
-                             "timecov"        = "day-level",
-                             "timevaryingcov" = "post-day-level"
-            ), "\n", sep = "")
-            # extract covariates data.frame
+        covlevels = covlevels(capthist)
+        covtable = do.call(rbind, sapply(names(covlevels), function(covlevel){
+            # covlevel = "sessioncov"
+            # covlevel = "trapcov"
+        # covlevels = c("sessioncov", "trapcov", "timecov", "timevaryingcov")
+#         covtable = do.call(rbind, sapply(covlevels, function(covlevel){
+            # covariate level
+            level = switch(covlevel,
+                           "sessioncov"     = "array",
+                           "trapcov"        = "post",
+                           "timecov"        = "day",
+                           "timevaryingcov" = "post-day")
+
+            # extract covariates from capthist
             data = switch(covlevel,
                           "sessioncov" = sessioncov(capthist),
                           "timecov"    = timecov(capthist),
                           trapcov(capthist)
             )
+            # if data is a list, collapse it into a single dataframe
             if(!inherits(data, "data.frame"))
                 data = do.call(rbind, data)
-            # trapcov and timevaryingcov
+            # trapcov and timevaryingcov need to be handled differently
             if(!is.null(data)){
                 if(covlevel %in% c("trapcov", "timevaryingcov")){
                     tvc = timevaryingcov(traps(capthist))
@@ -1448,27 +1693,16 @@ summary_capthist = function(capthist){
                     }
                 }
             }
-            # print covariate details
-            w = max(nchar(colnames(data)))
-            for(cov in sort(unique(colnames(data)))){ # cov = colnames(data)[1] ; cov
-                tempdata = unlist(data[, colnames(data) == cov])
-                # name = colnames(data)[j]
-                spaces = paste(rep(" ", w - nchar(cov)), sep = "")
-                class = class(tempdata)
-                cat(" - ", cov, spaces, ": ", class, " (", sep = "")
-                if(class == "factor"){
-                    levels = levels(tempdata)
-                    cat(length(levels) , "levels: ")
-                    if(length(levels) > 4)
-                        levels = c(levels[1:4], "...")
-                    cat(paste(levels, collapse = ", "), sep = "")
-                    # cat("(", [1:min(c(10)))])
-                }else if(class %in% c("integer", "numeric")){
-                    cat("range:", paste(range(tempdata), collapse = ", "))
-                }
-                cat(")\n")
-            }
-        }
+            if(is.null(data) || ncol(data) == 0) return(NULL)
+            # summarise covariate
+            covtable = covtable(data[,covlevels[[covlevel]], drop = FALSE])
+            covtable = cbind(Level = c(level, rep("", nrow(covtable) - 1)), covtable)
+            return(covtable)
+        }))
+        print(as.data.frame(covtable), quote = FALSE, row.names = FALSE,
+              right = FALSE)
+        # rownames(covtable) = ""
+        # print(covtable, quote = FALSE, row.names = FALSE, right = FALSE)
     }
 
     invisible()
@@ -1478,7 +1712,8 @@ summary_capthist = function(capthist){
 ## -------------------------------------------------------------------------- ##
 
 #' @title Summarise a fitted model
-#' @description Summarise the results of a model fitted with \code{\link{gibbonsecr_fit}}.
+#' @description Summarise the results of a model fitted with
+#'   \code{\link{gibbonsecr_fit}}.
 #' @inheritParams coef.gibbonsecr_fit
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @example inst/examples/example_fit.r
@@ -1494,17 +1729,25 @@ summary.gibbonsecr_fit = function(object, ...){
         ## model
 
         cat("Model:\n")
-        cat(" detection func.", switch(object$model.options$detectfn + 1, "half normal", "hazard rate"), "\n")
-        cat(" bearings dist. ", switch(object$model.options$bearings  + 1, "none", "von mises", "wrapped cauchy"), "\n")
-        cat(" distances dist.", switch(object$model.options$distances + 1, "none", "gamma", "log-normal"), "\n")
+        cat(" detection func.", switch(object$model.options$detectfn + 1,
+                                       "half normal",
+                                       "hazard rate"), "\n")
+        cat(" bearings dist. ", switch(object$model.options$bearings  + 1,
+                                       "none",
+                                       "von mises",
+                                       "wrapped cauchy"), "\n")
+        cat(" distances dist.", switch(object$model.options$distances + 1,
+                                       "none",
+                                       "gamma",
+                                       "log-normal"), "\n")
         cat("\n")
 
         ##################################################
         ## mask
 
-        cat("Mask:\n")
-        summary_mask(object$mask, object$capthist)
-        cat("\n")
+        # cat("Mask:\n")
+        # summary_mask(object$mask, object$capthist)
+        # cat("\n")
 
         ##################################################
         ## parameter estimates
@@ -1531,14 +1774,17 @@ summary.gibbonsecr_fit = function(object, ...){
         # extract intercept parameters
         par.table = par.table[grepl("Intercept", rownames(par.table)), , drop = FALSE]
         # update rownames to give submodel name
-        submodels = rownames(par.table) = gsub("\\.\\(Intercept\\)", "", rownames(par.table))
+        submodels = rownames(par.table) = gsub("\\.\\(Intercept\\)", "",
+                                               rownames(par.table))
         # convert to response scale
         for(i in submodels)
             par.table[i,] = object$inv.link[[i]](par.table[i,])
         # pretty numbers
-        par.table = as.data.frame(do.call(rbind, sapply(rownames(par.table), function(i){
-            pretty_numbers(par.table[i,], 6)
-        }, simplify = FALSE)))
+        par.table = as.data.frame(do.call(rbind, {
+            sapply(rownames(par.table), function(i){
+                pretty_numbers(par.table[i,], 6)
+            }, simplify = FALSE)
+        }))
         colnames(par.table) = col.names
         # add units
         par.table$units = sapply(rownames(par.table), function(i){
@@ -1567,9 +1813,12 @@ summary.gibbonsecr_fit = function(object, ...){
         ## esa, aic and run time
 
         esa = get_esa(object)
-        cat("\nEffective sampling area:", round(mean(esa), 1), "sq km (average per array)\n")
+        cat("\nEffective sampling area:", round(mean(esa), 1),
+            "sq km (average per array)\n")
         cat("\nAIC =", AIC(object), "\n")
-        cat("\nTime taken: ", round(object$run.time,1), " ", attr(object$run.time, "units"), " (", object$nlm$iterations, " iterations)\n", sep = "")
+        cat("\nTime taken: ", round(object$run.time,1), " ",
+            attr(object$run.time, "units"), " (", object$nlm$iterations,
+            " iterations)\n", sep = "")
         # cat("\n")
 
     }else{
@@ -1583,16 +1832,38 @@ summary.gibbonsecr_fit = function(object, ...){
 ## -------------------------------------------------------------------------- ##
 
 summary_mask = function(mask, traps = NULL){
+
+    ##################################################
+    ## checks
+
+    if(inherits(mask, "gibbonsecr_fit")){
+        traps = traps(mask$capthist)
+        mask = mask$mask
+    }
+    if(!inherits(mask, "mask"))
+        stop("mask object required")
+    if(!is.null(traps))
+    if(!inherits(mask, "mask"))
+        stop("mask object required")
+
+    ##################################################
+    ## summary stats
+
+    cat("Summary stats:\n")
     if(!is.null(traps)){
-        if(inherits(traps, "capthist"))
-            traps = traps(traps)
-        cat(" buffer    ", mask_buffer(mask, traps), "m\n")
+        cat(" buffer    ", max(mask_buffer(mask, traps)), "m\n")
     }
     cat(" spacing   ", mask_spacing(mask), "m\n")
     cat(" npoints   ", round(mean(mask_npoints(mask))), "(average per array)\n")
     cat(" area      ", round(mean(mask_Area(mask))), "sq km (average per array)\n")
-    maskcov = covlevels(mask)$maskcov
-    cat(" covariates", paste(maskcov, collapse = ", "), "\n")
+
+    ##################################################
+    ## covariates
+
+    cat("\nCovariates:\n")
+    data = do.call(rbind, maskcov(MS(mask)))
+    covtable = covtable(data)
+    print(as.data.frame(covtable), quote = FALSE, row.names = FALSE, right = FALSE)
     invisible()
 }
 
@@ -1676,13 +1947,19 @@ timecov = function(capthist){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-trapcov = function(capthist){
-    if(!inherits(capthist, "capthist"))
-        stop("requires a 'capthist' object")
-    if(ms(capthist)){
-        sapply(traps(capthist), covariates, simplify = FALSE)
+trapcov = function(traps){
+    if(inherits(traps, "capthist"))
+        traps = traps(traps)
+    if(!inherits(traps, "traps"))
+        stop("requires a 'traps' object")
+    if(ms(traps)){
+        sapply(traps, trapcov, simplify = FALSE)
     }else{
-        covariates(traps(capthist))
+        if(is.null(covariates(traps))){
+            as.data.frame(traps)
+        }else{
+            cbind(as.data.frame(traps), covariates(traps))
+        }
     }
 }
 
@@ -1757,7 +2034,8 @@ make_regiontraps = function(traps){
 ## -------------------------------------------------------------------------- ##
 
 #' @title Compute the variance-covariance matrix
-#' @description Compute the variance-covariance from a model fitted with \code{\link{gibbonsecr_fit}}.
+#' @description Compute the variance-covariance from a model fitted with
+#'   \code{\link{gibbonsecr_fit}}.
 #' @inheritParams coef.gibbonsecr_fit
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @example inst/examples/example_fit.r

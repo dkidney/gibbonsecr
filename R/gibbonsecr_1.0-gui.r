@@ -10,8 +10,8 @@
 # download XQuartz-2.7.7.dmg
 
 #' @title Launch the graphical user interface
-#' @description Graphical user interface for fitting acoustic gibbon survey data using
-#'   the gibbonsSECR package
+#' @description Graphical user interface for fitting acoustic gibbon survey data
+#'   using the gibbonsSECR package
 #' @details Currently allows the inclusion of the following components:
 #'   \itemize{
 #'
@@ -31,8 +31,12 @@
 #'   \item{saving and reloading of workspace}
 #'
 #'   }
-#' @param prompt.save.on.exit logical scalar, determining whether a save workspace prompt message should be shown when the GUI window is closed (defaults to \code{FALSE})
-#' @param quit.r.on.exit a logical scalar, determining whether the background R process should quit when the GUI window is closed (defaults to \code{FALSE})
+#' @param prompt.save.on.exit logical scalar, determining whether a save
+#'   workspace prompt message should be shown when the GUI window is closed
+#'   (defaults to \code{FALSE})
+#' @param quit.r.on.exit a logical scalar, determining whether the background R
+#'   process should quit when the GUI window is closed (defaults to
+#'   \code{FALSE})
 #' @section Things still to be added:
 #'
 #'   \itemize{
@@ -74,7 +78,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ##################################################
     ## dynamic R objects
 
-    robj = list2env(list(
+    robj_list = list(
         capthist = NULL,
         mask     = NULL,
         region   = NULL,
@@ -83,7 +87,9 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         habitat3 = NULL,
         fit      = NULL,
         wd       = path.expand(getwd())
-    ))
+    )
+
+    robj = list2env(robj_list)
 
     ##################################################
     ## static R objects
@@ -554,13 +560,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         }
     }
 
-    model_estimates = function(){
+    model_coef = function(){
         result = try(utils::capture.output(cbind(estimate = coef(robj$fit),
                                                  confint(robj$fit))))
         if(inherits(result, "try-error")){
             error_message(result)
         }else{
-            print_to_console(result, "Parameter estimates:", dashes = TRUE)
+            print_to_console(result, "Model coefficients:", dashes = TRUE)
         }
     }
 
@@ -695,6 +701,43 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             model_summary()
         }
         refresh()
+    }
+
+    model_predict = function(){
+        print_to_console("Predictions:\n", tag = "headingTag")
+        print_to_console("\n")
+        newdata = try(choose_pred_data(robj$fit), TRUE)
+        if(inherits(newdata, "try-error")){
+            error_message(newdata)
+        }else{
+            if(!is.null(newdata)){
+                print_to_console("Prediction Data:")
+                print_to_console(utils::capture.output(print(newdata)))
+                print_to_console("\n")
+            }
+        }
+        preds = try(predict(robj$fit, newdata = newdata), TRUE)
+        if(inherits(preds, "try-error")){
+            error_message(preds)
+        }else{
+            row.names = if(is.null(newdata)) FALSE else TRUE
+            if(!is.null(preds$lower)){
+                print_to_console("Lower 95% CL:")
+                print_to_console(utils::capture.output(
+                    print(preds$lower, row.names = row.names)))
+                print_to_console("\n")
+            }
+            if(!is.null(preds$upper)){
+                print_to_console("Upper 95% CL:")
+                print_to_console(utils::capture.output(
+                    print(preds$upper, row.names = row.names)))
+                print_to_console("\n")
+            }
+            print_to_console("Point estimates:")
+            print_to_console(utils::capture.output(
+                print(preds$est, row.names = row.names)))
+            print_dashes()
+        }
     }
 
     model_summary = function(){
@@ -862,18 +905,25 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                     tclvalue(tvar$pcall.radio) = "fixed"
                 }
                 # disable model summary and estimate buttons
-                tkconfigure(tobj$model$summary,   state = "disabled")
-                tkconfigure(tobj$model$estimates, state = "disabled")
+                tkconfigure(tobj$model$summary, state = "disabled")
+                tkconfigure(tobj$model$predict, state = "disabled")
+                tkconfigure(tobj$model$coef,    state = "disabled")
 
                 ## Fit
                 if(!is.null(robj$fit)){
                     # fitted model exists
                     # enable model summary and estimate buttons
                     # enable everything in the plots tab
-                    tkconfigure(tobj$model$summary,   state = "normal")
-                    tkconfigure(tobj$model$estimates, state = "normal")
+                    tkconfigure(tobj$model$summary, state = "normal")
+                    tkconfigure(tobj$model$predict, state = "normal")
+                    tkconfigure(tobj$model$coef,    state = "normal")
+                    tkconfigure(tobj$model$predict, state = "normal")
                     for(i in names(tobj$plots))
                         tkconfigure(tobj$plots[[i]], state = "normal")
+                    # disable components of the model tab depending in the model
+                    # all.covs = do.call(c, lapply(robj$fit$model, all.vars))
+                    # state = if(length(all.covs) == 0) "disabled" else "normal"
+                        # tkconfigure(tobj$model$predict, state = state)
                     # disable components of the plots tab depending in the model
                     for(i in c("bearings", "distances")){ # i = "distances"
                         if(robj$fit$model.options[[i]] == 0){
@@ -974,8 +1024,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 }else{
                     for(j in colnames(robj$FILE@data)){
                         device_popup()
-                        par(mar = c(2,2,2,6), oma = c(0,0,0,0))
-                        plot_shp(robj$FILE, covariate = j)
+                        par(mar = c(2,2,2,7), oma = c(0,0,0,0))
+                        plot_shp(robj$FILE, covariate = j, axes = TRUE)
                         title(j)
                         plot_traps(robj$capthist, add = TRUE)
                     }
@@ -1241,9 +1291,9 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     label.buffer  = tklabel(frame.mask.details, "Buffer (m)")
     label.spacing = tklabel(frame.mask.details, "  Spacing (m)")
     tobj$mask$buffer  = tkentry(frame.mask.details, tvar$buffer,
-                                width = 6)
+                                width = os$fixed.entry.width)
     tobj$mask$spacing = tkentry(frame.mask.details, tvar$spacing,
-                                width = 6)
+                                width = os$fixed.entry.width)
     tkgrid(label.buffer,      row = 1, column = 1)
     tkgrid(tobj$mask$buffer,  row = 1, column = 2)
     tkgrid(label.spacing,     row = 1, column = 3)
@@ -1256,10 +1306,6 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     add_heading(tab.mask, "SHP files")
     frame.mask.shp = tkframe(tab.mask)
     tkpack(frame.mask.shp)
-    # tkgrid(tklabel(frame.mask.shp, "Region"),   row = 1, column = 0)
-    # tkgrid(tklabel(frame.mask.shp, "Habitat1"), row = 2, column = 0)
-    # tkgrid(tklabel(frame.mask.shp, "Habitat2"), row = 3, column = 0)
-    # tkgrid(tklabel(frame.mask.shp, "Habitat3"), row = 4, column = 0)
     for(i in shp.files){
         tobj$mask[[paste0(i, ".label")]]   = tklabel(
             parent       = frame.mask.shp,
@@ -1297,37 +1343,6 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         tkgrid(tobj$mask[[paste0(i, ".plot")]],    row = row, column = 4)
         tkgrid(tobj$mask[[paste0(i, ".use")]],     row = row, column = 5)
     }
-    #     tobj$mask$region.path    = tkentry(frame.mask.shp, tvar$region.path)
-    #     tobj$mask$habitat1.path  = tkentry(frame.mask.shp, tvar$habitat1.path)
-    #     tobj$mask$habitat2.path  = tkentry(frame.mask.shp, tvar$habitat2.path)
-#     tobj$mask$habitat3.path  = tkentry(frame.mask.shp, tvar$habitat3.path)
-#     tobj$mask$region.browse  = tkbutton(frame.mask.shp, "...",
-#                                         browse("region", "shp"), width = 2)
-#     tobj$mask$habitat.browse = tkbutton(frame.mask.shp, "...",
-#                                         browse("habitat", "shp"), width = 2)
-#     tobj$mask$region.import  = tkbutton(frame.mask.shp, "Import",
-#                                         shp_import("region"))
-#     tobj$mask$habitat.import = tkbutton(frame.mask.shp, "Import",
-#                                         shp_import("habitat"))
-#     tobj$mask$region.plot    = tkbutton(frame.mask.shp, "Plot",
-#                                         shp_plot("region"))
-#     tobj$mask$habitat.plot   = tkbutton(frame.mask.shp, "Plot",
-#                                         shp_plot("habitat"))
-#     tobj$mask$region.use  = tkcheck(frame.mask.shp, tvar$region.use)
-#     tobj$mask$habitat.use = tkcheck(frame.mask.shp, tvar$habitat.use)
-#     tkgrid(tobj$mask$region.path,    row = 1, column = 1)
-#     tkgrid(tobj$mask$habitat.path,   row = 2, column = 1)
-#     tkgrid(tobj$mask$region.browse,  row = 1, column = 2)
-#     tkgrid(tobj$mask$habitat.browse, row = 2, column = 2)
-#     tkgrid(tobj$mask$region.import,  row = 1, column = 3)
-#     tkgrid(tobj$mask$habitat.import, row = 2, column = 3)
-#     tkgrid(tobj$mask$region.plot,    row = 1, column = 4)
-#     tkgrid(tobj$mask$habitat.plot,   row = 2, column = 4)
-#     tkgrid(tobj$mask$region.use,     row = 1, column = 5)
-#     tkgrid(tobj$mask$habitat.use,    row = 2, column = 5)
-
-    # tkconfigure(tobj$mask$region.path,  validate = "focus", validatecommand = validate_entry("region", "mask"))
-    # tkconfigure(tobj$mask$habitat.path, validate = "focus", validatecommand = validate_entry("habitat", "mask"))
 
     ##################################################
     ## mask buttons
@@ -1444,9 +1459,9 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     # configure entry width and radio button variables
     for(i in submodels){
-        tkconfigure(tobj$model[[paste0(i, ".fixed")]],
-                    width = 6)
         for(j in c("formula","fixed")){
+            tkconfigure(tobj$model[[paste0(i, ".", j)]],
+                        width = os[[paste0(j, ".entry.width")]])
             tkconfigure(tobj$model[[paste(i, j, "radio", sep = ".")]],
                         variable = tvar[[paste(i, "radio", sep = ".")]])
         }
@@ -1458,11 +1473,19 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     add_separator(tab.model)
     frame.model.buttons = tkframe(tab.model)
     tkpack(frame.model.buttons)
-    tobj$model$fit       = tkbutton(frame.model.buttons, "Fit",       model_fit)
-    tobj$model$summary   = tkbutton(frame.model.buttons, "Summary",   model_summary)
-    tobj$model$estimates = tkbutton(frame.model.buttons, "Estimates", model_estimates)
-    tkgrid(tobj$model$fit, tobj$model$summary, tobj$model$estimates)
+    tobj$model$fit     = tkbutton(frame.model.buttons, "Fit",     model_fit)
+    tobj$model$summary = tkbutton(frame.model.buttons, "Summary", model_summary)
+    tobj$model$predict = tkbutton(frame.model.buttons, "Predict", model_predict)
+    tobj$model$coef    = tkbutton(frame.model.buttons, "Coef",    model_coef)
+#     tkgrid(tobj$model$fit,     row = 1, column = 1)
+#     tkgrid(tobj$model$summary, row = 1, column = 2)
+#     tkgrid(tobj$model$coef,    row = 2, column = 1)
+#     tkgrid(tobj$model$predict, row = 2, column = 2)
 
+    tkgrid(tobj$model$fit,
+           tobj$model$summary,
+           tobj$model$coef,
+           tobj$model$predict)
 
     ##################################################
     ##################################################
@@ -1532,7 +1555,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkpack(sframe.plots.bearings, side = "left")
     label.bearings.ci.method = tklabel(sframe.plots.bearings, "95% CI method")
     tobj$plots$bearings.ci.method = tkcombo(sframe.plots.bearings, tvar$bearings.ci.method,
-                                           values = values$ci.method)
+                                           values$ci.method)
     tobj$plots$bearings.plot      = tkbutton(frame.plots.bearings, "Plot", plot_bearings)
     tkgrid(label.bearings.ci.method,      row = 1, column = 1)
     tkgrid(tobj$plots$bearings.ci.method, row = 1, column = 2)
@@ -1549,7 +1572,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkpack(sframe.plots.distances, side = "left")
     label.distances.ci.method = tklabel(sframe.plots.distances, "95% CI method")
     tobj$plots$distances.ci.method = tkcombo(sframe.plots.distances, tvar$distances.ci.method,
-                                           values = values$ci.method)
+                                           values$ci.method)
     tobj$plots$distances.plot      = tkbutton(frame.plots.distances, "Plot", plot_distances)
     tkgrid(label.distances.ci.method,      row = 1, column = 1)
     tkgrid(tobj$plots$distances.ci.method, row = 1, column = 2)
@@ -1573,19 +1596,26 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ##################################################
     ## CONSOLE
 
-    console = tktext(rhs, fg = os$console.fg, bg = os$console.bg, borderwidth = 1, padx = 10, pady = 10, relief = "sunken")
+    console = tktext(rhs, fg = os$console.fg, bg = os$console.bg, borderwidth = 1,
+                     padx = 10, pady = 10, relief = "sunken")
     scrollbar = ttkscrollbar(rhs, command = function(...) tkyview(console, ...))
-    tkconfigure(console, yscrollcommand = function(...) tkset(scrollbar, ...), state = "disabled")
+    tkconfigure(console, yscrollcommand = function(...) tkset(scrollbar, ...),
+                state = "disabled")
     tkpack(scrollbar, side = "right", fill = "y")
     tkpack(console, fill = "both", expand = TRUE, padx = 0, pady = 0)
     tcl("tk_textCopy", console)
 
     # font tags
-    tktag.configure(console, "normalTag",  foreground = os$console.fg,    font = os$console.normal.font)
-    tktag.configure(console, "headingTag", foreground = os$console.fg,    font = os$console.heading.font)
-    tktag.configure(console, "successTag", foreground = "springgreen3",   font = os$console.normal.font)
-    tktag.configure(console, "warningTag", foreground = "orange",         font = os$console.normal.font)
-    tktag.configure(console, "errorTag",   foreground = "firebrick1",     font = os$console.normal.font)
+    tktag.configure(console, "normalTag",  foreground = os$console.fg,
+                    font = os$console.normal.font)
+    tktag.configure(console, "headingTag", foreground = os$console.fg,
+                    font = os$console.heading.font)
+    tktag.configure(console, "successTag", foreground = "springgreen3",
+                    font = os$console.normal.font)
+    tktag.configure(console, "warningTag", foreground = "orange",
+                    font = os$console.normal.font)
+    tktag.configure(console, "errorTag",   foreground = "firebrick1",
+                    font = os$console.normal.font)
 
     # left click to open console popup menu
     tkbind(console, "<ButtonPress-3>", console_popup)
@@ -1609,8 +1639,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     menu$help.examples = tkmenu(menu$help, tearoff = FALSE)
     tkadd(menu$help, "cascade", label = "Example data", menu = menu$help.examples)
     tkadd(menu$help.examples, "command", label = "N.annamensis", command = load_N_annamensis)
-    # tkadd(menu$help.examples, "command", label = "N.siki",       command = load_N_siki)
-    # tkadd(menu$help.examples, "command", label = "Peafowl",      command = load_peafowl)
+    # tkadd(menu$help.examples, "command", label = "N.siki", command = load_N_siki)
+    tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
     tkadd(menu$help, "command", label = "User manual", command = open_manual_html)
     tkadd(menu$help, "command", label = "About gibbonsecr", command = about)
 

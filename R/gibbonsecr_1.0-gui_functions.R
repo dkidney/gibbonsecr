@@ -2,13 +2,13 @@
 ## gui functions which are independent of the gui environment
 ## -------------------------------------------------------------------------- ##
 
-center_window = function(tt){
-    winw = as.numeric(tclvalue(tkwinfo("width", tt)))
-    winh = as.numeric(tclvalue(tkwinfo("height", tt)))
-    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
-    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
-    tkwm.geometry(tt, paste0(winw, "x", winh, "+", round((scrw - winw) / 2), "+", round((scrh - winh) / 2)))
-}
+# center_window = function(tt){
+#     winw = as.numeric(tclvalue(tkwinfo("width", tt)))
+#     winh = as.numeric(tclvalue(tkwinfo("height", tt)))
+#     scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+#     scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+#     tkwm.geometry(tt, paste0(winw, "x", winh, "+", round((scrw - winw) / 2), "+", round((scrh - winh) / 2)))
+# }
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -34,7 +34,6 @@ check_covariate_classes = function(x){
     scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
     scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
     tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
-    # tkwm.geometry(tt, "")
     tcl("wm", "attributes", tt, topmost = TRUE)
     tcl("wm", "attributes", tt, topmost = FALSE)
     tkwm.geometry(tt, "")
@@ -161,11 +160,11 @@ choose_covariate_values = function(x){
                sticky = "w")
         if(factor[j]){
             value[[j]] = tclVar(levels(x[[j]])[1])
-            widget[[j]] = tkcombo(upper, textvariable = value[[j]],
+            widget[[j]] = ttkcombobox(upper, textvariable = value[[j]],
                                       values = levels(x[[j]]))
         }else{
             value[[j]] = tclVar(mean(x[[j]]))
-            widget[[j]] = tkentry(upper, textvariable = value[[j]])
+            widget[[j]] = ttkentry(upper, textvariable = value[[j]])
         }
         tkgrid(widget[[j]], row = j, column = 2, sticky = "w")
     }
@@ -249,13 +248,150 @@ choose_covariate_values = function(x){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+choose_pred_data = function(fit, submodels = NULL){
+
+    if(length(do.call(c, sapply(fit$model, all.vars))) == 0){
+        return(NULL)
+    }
+
+    ##################################################
+    ## toplevel window and main frame
+
+    tt = tktoplevel()
+    tkwm.title(tt, "Choose prediction data")
+    w = 400
+    h = 121
+    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+    tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+    tcl("wm", "attributes", tt, topmost = TRUE)
+    tcl("wm", "attributes", tt, topmost = FALSE)
+    tkwm.geometry(tt, "")
+    tkfocus(tt)
+    main = ttkframe(tt)
+
+    ##################################################
+    ## upper frame for choosing covariate values
+
+    upper = ttkframe(main, padding = c(5,5))
+    tkgrid(ttklabel(upper, text = "Name"),     row = 0, column = 1, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Value(s)"), row = 0, column = 2, sticky = "w")
+
+    ##################################################
+    ## summarise covariates
+
+    if(is.null(submodels))
+        submodels = names(fit$parindx) ; submodels
+    covnames = sapply(submodels, function(i){ # submodel = "sigma"
+        bigmf = do.call(rbind, lapply(fit$model.frames, function(x) x[[i]]))
+        sapply(bigmf, function(x){
+            if(inherits(x, "factor")) levels(x) else (range(x))
+        }, simplify = FALSE)
+    }, simplify = FALSE)
+    covnames = do.call(c, unname(covnames))
+    covnames = covnames[!duplicated(names(covnames))]
+    covnames = covnames[order(names(covnames))]
+
+    ##################################################
+    ## add a combo / entry for each covariate
+    box = boxvar = list()
+    for(i in names(covnames)){
+        if(inherits(covnames[[i]], "character")){
+            boxvar[[i]] = tclVar(covnames[[i]][1])
+            box[[i]] = ttkcombobox(parent       = upper,
+                                   textvariable = boxvar[[i]],
+                                   values       = c(covnames[[i]], "all"),
+                                   width        = 30)
+        }else{
+            values[[i]] = tclVar(mean(covnames[[i]]))
+            box[[i]] = ttkentry(parent       = upper,
+                                textvariable = values[[i]],
+                                width        = 30)
+        }
+        row = which(names(covnames) == i)
+        tkgrid(ttklabel(upper, text = i), row = row, column = 1, sticky = "w")
+        tkgrid(box[[i]], row = row, column = 2, sticky = "w")
+
+    }
+
+    ##################################################
+    ## lower frame for buttons
+
+    lower = ttkframe(main, padding = c(5,5))
+    done = tclVar(0)
+    ok = ttkbutton(
+        lower, text = "OK", state = "normal", width = 10,
+        command = function(){
+            # throw error if numeric variable outside observed range
+            for(i in names(covnames)){
+                if(!inherits(covnames[[i]], "character")){
+                    x = as.numeric(tclvalue(boxvar[[i]]))
+                    if(x < covnames[[i]][1] || x > covnames[[i]][2]){
+                        tkmessageBox(title = "Error", icon = "error", type = "ok",
+                                     message = paste("value for", i,
+                                                     "is outside observed range"))
+                        stop(.call = FALSE)
+                    }
+                }
+            }
+            tclvalue(done) = 1
+        }
+    )
+    cancel = ttkbutton(
+        lower, text = "Cancel", state = "normal", width = 10,
+        command = function(){
+            tclvalue(done) = 2
+        }
+    )
+
+    ##################################################
+    ## packing etc.
+
+    tkgrid(ok, cancel)
+    tkpack(upper)
+    tkpack(lower)
+    tkpack(main)
+    tkwm.resizable(tt, 0, 0)
+    tkwm.protocol(tt, "WM_DELETE_WINDOW", function(){
+        tclvalue(done) = 2
+    })
+    tkwait.variable(done)
+
+    ##################################################
+    # return prediction data
+
+    preds = if(tclvalue(done) == "1"){
+        do.call(expand.grid, sapply(names(covnames), function(i){
+            if(inherits(covnames[[i]], "character")){
+                if(tclvalue(boxvar[[i]]) == "all"){
+                    factor(covnames[[i]], levels = covnames[[i]])
+                }else{
+                    factor(tclvalue(boxvar[[i]]), levels = covnames[[i]])
+                }
+            }else{
+                as.numeric(tclvalue(boxvar[[i]]))
+            }
+        }, simplify = FALSE))
+    }else{
+        NULL
+    }
+
+    tkdestroy(tt)
+    return(preds)
+
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
 # platform-specific appearance setting for tcltk widgets
 # .Tcl("ttk::style theme names")
 # sort(as.character(tkfont.families()))
 
 gui_appearance_settings = function(){
 
-    .Tcl(paste("source", system.file("doc/tcl/gibbonsecr_theme.tcl", package = "gibbonsecr")))
+    .Tcl(paste("source", system.file("doc/tcl/gibbonsecr_theme.tcl",
+                                     package = "gibbonsecr")))
 
     general = list(
         frame.padding = c(5,5),
@@ -270,14 +406,17 @@ gui_appearance_settings = function(){
             WIDTH  = 1000,
             HEIGHT = 525,
             lhs.width = 335,
-            rhs.width = 525 - 335,
+            rhs.width = 1000 - 335,
             button.width = 9,
             combo.width  = 15,
             entry.width  = 15,
+            fixed.entry.width  = 6,
+            formula.entry.width  = 25,
             grid.padx    = 1,
             grid.pady    = 1,
             normal.font          = tkfont.create(size = 10, family = "Trebuchet MS"),
-            heading.font         = tkfont.create(size = 10, family = "Trebuchet MS", slant = "roman", weight = "bold"),
+            heading.font         = tkfont.create(size = 10, family = "Trebuchet MS",
+                                                 slant = "roman", weight = "bold"),
             console.normal.font  = tkfont.create(size = 9,  family = "Lucida Console"),
             console.heading.font = tkfont.create(size = 10, family = "Lucida Console"),
             console.bold.font    = tkfont.create(size = 9,  family = "Lucida Console", slant = "roman")
@@ -291,20 +430,25 @@ gui_appearance_settings = function(){
     }else{
 
         specific = list(
-            WIDTH  = 1000,
-            HEIGHT = 550,
+            WIDTH  = 1250,
+            HEIGHT = 675,
             lhs.width = 410,
-            rhs.width = 575 - 410,
+            rhs.width = 1250 - 410,
             button.width = 8,
             combo.width  = 12,
             entry.width  = 15,
+            fixed.entry.width  = 6,
+            formula.entry.width  = 25,
             grid.padx    = 2,
             grid.pady    = 2,
-            heading.font         = tkfont.create(size = 10, family = "Lucida Grande", slant  = "roman", weight = "bold"),
-            console.normal.font  = tkfont.create(size = 10, family = "Courier"),
-            console.heading.font = tkfont.create(size = 11, family = "Courier"),
-            console.bold.font    = tkfont.create(size = 10, family = "Courier", slant  = "roman", weight = "bold")
-)
+            heading.font         = tkfont.create(size = 10, family = "Lucida Grande",
+                                                 slant  = "roman", weight = "bold"),
+            console.normal.font  = tkfont.create(size = 10, family = "Courier New",
+                                                 weight = "bold"),
+            console.heading.font = tkfont.create(size = 11, family = "Courier New",
+                                                 weight = "bold"),
+            console.bold.font    = tkfont.create(size = 10, family = "Courier New",                                               weight = "bold")
+        )
         .Tcl("ttk::style configure TButton       -padding {0 3}")
         .Tcl("ttk::style configure TEntry        -padding {5 4}")
         .Tcl("ttk::style configure TCombobox     -padding {5 4}")

@@ -386,8 +386,10 @@ check_mask = function(mask, capthist, mask.options = list()){
             if(any(missing)){
                 message("removing mask points with missing covariate values")
                 for(session in session(mask)){ # session = "2"
-                    keep = !apply(covariates(mask[[session]]), 1, function(x) any(is.na(x)))
-                    mask[[session]] = subset_mask(mask = mask[[session]], index = keep)
+                    keep = !apply(covariates(mask[[session]]), 1, function(x){
+                        any(is.na(x))
+                    })
+                    mask[[session]] = subset_mask(mask[[session]], keep)
                 }
             }
         # }
@@ -642,7 +644,7 @@ check_posts = function(posts, detections, details){
 # this needs some work
 # allow some start values to be fixed
 
-check_start_values = function(start, capthist, mask, model.options, fixed, S, K, M, a, usage, design.matrices, par.labels, inv.link, mask.info, CV = 0.3){
+check_start_values = function(start, capthist, mask, model.options, fixed, S, K, M, a, usage, design.matrices, par.labels, parindx, inv.link, mask.info, CV = 0.3){
 
     # start = NULL
     # start = c(D = log(0.5))
@@ -700,7 +702,7 @@ check_start_values = function(start, capthist, mask, model.options, fixed, S, K,
             esa = calc_esa(
                 detectfn        = model.options$detectfn,
                 beta            = start,
-                par.labels      = par.labels,
+                parindx         = parindx,
                 fixed           = fixed,
                 design.matrices = design.matrices,
                 distances       = sapply(mask.info, function(x) x[["distances"]], simplify = FALSE),

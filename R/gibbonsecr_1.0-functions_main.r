@@ -61,8 +61,8 @@ calc_detprob = function(detectfn, g0, sigma, z, distances, usage, M, S, K){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-calc_esa = function(detectfn, beta, par.labels, fixed, design.matrices, distances, usage, inv.link, S, K, M, a){
-    submodel.arrays = make_submodel_arrays(beta, par.labels, fixed, design.matrices, inv.link, S, K)
+calc_esa = function(detectfn, beta, parindx, fixed, design.matrices, distances, usage, inv.link, S, K, M, a){
+    submodel.arrays = make_submodel_arrays(beta, parindx, fixed, design.matrices, inv.link, S, K)
     session.names = names(design.matrices)
     esa = sapply(session.names, function(session){ # session = session.names[1] ; session
         pdot = calc_pdot(
@@ -182,16 +182,22 @@ cv_to_pdfpar = function(cv = 0.3, which = c("vm","gamma","lnorm")){
 # @export
 
 delta_method = function(f, beta, vcov, ...){
+
+    ##################################################
+    ## checks
+
     # check that f is a function of beta
-    if(!"beta" %in% names(formals(f))) stop("f must be a function of vector 'beta'")
+    if(!"beta" %in% names(formals(f)))
+        stop("f must be a function of vector 'beta'")
     # check that f doesn't have a betanames argument
-    if("betanames" %in% names(formals(f))) stop("f can't be a function of 'betanames'")
-    # force evaluate dots
-    dots = list(...) # dots = list(r = 0:10)
+    if("betanames" %in% names(formals(f)))
+        stop("f can't be a function of 'betanames'")
 
     ##################################################
     ## arguments to new function g
 
+    # force evaluate dots
+    dots = list(...) # dots = list(r = 0:10)
     # expand beta vector to a series of individual betas
     beta.args = paste("beta", 1:length(beta), sep = "") # beta.args
     # add betanames and dots
@@ -200,8 +206,6 @@ delta_method = function(f, beta, vcov, ...){
     if(length(dots) > 0) all.args = c(all.args, names(dots)) # all.args
     # collapse
     all.args.collapsed = paste(all.args, collapse = ", ") # args
-
-    # return(args)
 
     ##################################################
     ## evaluate all arguments in the current environment
@@ -225,6 +229,7 @@ delta_method = function(f, beta, vcov, ...){
 
     # extract body from function f
     body = paste(as.character(body(f)), collapse = "\n") # cat(body)
+
     # remove leading/trailing braces/returns
     for(i in c("^\\{","^\n","\\}$","\n$"))
         body = gsub(i, "", body) # cat(body)
@@ -232,15 +237,10 @@ delta_method = function(f, beta, vcov, ...){
     newline = paste0("beta = setNames(c(", paste(beta.args, collapse = ", "), "), betanames)\n") # cat(newline)
     body = paste0(newline, body) # cat(body)
 
-    # cat(body)
-    # stop()
-
     ##################################################
     ## make new function g
 
     g = eval(parse(text = paste0("function(", all.args.collapsed, "){\n", body, "\n}")))  # g
-
-    # return(g)
 
     ##################################################
     ## make a call expression for new function g
@@ -250,8 +250,6 @@ delta_method = function(f, beta, vcov, ...){
 
     ##################################################
     ## estimates and estimated variances
-
-    # return(thisenv)
 
     # est = eval(expr)
     est  = stats::numericDeriv(expr = expr, theta = beta.args, rho = thisenv)
@@ -394,6 +392,7 @@ get_inv_link = function(model, fixed, model.options){
 #' @param fitting.options TODO
 #' @param start TODO
 #' @param trace TODO
+#' @param debug TODO
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @example inst/examples/example_fit.r
 #' @export
@@ -441,13 +440,13 @@ gibbonsecr_fit = function(capthist, model = list(), mask = NULL, fixed = list(),
    # model.frames = model.frames ; smooth.setup = NULL ; sessions = NULL ; submodels = NULL
 
     par.labels = make_par_labels(design.matrices, fixed)
+    parindx    = make_parindx(par.labels[,"unique"])
     inv.link   = get_inv_link(model, fixed, model.options)
     detected   = get_captures(capthist, summarise = "occasions")
     data       = prepare_data(capthist, model.options)
     mask.info  = prepare_mask_info(mask, capthist, model.options)
     usage      = usage(traps(capthist))
-    start      = check_start_values(start, capthist, mask, model.options, fixed, S, K, M, a, usage, design.matrices, par.labels, inv.link, mask.info)
-    parindx    = make_parindx(names(start))
+    start      = check_start_values(start, capthist, mask, model.options, fixed, S, K, M, a, usage, design.matrices, par.labels, parindx, inv.link, mask.info)
     # use default fitting options if not supplied
     default.fitting.options = list(hessian = TRUE, iterlim = 1000, LLonly = FALSE)
     fitting.options = replace(default.fitting.options, names(fitting.options), fitting.options)
@@ -460,7 +459,7 @@ gibbonsecr_fit = function(capthist, model = list(), mask = NULL, fixed = list(),
         data            = data,
         mask.info       = mask.info,
         design.matrices = design.matrices,
-        par.labels      = par.labels,
+        parindx         = parindx,
         fixed           = fixed,
         inv.link        = inv.link,
         model.options   = model.options,
@@ -798,12 +797,12 @@ hr = function(x, theta, ...){
 #' library(sp)
 #' library(secr)
 #' wd = setwd(system.file("extdata/N.annamensis", package = "gibbonsecr"))
-#' op = par(no.readonly = TRUE)
+#' pop = par(no.readonly = TRUE)
 #'
 #' capthist = import_data(
-#'     detections = "example_detections_file.csv",
-#'     posts      = "example_posts_file.csv",
-#'     covariates = "example_covariates_file.csv"
+#'     detections = "detections.csv",
+#'     posts      = "posts.csv",
+#'     covariates = "covariates.csv"
 #' )
 #' class(capthist)
 #'
@@ -814,7 +813,7 @@ hr = function(x, theta, ...){
 #' plot(traps(capthist), add = TRUE)
 #'
 #' setwd(wd)
-#' par(op)
+#' par(pop)
 #' @export
 
 import_data = function(detections, posts, covariates = NULL, details = list()){
@@ -1105,46 +1104,52 @@ import_shp = function(filepath, type = c("region","habitat"), verbose = FALSE, .
         stop("can't find file - check file path", call. = FALSE)
     x = try({
         raster::shapefile(filepath, verbose = verbose, ...)
-#         rgdal::readOGR(
-#             dsn     = dirname(filepath),
-#             layer   = tools::file_path_sans_ext(basename(filepath)),
-#             verbose = verbose,
-#             ...
-#         )
     }, TRUE)
     if(inherits(x, "try-error"))
         stop("couldn't import shapefile", call. = FALSE)
-    if(!inherits(x, c("SpatialPolygons")))
-        stop("can't convert shp file to SpatialPolygons class")
+    if(!inherits(x, c("SpatialPolygons", "SpatialPoints")))
+        stop("only works for polygons and points")
+
+    ##################################################
+    ## check data
+
+    if(inherits(x, c("SpatialPolygonsDataFrame", "SpatialPointsDataFrame"))){
+        for(j in 1:ncol(x@data)){
+            if(inherits(x@data[[j]], c("character","logical"))){
+                x@data[[j]] = as.factor(x@data[[j]])
+            }
+        }
+    }
+
 
     ##################################################
     ## check habitat
 
-    if(type == "habitat"){
-        if(length(x@polygons) == 1)
-            stop("only one layer in habitat shp file")
-        # convert to SpatialPolygonsDataFrame if necessary
-        # and use polygon IDs as habitat labels if no habitat column
-        spdf = inherits(x, "SpatialPolygonsDataFrame")
-        habcol = spdf && "habitat" %in% colnames(x@data)
-        if(!spdf || !habcol){
-            message("- no habitat variable in shp data so using polygon IDs")
-            IDs = sapply(x@polygons, function(x) x@ID)
-            data = data.frame(habitat = factor(IDs), row.names = IDs)
-            colnames(data) = tools::file_path_sans_ext(basename(filepath))
-            if(!spdf)
-                x = sp::SpatialPolygonsDataFrame(x, data)
-            if(!habcol)
-                x@data = data
-        }
-    }
+#     if(type == "habitat"){
+#         if(length(x@polygons) == 1)
+#             stop("only one layer in habitat shp file")
+#         # convert to SpatialPolygonsDataFrame if necessary
+#         # and use polygon IDs as habitat labels if no habitat column
+#         spdf = inherits(x, "SpatialPolygonsDataFrame")
+#         habcol = spdf && "habitat" %in% colnames(x@data)
+#         if(!spdf || !habcol){
+#             message("- no habitat variable in shp data so using polygon IDs")
+#             IDs = sapply(x@polygons, function(x) x@ID)
+#             data = data.frame(habitat = factor(IDs), row.names = IDs)
+#             colnames(data) = tools::file_path_sans_ext(basename(filepath))
+#             if(!spdf)
+#                 x = sp::SpatialPolygonsDataFrame(x, data)
+#             if(!habcol)
+#                 x@data = data
+#         }
+#     }
 
     ##################################################
     ## check region
 
-    if(type == "region"){
-
-    }
+#     if(type == "region"){
+#
+#     }
 
     return(x)
 }
@@ -1435,17 +1440,17 @@ make_parindx = function(betanames){
 # makes a list of all parameter values - both fixed and current estimated parameter values in fitting process
 # each element represents a different submodel
 
-make_par_list = function(beta, par.labels, fixed){
-    submodel.names = unique(par.labels[,"submodel"])
-    par.list = sapply(submodel.names, function(submodel){ # submodel = submodel.names[1] ; submodel
-        i = par.labels[,"submodel"] == submodel
-        temp = beta[i]
-        names(temp) = par.labels[i,"unique"]
-        return(temp)
-    }, simplify = FALSE)
-    par.list = c(par.list, fixed)
-    return(par.list)
-}
+# make_par_list = function(beta, par.labels, fixed){
+#     submodel.names = unique(par.labels[,"submodel"])
+#     parlist = sapply(submodel.names, function(submodel){ # submodel = submodel.names[1] ; submodel
+#         i = par.labels[,"submodel"] == submodel
+#         temp = beta[i]
+#         names(temp) = par.labels[i,"unique"]
+#         return(temp)
+#     }, simplify = FALSE)
+#     parlist = c(parlist, fixed)
+#     return(parlist)
+# }
 
 make_parlist = function(beta, parindx, fixed){
     c(lapply(parindx, function(x){
@@ -1512,18 +1517,15 @@ make_smooth_setup = function(model, model.frames){
 # spatial location, occasion, post, etc.
 
 # make_submodel_arrays = function(beta, par.labels, fixed, design.matrices, inv.link, n, S, K){
-make_submodel_arrays = function(beta, par.labels, fixed, design.matrices, inv.link, S, K, sessions = NULL, submodels = NULL){
+make_submodel_arrays = function(beta, parindx, fixed, design.matrices, inv.link, S, K, sessions = NULL, submodels = NULL){
     # beta = start
-    par.list = make_par_list(beta, par.labels, fixed)
-
+    # parlist = make_par_list(beta, parindx, fixed)
+    parlist = make_parlist(beta, parindx, fixed)
     if(is.null(sessions)) sessions = names(design.matrices)
-    if(is.null(submodels)) submodels = names(par.list)
-
-    sapply(sessions, function(session){
-        # session = sessions[1] ; session
-        sapply(submodels, function(submodel){
-            # submodel = "g0"
-            response.scale = inv.link[[submodel]](as.numeric(design.matrices[[session]][[submodel]] %*% par.list[[submodel]]))
+    if(is.null(submodels)) submodels = names(parlist)
+    sapply(sessions, function(session){ # session = sessions[1] ; session
+        sapply(submodels, function(submodel){ # submodel = "g0"
+            response.scale = inv.link[[submodel]](as.numeric(design.matrices[[session]][[submodel]] %*% parlist[[submodel]]))
             if(submodel %in% c("D","pcall")){
                 # density uses a M by 1 matrix
                 # pcall uses a S by 1 matrix
@@ -1546,26 +1548,26 @@ make_submodel_arrays = function(beta, par.labels, fixed, design.matrices, inv.li
 # submodel values need to be stored in arrays since values can change with
 # spatial location, occasion, post, etc.
 
-make_submodel_arrays2 = function(beta, parindx, fixed, design.matrices, inv.link, S, K){
-    # beta = start
-    parlist = make_parlist(beta, parindx, fixed)
-    sapply(names(design.matrices), function(session){
-        # session = names(design.matrices)[1] ; session
-        sapply(names(design.matrices[[session]]), function(submodel){
-            # submodel = "g0"
-            response.scale = inv.link[[submodel]](as.numeric(design.matrices[[session]][[submodel]] %*% parlist[[submodel]]))
-            if(submodel %in% c("D","pcall")){
-                # density uses a M by 1 matrix
-                # pcall uses a S by 1 matrix
-                matrix(response.scale, ncol = 1)
-            }else{
-                # the rest use S by K matrices
-                # fill by row, since design matrices are ordered by S then K
-                matrix(response.scale, nrow = S[session], ncol = K[session], byrow = TRUE)
-            }
-        }, simplify = FALSE)
-    }, simplify = FALSE)
-}
+# make_submodel_arrays2 = function(beta, parindx, fixed, design.matrices, inv.link, S, K){
+#     # beta = start
+#     parlist = make_parlist(beta, parindx, fixed)
+#     sapply(names(design.matrices), function(session){
+#         # session = names(design.matrices)[1] ; session
+#         sapply(names(design.matrices[[session]]), function(submodel){
+#             # submodel = "g0"
+#             response.scale = inv.link[[submodel]](as.numeric(design.matrices[[session]][[submodel]] %*% parlist[[submodel]]))
+#             if(submodel %in% c("D","pcall")){
+#                 # density uses a M by 1 matrix
+#                 # pcall uses a S by 1 matrix
+#                 matrix(response.scale, ncol = 1)
+#             }else{
+#                 # the rest use S by K matrices
+#                 # fill by row, since design matrices are ordered by S then K
+#                 matrix(response.scale, nrow = S[session], ncol = K[session], byrow = TRUE)
+#             }
+#         }, simplify = FALSE)
+#     }, simplify = FALSE)
+# }
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -1573,9 +1575,9 @@ make_submodel_arrays2 = function(beta, parindx, fixed, design.matrices, inv.link
 # evaluates the log-likelihood values separately for data from each array
 # returns the sum of the loglik values
 
-negloglik_wrapper = function(beta, par.labels, fixed, design.matrices, inv.link, data, mask.info, model.options, usage, detected, R, n, S, K, M, a, trace = FALSE){
+negloglik_wrapper = function(beta, parindx, fixed, design.matrices, inv.link, data, mask.info, model.options, usage, detected, R, n, S, K, M, a, trace = FALSE){
     # beta = start
-    submodel.arrays = make_submodel_arrays(beta, par.labels, fixed, design.matrices, inv.link, S, K)
+    submodel.arrays = make_submodel_arrays(beta, parindx, fixed, design.matrices, inv.link, S, K)
     # lapply(submodel.arrays[[1]], head) ; lapply(submodel.arrays[[1]], dim)
     nll = sum(sapply(1:R, function(i){ # i=1
         negloglik_rcpp(

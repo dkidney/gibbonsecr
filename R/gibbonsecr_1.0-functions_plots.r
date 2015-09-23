@@ -1,11 +1,16 @@
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-add_category_legend = function(names, col, ...){
-    pop = par(no.readonly = TRUE)
+add_category_legend = function(legend, col, ...){
+    args = c(as.list(environment()), list(...))
+    if(is.null(args$x))     args$x = 'right'
+    if(is.null(args$yjust)) args$yjust = 0.5
+    if(is.null(args$pch))   args$pch = 15
+    if(is.null(args$inset)) args$inset = -0.1
+    xpd = par("xpd")
+    on.exit(par(xpd = xpd))
     par(xpd = TRUE)
-    legend(par("usr")[2], mean(par("usr")[3:4]), legend = names, col = col, pch = 15, yjust = 0.5, ...)
-    par(pop)
+    do.call("legend", args)
     invisible()
 }
 
@@ -25,9 +30,11 @@ add_category_legend = function(names, col, ...){
 # plot(x, y, pch = 19, cex = 0.5, col = cols)
 # add_number_legend(zlim, col, yscale = 0.8)
 
-add_number_legend = function(zlim, col, border = 1, xscale = 1, yscale = 0.8, xadj = 1){
+add_number_legend = function(zlim, col, border = 1, xscale = 1, yscale = 0.75, xadj = 1){
 
-    pop = par(no.readonly = TRUE)
+    xpd = par("xpd")
+    on.exit(par(xpd = xpd))
+    par(xpd = TRUE)
 
     ##################################################
     ## legend bounding box
@@ -58,7 +65,6 @@ add_number_legend = function(zlim, col, border = 1, xscale = 1, yscale = 0.8, xa
     xs = range(bbox$x)
     ys = seq(min(bbox$y), max(bbox$y), length = ncol + 1)
     # cols = palette(ncols)
-    par(xpd = TRUE)
     for(i in 1:ncol){ # i=1
         cell = cbind(x = xs[c(1, 1,   2,   2)],
                      y = ys[c(i, i+1, i+1, i)]) ; cell
@@ -81,7 +87,6 @@ add_number_legend = function(zlim, col, border = 1, xscale = 1, yscale = 0.8, xa
     # plot tickmar labels
     text(tx[2], ty, as.character(ticks), pos = 4)
 
-    par(pop)
     invisible()
 
 }
@@ -195,7 +200,8 @@ plot_capthist = function(x, mask = NULL){
         points(traps, col = i, pch = 15)
         if(!is.null(mask)){
             # points(as.data.frame(mask[[i]]), col = i, pch = 15)
-            buffer.contour(traps, mask_buffer(mask[[i]], traps), col = i, lty = ceiling(i / 10), add = TRUE)
+            buffer.contour(traps, mask_buffer(mask[[i]], traps), col = i,
+                           lty = ceiling(i / 10), add = TRUE)
         }
     }
     title("Listening post locations")
@@ -207,7 +213,9 @@ plot_capthist = function(x, mask = NULL){
 
 plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distances"), session = 1, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = FALSE, ...){
     which = match.arg(which)
-    plotargs = list(...) # plotargs = list() ; which = "bearings" ; session = "2" ; nx = 100
+    plotargs = list(...) # plotargs = list() ; which = "distances" ; session = "2" ; nx = 100
+    # print(plotargs)
+    # stop("1")
     plotargs$x = switch(
         which,
         "detectfn"  = seq(0, mask_buffer(fit$mask, fit$capthist), length = nx),
@@ -218,7 +226,14 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
     ##################################################
     ## delta method
 
-    deltaargs = list(beta = coef(fit), fit = fit, x = plotargs$x, session = session, which = which)
+    deltaargs = list(beta    = coef(fit),
+                     fit     = fit,
+                     x       = plotargs$x,
+                     session = session,
+                     which   = which,
+                     ...)
+    # print(deltaargs)
+    # stop("2")
     if(CI){
         deltaargs$f = fitted_detectfn_auxiliary_values
         deltaargs$vcov = vcov(fit)
@@ -230,6 +245,8 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
     }else{
         delta = list(est = do.call(fitted_detectfn_auxiliary_values, deltaargs))
     }
+    # print(delta)
+    # stop("3")
     plotargs$y = delta$est
     if(which == "bearings") plotargs$x = plotargs$x * 180/pi
 
@@ -298,8 +315,10 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
 
 plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distances","density"), session = 1, use.global.par.settings = TRUE, ...){
     which = match.arg(which)
+    # print(list(...))
+    # stop()
     # which = "pdot"; session = 1; use.global.par.settings = TRUE
-    if(!ms(x$capthist)) stop("only works for multi-session data")
+    # if(!ms(x$capthist)) stop("only works for multi-session data")
     if(which %in% c("bearings","distances"))
         if(x$model.options[[which]] == 0) stop("no ", which, " model")
     if(is.numeric(session))
@@ -457,7 +476,7 @@ plot.gibbonsecr_sim = function(x, CI = TRUE, exp = FALSE, use.global.par.setting
 # @param yaxs TODO
 # @author Darren Kidney \email{darrenkidney@@googlemail.com}
 # @export
-plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = NULL, pch = 15, bty = "n", axes = TRUE, xlab = "", ylab = "", main = "", legend = TRUE, xaxs = "r", yaxs = "r", type = "p"){
+plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = NULL, pch = 15, bty = "n", axes = TRUE, xlab = "", ylab = "", main = "", add.legend = TRUE, xaxs = "r", yaxs = "r", type = "p"){
     # session = NULL; add = FALSE; col = NULL; pch = 15; bty = "n"; axes = FALSE; xlab = ""; ylab = ""; main = ""; legend = TRUE; xaxs = "r"; yaxs = "r"; type = "p"
     if(!inherits(mask, "mask"))
         stop("requires a mask object", call. = FALSE)
@@ -491,11 +510,17 @@ plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = 
             }
         }
         points(regionmask, pch = pch, col = cols, cex = 0.5)
-        if(!is.null(covariate)){
-            if(number){
-                add_number_legend(range(var), attr(cols, "col"))
-            }else{
-                add_category_legend(levels(var), attr(cols, "col"))
+        if(add.legend){
+            if(!is.null(covariate)){
+                col = attr(cols, "col")
+                if(number){
+                    add_number_legend(range(var), col)
+                }else{
+                    bbox = apply(do.call(rbind, mask_bbox(MS(mask))), 2, range)
+                    x = max(bbox[,"x"]) + 0.05 * diff(range(bbox[,"x"]))
+                    y = mean(bbox[,"y"])
+                    add_category_legend(x = x, y = y, legend = levels(var), col = col)
+                }
             }
         }
     }
@@ -512,7 +537,7 @@ plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = 
 # @param add TODO
 # @author Darren Kidney \email{darrenkidney@@googlemail.com}
 # @export
-plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = NULL){
+plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = NULL, add.legend = TRUE, ...){
     # check class
     if(!inherits(shp, c("SpatialPolygons", "SpatialPoints")))
         stop("method only works for SpatialPolygons or SpatialPoints")
@@ -523,7 +548,7 @@ plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = N
             warning("covariate not found")
             covariate = NULL
         }else{
-            x = shp@data[[covariate]]
+            var = shp@data[[covariate]]
         }
     }
 
@@ -531,12 +556,13 @@ plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = N
     if(is.null(covariate)){
         cols = "grey"
     }else{
-        number = inherits(x, c("integer","numeric"))
+        number = inherits(var, c("integer","numeric"))
         cols = if(number){
-            if(is.null(zlim)) zlim = range(x)
-            var2col(x, palette = palette, ncol = ncol, zlim = zlim)
+            if(is.null(zlim)) zlim = range(var)
+            var2col(var, palette = palette, ncol = ncol, zlim = zlim)
         }else{
-            var2col(x, palette = palette)
+            var = as.factor(var)
+            var2col(var, palette = palette)
         }
     }
 
@@ -548,15 +574,19 @@ plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = N
     }
 
     # add legend
-    if(!is.null(covariate)){
-        col = attr(cols, "col")
-        if(number){
-            add_number_legend(zlim, col = col)
-        }else{
-            add_category_legend(names = levels(x), col = col)
+    if(add.legend){
+        if(!is.null(covariate)){
+            col = attr(cols, "col")
+            if(number){
+                add_number_legend(zlim, col, ...)
+            }else{
+                x = shp@bbox[1,"max"] + 0.05 * diff(range(shp@bbox[1,]))
+                y = mean(shp@bbox[2,])
+                add_category_legend(x = x, y = y, legend = levels(var), col = col, ...)
+            }
         }
     }
-
+    invisible()
 }
 
 
@@ -589,10 +619,14 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
     ##################################################
     ## delta method
 
-    deltaargs = list(beta = coef(fit), fit = fit, session = session,
-                     mask = mask, traps = traps, which = which)
+    deltaargs = list(beta    = coef(fit),
+                     fit     = fit,
+                     session = session,
+                     mask    = mask,
+                     traps   = traps,
+                     which   = which)
     if(CI){
-        deltaargs$f = fitted_surface_values
+        deltaargs$f    = fitted_surface_values
         deltaargs$vcov = vcov(fit)
         delta = do.call(delta_method, deltaargs)
     }else{
