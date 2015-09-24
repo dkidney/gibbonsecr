@@ -1025,7 +1025,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                     for(j in colnames(robj$FILE@data)){
                         device_popup()
                         par(mar = c(2,2,2,7), oma = c(0,0,0,0))
-                        plot_shp(robj$FILE, covariate = j, axes = TRUE)
+                        plot_shp(robj$FILE, covariate = j)
                         title(j)
                         plot_traps(robj$capthist, add = TRUE)
                     }
@@ -1204,9 +1204,12 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkgrid(tklabel(frame.data.csv, "Posts"),      row = 2, column = 1)
     tkgrid(tklabel(frame.data.csv, "Covariates"), row = 3, column = 1)
 
-    tobj$data$detections.path   = tkentry(frame.data.csv, tvar$detections.path)
-    tobj$data$posts.path        = tkentry(frame.data.csv, tvar$posts.path)
-    tobj$data$covariates.path   = tkentry(frame.data.csv, tvar$covariates.path)
+    tobj$data$detections.path   = tkentry(frame.data.csv, tvar$detections.path,
+                                          width = os$csv.entry.width)
+    tobj$data$posts.path        = tkentry(frame.data.csv, tvar$posts.path,
+                                          width = os$csv.entry.width)
+    tobj$data$covariates.path   = tkentry(frame.data.csv, tvar$covariates.path,
+                                          width = os$csv.entry.width)
     tobj$data$detections.browse = tkbutton(frame.data.csv, "...", browse("detections"),
                                            width = 2)
     tobj$data$posts.browse      = tkbutton(frame.data.csv, "...", browse("posts"),
@@ -1640,7 +1643,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkadd(menu$help, "cascade", label = "Example data", menu = menu$help.examples)
     tkadd(menu$help.examples, "command", label = "N.annamensis", command = load_N_annamensis)
     # tkadd(menu$help.examples, "command", label = "N.siki", command = load_N_siki)
-    tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
+    # tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
     tkadd(menu$help, "command", label = "User manual", command = open_manual_html)
     tkadd(menu$help, "command", label = "About gibbonsecr", command = about)
 

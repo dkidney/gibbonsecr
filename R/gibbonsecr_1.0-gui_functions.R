@@ -394,6 +394,8 @@ gui_appearance_settings = function(){
                                      package = "gibbonsecr")))
 
     general = list(
+        WIDTH  = 1250,
+        HEIGHT = 675,
         frame.padding = c(5,5),
         console.fg    = "grey80",
         console.bg    = "grey15",
@@ -403,13 +405,12 @@ gui_appearance_settings = function(){
     if(.Platform$OS.type == "windows"){
 
         specific = list(
-            WIDTH  = 1000,
-            HEIGHT = 525,
-            lhs.width = 335,
-            rhs.width = 1000 - 335,
+            lhs.width = 350,
+            rhs.width = general$WIDTH - 350,
             button.width = 9,
             combo.width  = 15,
-            entry.width  = 15,
+            entry.width  = 16,
+            csv.entry.width = 28,
             fixed.entry.width  = 6,
             formula.entry.width  = 25,
             grid.padx    = 1,
@@ -430,10 +431,8 @@ gui_appearance_settings = function(){
     }else{
 
         specific = list(
-            WIDTH  = 1250,
-            HEIGHT = 675,
             lhs.width = 410,
-            rhs.width = 1250 - 410,
+            rhs.width = general$WIDTH - 410,
             button.width = 8,
             combo.width  = 12,
             entry.width  = 15,
