@@ -7,13 +7,17 @@
 gibbonsecr_gui(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE)
 }
 \arguments{
-\item{prompt.save.on.exit}{logical scalar, determining whether a save workspace prompt message should be shown when the GUI window is closed (defaults to \code{FALSE})}
+\item{prompt.save.on.exit}{logical scalar, determining whether a save
+workspace prompt message should be shown when the GUI window is closed
+(defaults to \code{FALSE})}
 
-\item{quit.r.on.exit}{a logical scalar, determining whether the background R process should quit when the GUI window is closed (defaults to \code{FALSE})}
+\item{quit.r.on.exit}{a logical scalar, determining whether the background R
+process should quit when the GUI window is closed (defaults to
+\code{FALSE})}
 }
 \description{
-Graphical user interface for fitting acoustic gibbon survey data using
-  the gibbonsSECR package
+Graphical user interface for fitting acoustic gibbon survey data
+  using the gibbonsSECR package
 }
 \details{
 Currently allows the inclusion of the following components:

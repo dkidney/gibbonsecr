@@ -8,13 +8,15 @@
   buffer = 6000, spacing = 10, beta = NULL, debug = FALSE, ...)
 }
 \arguments{
-\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
+\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned
+from the \code{\link{gibbonsecr_fit}} function)}
 
 \item{nsim}{number of data sets to simulate (currently fixed at 1)}
 
 \item{seed}{an integer to initialize the random number generator}
 
-\item{buffer}{buffer distance for use in generating the underlying population (see Details)}
+\item{buffer}{buffer distance for use in generating the underlying population
+(see Details)}
 
 \item{spacing}{TODO}
 
@@ -25,7 +27,8 @@
 \item{...}{additional arguments (not used)}
 }
 \description{
-Simulate capture history data from a model fitted with \code{\link{gibbonsecr_fit}}
+Simulate capture history data from a model fitted with
+  \code{\link{gibbonsecr_fit}}
 }
 \details{
 TODO

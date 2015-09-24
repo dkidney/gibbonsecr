@@ -7,12 +7,14 @@
 \method{vcov}{gibbonsecr_fit}(object, ...)
 }
 \arguments{
-\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
+\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned
+from the \code{\link{gibbonsecr_fit}} function)}
 
 \item{...}{additional arguments (not used)}
 }
 \description{
-Compute the variance-covariance from a model fitted with \code{\link{gibbonsecr_fit}}.
+Compute the variance-covariance from a model fitted with
+  \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

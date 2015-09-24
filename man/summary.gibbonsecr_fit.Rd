@@ -7,12 +7,14 @@
 \method{summary}{gibbonsecr_fit}(object, ...)
 }
 \arguments{
-\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
+\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned
+from the \code{\link{gibbonsecr_fit}} function)}
 
 \item{...}{additional arguments (not used)}
 }
 \description{
-Summarise the results of a model fitted with \code{\link{gibbonsecr_fit}}.
+Summarise the results of a model fitted with
+  \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

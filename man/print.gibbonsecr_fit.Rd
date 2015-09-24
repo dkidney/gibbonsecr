@@ -7,12 +7,14 @@
 \method{print}{gibbonsecr_fit}(x, ...)
 }
 \arguments{
-\item{x}{a \code{gibbonsecr} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
+\item{x}{a \code{gibbonsecr} model object (i.e. an object returned from the
+\code{\link{gibbonsecr_fit}} function)}
 
 \item{...}{additional arguments (not used)}
 }
 \description{
-Print a summary of the results from a model fitted with \code{\link{gibbonsecr_fit}}.
+Print a summary of the results from a model fitted with
+  \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 

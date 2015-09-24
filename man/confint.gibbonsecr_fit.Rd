@@ -7,19 +7,23 @@
 \method{confint}{gibbonsecr_fit}(object, parm, level = 0.95, ...)
 }
 \arguments{
-\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
+\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned
+from the \code{\link{gibbonsecr_fit}} function)}
 
-\item{parm}{parameters (see documentation for the \code{\link{confint}} generic)}
+\item{parm}{parameters (see documentation for the \code{\link{confint}}
+generic)}
 
 \item{level}{the confidence level}
 
 \item{...}{additional arguments (not used)}
 }
 \description{
-Compute confidence intervals stimated parameters from a model fitted with \code{\link{gibbonsecr_fit}}.
+Compute confidence intervals stimated parameters from a model
+  fitted with \code{\link{gibbonsecr_fit}}.
 }
 \details{
-Uses the delta method to obtain interval estimates on the link scale.
+Uses the delta method to obtain interval estimates on the link
+  scale.
 }
 \examples{
 ## Not run: 

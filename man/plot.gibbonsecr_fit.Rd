@@ -8,7 +8,8 @@
   "distances", "density"), session = 1, use.global.par.settings = TRUE, ...)
 }
 \arguments{
-\item{x}{a \code{gibbonsecr} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
+\item{x}{a \code{gibbonsecr} model object (i.e. an object returned from the
+\code{\link{gibbonsecr_fit}} function)}
 
 \item{which}{TODO}
 

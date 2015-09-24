@@ -7,14 +7,16 @@
 \method{AIC}{gibbonsecr_fit}(object, ..., k = 2)
 }
 \arguments{
-\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned from the \code{\link{gibbonsecr_fit}} function)}
+\item{object}{a \code{gibbonsecr_fit} model object (i.e. an object returned
+from the \code{\link{gibbonsecr_fit}} function)}
 
 \item{...}{additional arguments (not used)}
 
 \item{k}{the penalty per parameter to be used (defaults to k = 2)}
 }
 \description{
-Compute the AIC score for a model fitted with \code{\link{gibbonsecr_fit}}.
+Compute the AIC score for a model fitted with
+  \code{\link{gibbonsecr_fit}}.
 }
 \examples{
 ## Not run: 
