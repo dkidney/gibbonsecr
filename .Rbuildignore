@@ -1,5 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+binaries
 checking
 data/N.siki.rda
 data_prep
