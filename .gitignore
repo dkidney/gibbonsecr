@@ -12,12 +12,8 @@ notes
 src/*.dll
 src/*.o
 src/*.so
-src-i386/*.dll
-src-i386/*.o
-src-i386/*.so
-src-x64/*.dll
-src-x64/*.o
-src-x64/*.so
+src-i386
+src-x64
 temp
 TODO.docx
 vignettes_prep

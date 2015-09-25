@@ -15,23 +15,24 @@ vignette: >
 
 ## Contents
 
-<a href="#overview">**1. Overview**</a>
+<a href="#overview"> **1. Overview**</a>
 
-<a href="#intro">**2. Introduction to SECR**</a>  
+<a href="#intro">    **2. Introduction to SECR**</a>  
 
-<a href="#install">**3. Installing the software**</a>
+<a href="#load">     **3. Loading the software**</a>
 
-<a href="#data">**4. Data import**</a>  
+<a href="#data">     **4. Data import**</a>  
 
-<a href="#mask">**5. Making a mask**</a>  
+<a href="#mask">     **5. Making a mask**</a>  
 
-<a href="#model">**6. Model fitting**</a>  
+<a href="#model">    **6. Model fitting**</a>  
 
-<a href="#plots">**7. Plotting results**</a>
+<a href="#plots">    **7. Plotting results**</a>
 
 <a href="#selection">**8. Model selection**</a>
 
-<a href="#menu">**9. Menu options**</a>
+<a href="#menu">     **9. Menu options**</a>
+
 
 
 ********************************************************************************
@@ -50,15 +51,17 @@ The `gibbonsecr` software package uses **Spatially Explicit Capture--Recapture (
 
 ## 2. Introduction to SECR
 
-<a href="#intro-setup">**2.1 Basic setup**</a>  
+<a href="#intro-setup">    **2.1 Basic setup**</a>  
 
-<a href="#intro-bearings">**2.2 Estimated bearings**</a>
+<a href="#intro-bearings"> **2.2 Estimated bearings**</a>
 
-<a href="#intro-detfunc">**2.3 Detection functions**</a>
+<a href="#intro-distances">**2.3 Estimated distances**</a>
 
-<a href="#intro-detsurf">**2.4 Detection surface**</a>
+<a href="#intro-detfunc">  **2.4 Detection functions**</a>
 
-<a href="#intro-esa">**2.5 Effective Sampling Area**</a>
+<a href="#intro-detsurf">  **2.5 Detection surface**</a>
+
+<a href="#intro-esa">      **2.6 Effective Sampling Area**</a>
 
 <a href="#contents">(Back to contents)</a>
 
@@ -112,9 +115,18 @@ The wrapped Cauchy is likely to perform better when there are a small number of 
 <a href="#intro">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
 
+<a name="intro-distances"></a>
+
+### 2.3 Estimated distances
+
+TODO
+
+<a href="#intro">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
 <a name="intro-detfunc"></a>
 
-### 2.3 Detection functions
+### 2.4 Detection functions
 
 Another key feature of SECR is that the probability of detecting a (calling) gibbon group at a given location is modelled as a function of distance from the detector. This function -- referred to as the **detection function** -- is typically assumed to belong to one of two main types of function: the **half normal** or the **hazard rate**. The specific shape of the detection function depends on the value of its parameters, which need to be estimated from the survey data. The half normal has two parameters: `g0` and `sigma`. The `g0` parameter gives the probability at zero distance and the `sigma` parameter controls the width of the function. The hazard rate has three parameters: `g0`, `sigma` and `z`. The `z` parameter controls the shape of the 'shoulder' and adds a greater degree of flexibility. The figure below illustrates the shape of these detection functions for a range of parameter values.
 
@@ -126,7 +138,7 @@ Another key feature of SECR is that the probability of detecting a (calling) gib
 
 <a name="intro-detsurf"></a>
 
-### 2.4 Detection surface
+### 2.5 Detection surface
 
 The association of a detection function with each detector allows the overall probability of detection by at least one detector during the survey to be calculated for any given animal/group location. The figure below illustrates this idea of overall detection probability using a heatmap of a **detection surface**.
 
@@ -139,13 +151,13 @@ The region near the centre of the surface is close to the detector array and has
 
 <a name="intro-esa"></a>
 
-### 2.5 Effective sampling area
+### 2.6 Effective sampling area
 
 The shape of the detection surface is related to the size of the **effective sampling area**. Since the region close to the detectors has a very high detection probability, most animals/groups within this region will be detected and this region will therefore be almost perfectly sampled. However, regions where the detection probability is less than 1 will not be compltely sampled as some animal/groups in these areas will be missed. The figure below illustrates this idea for a series of arbitrary detection surfaces.
 
-<img src="figures/detection_surface3.jpeg" width="100%" style="border-style: none"/>
+<img src="figures/intro_detection_surfaces.jpeg" width="100%" style="border-style: none"/>
 
-The first plot in this figure shows a flat surface where the detection probability is 0.5 everywhere. In this scenario every animal/group has a 50% chance of being detected. If the area covered by the surface was 10km<sup>2</sup>, then the *effective* sampling area would be 10km<sup>2</sup> x 0.5 = 5km<sup>2</sup>. Using this detection process we would expect to detect the same number of animals/groups as we would if we perfectly sampled an area of 5km<sup>2</sup>. In the second plot in the figure above half of the area is sampled perfectly and the other half is not sampled at all, so this has the same effective sampling area as the first plot. The third plot has a detection gradient and isn't as intuitive to interpret. However, the way we calculate the effective survey area is to calculate the volumn under the detection surface. The third plot has the same volume as the other two, so it has the same effective area.
+The first plot in this figure shows a flat surface where the detection probability is 0.5 everywhere. In this scenario every animal/group has a 50% chance of being detected. If the area covered by the surface was 10km^2^, then the *effective* sampling area would be 10km^2^ x 0.5 = 5km^2^. Using this detection process we would expect to detect the same number of animals/groups as we would if we perfectly sampled an area of 5km^2^. In the second plot in the figure above half of the area is sampled perfectly and the other half is not sampled at all, so this has the same effective sampling area as the first plot. The third plot has a detection gradient and isn't as intuitive to interpret. However, the way we calculate the effective survey area is to calculate the volumn under the detection surface. The third plot has the same volume as the other two, so it has the same effective area.
 
 <br/>
 <a href="#intro">(Back to top of section)</a>  
@@ -155,11 +167,105 @@ The first plot in this figure shows a flat surface where the detection probabili
 
 ********************************************************************************
 
-<a name="install"></a>
+<a name="load"></a>
 
-## Installing the software
+## 3. Loading the software
 
-There are two ways to install the `gibbonsecr` software.
+<a href="#load-r">**3.1 Launch from R**</a>  
+<a href="#load-r-install">     --- 3.1.1 Install R</a>  
+<a href="#load-r-dependencies">--- 3.1.2 Install prerequisite R packages</a>  
+<a href="#load-r-gibbonsecr">  --- 3.1.3 Install the gibbonsecr package</a>  
+<a href="#load-r-gui">         --- 3.1.4 Launch the user interface</a>  
+
+<a href="#load-icon">**3.2 Launch from a desktop icon**</a>  
+<a href="#load-icon-download"> --- 3.2.1 Download the files</a>  
+<a href="#load-icon-shortcut"> --- 3.2.2 Make a shortcut icon</a>  
+
+<a href="#contents">(Back to contents)</a>
+
+<br/>
+There are currently two ways to install the `gibbonsecr` software: (i) by installing a statistical software package called **R** from which you can launch the user interface; or (ii) by downloading a pre-compiled version of R and adding a shortcut icon for the user interface to the desktop.
+
+**Note to Mac users:** Before you begin the installation process you need make sure you have the **XQuartz** software (also known as X11)  on your machine. Users of OS X 10.5 (Leopard), 10.6 (Snow Leopard) and 10.7 (Lion) should already have this installed by default (to check, look for the `X11.app` application in your applications folder). Users of OS X 10.8 (Mountain Lion), 10.9 (Mavericks) and 10.10 (Yosemite) to install it manually.
+
+[Download XQuartz](http://xquartz.macosforge.org/landing/)
+
+<a name="load-r"></a>
+
+### 3.1 Launch from R
+
+<a name="load-r-install"></a>
+
+#### 3.1.1 Install R
+
+Make sure you have the latest version of **R** installed. 
+
+[Download R for Windows](https://cran.r-project.org/bin/windows/base/)
+
+[Download R for Mac](https://cran.r-project.org/bin/macosx/)
+
+Optionally you can also install something called **RStudio** which acts as an interface to R and is more user-friendly (it has syntax highlighting and auto-completion for example). 
+
+[Download RStudio](https://www.rstudio.com/products/rstudio/download/)
+
+<a name="load-r-depedendencies"></a>
+
+#### 3.1.2 Install prerequisite R packages
+
+The `gibbonsecr` package uses some other R packages which don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R console.
+
+```{r eval=FALSE}
+install.packages(c("CircStats", "fields", "MASS", "nlme", "secr", "tcltk2"))
+```
+
+<a name="load-r-gibbonsecr"></a>
+
+#### 3.1.3 Install the gibbonsecr package
+
+Once the prequisite packages are installed you can install the gibbonsecr package. It's currently hosted on [GitHub](https://github.com) but you can download it and install it by running the code below.
+
+**Windows users:**
+```{r eval=FALSE}
+install.packages("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibbonsecr_1.0.zip", 
+                 repos = NULL, type = "win.binary")
+```
+
+**Mac users:**
+```{r eval=FALSE}
+install.packages("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibbonsecr_1.0.tgz", 
+                 repos = NULL, type = "mac.binary")
+```
+
+<a name="load-r-gui"></a>
+
+#### 3.1.4 Launch the user interface
+
+You only need to run the above steps once. When everything is installed you can launch the user interface by opening R (or RStudio) and typing the following lines into the console.
+
+```{r eval=FALSE}
+library(gibbonsecr)
+gibbonsecr_gui()
+```
+
+<a href="#load">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="load-icon"></a>
+
+### 3.2 Launch from a desktop icon
+
+<a name="load-icon-download"></a>
+
+#### 3.2.1 Download the files
+
+TODO
+
+<a name="load-icon-shortcut"></a>
+
+#### 3.2.2 Make a shortcut icon
+
+TODO
+
 <br/>
 <a href="#install">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
@@ -173,36 +279,104 @@ There are two ways to install the `gibbonsecr` software.
 ## 4. Data import
 
 <a href="#data-csv">**4.1 CSV files**</a>  
-<a href="#data-csv-detections">-- 4.1.1 Detections</a>  
-<a href="#data-csv-posts">     -- 4.1.2 Posts</a>  
-<a href="#data-csv-covariates">-- 4.1.3 Covariates</a>  
+<a href="#data-csv-detections">--- 4.1.1 Detections</a>  
+<a href="#data-csv-posts">     --- 4.1.2 Posts</a>  
+<a href="#data-csv-covariates">--- 4.1.3 Covariates</a>  
 
-<a href="#data-details">**4.2 Data details**</a>  
+<a href="#data-details">**4.2 Data details**</a>
+
+<a href="#data-buttons">**4.3 The Import button**</a>
 
 <a href="#contents">(Back to contents)</a>
+
+<br/>
+The first step in conducting an analysis is to import your survey data.
+This is done via the *Data* tab.
+
+`**SCREENSHOT**`
 
 <a name="data-csv"></a>
 
 ### 4.1 CSV files
 
+As a minumim you need to prepare a **detections** file and a **posts** file. You can also include an optional **covariates** file. Advice on how to structure these files is given in the sections below. All raw data files need to be in `.csv` format. The file paths to your data files can be entered manually into the text entry boxes in the *CSV files* section, or you can navigate to the file path using the `...` button.
+
 <a name="data-csv-detections"></a>
 
 #### 4.1.1 Detections
+
+The detections file contains a record of each detection, with one row per detection. For example, if group 1 was recorded at listening posts A and B then this would count as 2 detections. This file needs to have the following columns:
+
+* **array**    -- ID for the array
+* **occasion** -- ID for day of the survey (typically an integer between 1 and 4)
+* **post**     -- ID for the listening post
+* **group**    -- ID for the group
+* **bearing**  -- Estimated bearing
+
+The screenshot below shows an example detections file for a one-day (i.e. single-occasion) survey.
+
+<img src="figures/screenshot_csv_detections.jpg" width="100%" style="border-style: none"/>
+
+<a href="#data">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
 
 <a name="data-csv-posts"></a>
 
 #### 4.1.2 Posts
 
-<a name="data-csv-covariates"></a>
+The posts file contains information on the location and usage of the listening posts. This file
+needs to have one row per listening post and should contain the following columns:
 
-#### 4.1.3 Covariates
+* **array** -- ID for the array
+* **post**  -- ID for the listening post
+* **x**     -- Longitude coordinate (in metric units)
+* **y**     -- Latitude coordinate (in metric units)
+* **usage** -- Indicator showing the sampling days on which the posts were operated. E.g. if on a 3-day survey a particular post was used on day 1 and day 3 but for some reason not on day 2, you would write `101` in the usage column for that row. Each row in the usage column should contain the same number of digits.
 
-<a name="data-details"></a>
+The screenshot below shows an example posts file for a one-day survey.
+
+<img src="figures/screenshot_csv_posts.jpg" width="100%" style="border-style: none"/>
 
 <a href="#data">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
 
+<a name="data-csv-covariates"></a>
+
+#### 4.1.3 Covariates
+
+The covariates file contains information on environmental and other variables associated with the survey data. This file needs to have one row per day for each listening post and should contain the following columns:
+
+* **array**    -- ID for the array
+* **post**     -- ID for the listening post
+* **occasion** -- ID for day of the survey (typically an integer between 1 and 4)
+
+These columns can all be used as covariates themselves, but any additional covariates should be added using additional columns. Use underscores `_` instead of full stops for the covariate names.
+
+The screenshot below shows an example covariates file for a one-day survey.
+
+<img src="figures/screenshot_csv_covariates.jpg" width="100%" style="border-style: none"/>
+
+<a href="#data">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="data-details"></a>
+
 ### 4.2 Data details
+
+Once the paths to the data files have been entered, select the relevent units from the *Data details* dropdown boxes for your estimated bearings data (and estimated distances data if it was collected). (Note that the current version of the software only allows `Type = continuous` since interval methods for bearings and distances haven't yet been implemented.)
+
+<a href="#data">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="data-buttons"></a>
+
+### 4.3 The Import button
+
+Once the paths to your data files have been added and the data details checked, you can then press the `Import` button. If your data imports successfully then a summary print out should appear in the output window. You can re-print this summary at any time by pressing the `Summary` button.
+
+The screenshot below shows an example of some summary output after a successful data import.
+
+`**SCREENSHOT**`
 
 <br/>
 <a href="#data">(Back to top of section)</a>  
@@ -217,46 +391,85 @@ There are two ways to install the `gibbonsecr` software.
 
 ## 5. Making a mask
 
-<a href="#mask-size">**5.1 Size and resolution**</a>  
-<a href="#mask-size-buffer">-- 5.1.1 Buffer</a>  
-<a href="#mask-size-spacing">-- 5.1.2 Spacing</a>  
+<a href="#mask-size">**5.1 Mask size and resolution**</a>  
+<a href="#mask-size-buffer"> --- 5.1.1 Buffer</a>  
+<a href="#mask-size-spacing">--- 5.1.2 Spacing</a>  
 
 <a href="#mask-shp">**5.2 SHP files**</a>  
-<a href="#mask-shp-region">-- 5.2.1 Region</a>  
-<a href="#mask-shp-habitat">-- 5.2.2 Habitat</a>  
+<a href="#mask-shp-region">  --- 5.2.1 Region</a>  
+<a href="#mask-shp-habitat"> --- 5.2.2 Habitat</a>  
+
+<a href="#mask-buttons">**5.3 The Make button**</a>  
 
 <a href="#contents">(Back to contents)</a>
 
+The SECR model fitting procedure requires the use of a **mask** which is a fine grid of latitude and longitude coordinates around each array of listening posts. When an SECR model is fitted, the mask is used to provide a set of candidate locations for each detected group. It is important to use a suitable mask to avoid unreliable results.
+
 <a name="mask-size"></a>
 
-### 5.1 Size and resolution
+### 5.1 Mask size and resolution
+
+There are two main settings you need to consider when defining a mask -- the **buffer** and the **spacing** -- which you can specify in the *Mask* tab. 
 
 <a name="mask-size-buffer"></a>
 
 #### 5.1.1 Buffer
 
-<a name="mask-size-spacing"></a>
+The buffer defines the maximum distance between the mask points and the listening posts. It needs to be large enough so that the region it encompasses contains all plausible locations for the detected groups, but it shouldn't be unnecessarily large. Buffer distances that are too small will lead to underestimates of the effective sampling area and overestimates of density. However, increasing the buffer distance also increases the number of mask points, which means that the models will take longer to run, so the buffer also shouldn't be larger than it needs to be. **The ideal buffer distance is the distance at which the overall detection probability drops to zero**. 
 
-#### 5.1.1 Spacing
+A good way to check whether the buffer distance is large enough is to look at the detection surface, which you can plot after fitting a model (see the section on plotting results). The detection surface plot produced by `gibbonsecr` is the same size as the mask, so the colour at the edge of the plot will show you the overall detection probability at the buffer distance. If the detection probability is greater than zero at the buffer distance then you should increase the buffer distance, re-fit the model and re-check the detection surface plot. 
 
-<a name="mask-shp"></a>
+To illustrate this issue, the figure below shows a series of detection surfaces from models that were fitted using mask buffers of 1000m, 10000m and 5000m respectively.
+
+<img src="figures/mask_buffer_1000.jpeg" width="30%" style="border-style: none"/>
+<img src="figures/mask_buffer_10000.jpeg" width="30%" style="border-style: none"/>
+<img src="figures/mask_buffer_5000.jpeg" width="30%" style="border-style: none"/>
+
+The buffer plot 1 looks to be too small, since the detection probability at the buffer distance is much greater than zero. In this case it is extremely likely that the true locations of some of the detected groups were actually outside the buffer zone. In plot 2 the buffer has been increased to 10000m. The detection probabiilty at the buffer distance looks to be at zero so we would expect the density estimate to be unbiased. The density estimate in plot 2 is about 75% lower than the estimate in plot 1, which suggests that the estimate in plot 1 is a big overestimate. The buffer distance plot 3 is intermediate between the other two. The detection probability is still zero at the buffer distance, but the estimated density is very similar to plot 2, so it doesn't look to be biased. In this case the mask in plot 3 would be preferred since (for a given resolution) it will be much quicker to fit models than the mask in plot 2 whilst still giving reliable results.
 
 <a href="#mask">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
 
+<a name="mask-size-spacing"></a>
+
+#### 5.1.2 Spacing
+
+The buffer spacing is the distance between adjacent mask points. Decreasing the spacing will therefore increase the resolution and increase the total number of mask points. Smaller spacings provide a greater number of candidate locations and lead to more reliable results. However, increasing the number of mask points has a cost in terms of computing time and if the spacing is too small then models may take a very long time to run. As a general rule of thumb, try to use the smallest spacing that is practical given the speed of your computer, but try not to use spacings larger than 250m.
+
+<a href="#mask">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="mask-shp"></a>
+
 ### 5.2 SHP files
+
+The *Mask* tab also allows you to upload shapefiles in order to attach spatial covariate values to each of the mask points for use in model formulas.
 
 <a name="mask-shp-region"></a>
 
 #### 5.2.1 Region
 
+TODO
+
 <a name="mask-shp-habitat"></a>
 
 #### 5.2.2 Habitat
 
+TODO
+
+<a href="#mask">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="mask-buttons"></a>
+
+### 5.4 The Make button
+
+TODO
+
 <br/>
 <a href="#mask">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
+
 
 
 
@@ -267,44 +480,49 @@ There are two ways to install the `gibbonsecr` software.
 ## 6. Model fitting
 
 <a href="#model-options">**6.1 Model options**</a>  
-<a href="#model-options-detfunc">-- 6.1.1 Detection function</a>  
-<a href="#model-options-bearings">-- 6.1.2 Bearings distribution</a>  
-<a href="#model-options-distances">-- 6.1.3 Distancses distribution</a>
 
-<a href="#model-submodels">**6.2 Sub-models**</a>  
-<a href="#model-submodels-formulas">-- 6.2.1 Formulas</a>  
-<a href="#model-submodels-fixed">-- 6.2.1 Fixing parameter values</a>  
+<a href="#model-submodels">**6.2 Model parameters**</a>  
+<a href="#model-submodels-formulas">--- 6.2.1 Formulas</a>  
+<a href="#model-submodels-fixed">   --- 6.2.1 Fixing parameter values</a>  
 
 <a href="#contents">(Back to contents)</a>
+
+<br>
+Once you have made a mask you can move on the *Model* tab and start fitting some SECR models.
+
+`**SCREENSHOT**`
+
+Specifying a model is split into two steps: (i) choosing what kind of detection function and bearing error distribution you want to use, and (ii) deciding whether to fix any parameter values or model them using the available covariates. These steps are described in more detail below.
 
 <a name="model-options"></a>
 
 ### 6.1 Model options
 
-<a name="model-options-detfunc"></a>
+The first section in the *Model* tab contains dropdown boxes where you can choose between different detection functions and different distributions for the estimated bearings and distances. 
 
-#### 6.1.1 Detection function
+* **Detection function** -- choose either the half normal (the default) or the hazard rate
+* **Bearings distrbution** -- choose from the von Mises (the default), the wrapped Cauchy, or none
+* **Distances distribution** -- choose from the gamma (the default), the log-normal, or none
 
-<a href="#model">(Back to top of section)</a>  
-<a href="#contents">(Back to contents)</a>
-
-<a name="model-options-bearings"></a>
-
-#### 6.1.2 Bearings distribution
-
-<a href="#model">(Back to top of section)</a>  
-<a href="#contents">(Back to contents)</a>
-
-<a name="model-options-distances"></a>
-
-#### 6.1.3 Distances distribution
+Setting the bearings/distances distribution to `none` means that the bearings/distances data will be ignored in the analysis. Setting both bearings and distances distributions to `none` will result in a conventional SECR model being fitted using only the recapture data. 
 
 <a href="#model">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
 
 <a name="model-submodels"></a>
 
-### 6.2 Sub-models
+### 6.2 Model parameters
+
+The next section in the *Model* tab provides various options for refining your model. Each row in this section relates to a particular parameter in the SECR model.
+
+* **`D`** -- The number of groups per square kilometer
+* **`g0`** -- The detection function intercept parameter (see <a href="#intro-detfunc">Section 2.4 </a>)
+* **`sigma`** -- The detection function scale parameter (see <a href="#intro-detfunc">Section 2.4 </a>)
+* **`bearings`** -- The parameter of the distribution for the bearing errors (see <a href="#intro-bearings">Section 2.2 </a>)
+* **`distances`** -- The parameter of the distribution for the estimated distances (see <a href="#intro-distances">Section 2.3 </a>)
+* **`pcall`** -- The probablity of a group calling on a given day
+
+Don't worry if you forget these definitions, hovering your cursor over the row labels on the user interface will open a temporary help box to give you a reminder.
 
 <a href="#model">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
@@ -313,6 +531,16 @@ There are two ways to install the `gibbonsecr` software.
 
 #### 6.2.1 Formulas
 
+If you wish to specify a formula for a particular component you need to click the radio button on the right hand side of the *Formula* entry box for that component to activate the entry box. If the radio button is clicked but the box is left empty then the default formula using no covariates (i.e. an intercept-only model) will be assumed. If you wish to specify a model using covariates then you need to type in the names of the covariates you wish to use, separated by `+` signs. E.g. to model `sigma` in terms of habitat and weather then you would type,
+
+```
+habitat + weather
+```
+
+in the formula box for `sigma`. 
+
+**A note to experienced R-users:** For those of you who are familiar with R formula syntax, more complicated formula syntax (such as the use of `as.factor` and `as.numeric` to coerce variables, and `-1` to change the model contrasts) are NOT supported. Howerver the use of gam functions `s`, `te`, `ti` and `t2` (from the `mgcv` package) for numeric variables IS supported.
+
 <a href="#model">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
 
@@ -320,9 +548,20 @@ There are two ways to install the `gibbonsecr` software.
 
 #### 6.2.2 Fixing parameter values
 
+Sometimes you many not want or need to estimate a particular parameter, in which case you can fix its value. To do this, click on the radio button on the right hand side of the *Fixed* entry box and type the value of the parameter in the box.
+
+**`g0`**  
+Note that `g0` should be fixed at 1 for one-day surveys. This is because the probability of detecting a calling group at zero distance from a listening post is extraordinarily unlikely to be anything other than 1 (since you will be standing under the tree it's calling from). However, this is *NOT* the case for multi-day surveys. In a multi-day survey the movement of groups between consecutive sampling days means that we have to redefine group 'location' as being the *average* location of the group. As a result, `g0` needs to be interpreted as the probability of detecting a calling group at zero distance from the *average* location -- in other words, the probability of detecting a calling group when the listening post is *at* the average location. Since a group is unlikely to always be at its average location during a multi-day survey (unless it happens not to move) this probability is unlikely to be 1 and the `g0` parameter should be estimated.
+
+**`pcall`**  
+Note also that `pcall` is fixed at 1 by default. For one-day surveys, `pcall` can't be estimated so the only option is to provide a fixed value. Fixing `pcall` to 1 for one-day surveys means that the `D` parameter should be interpreted as the density of *calling* groups, rather than the density of groups. However, if prior knowledge of the calling probability is available you can type this into the *Fixed* box, in which case the density parameter can be reinterpreted as the density of groups. For one-day surveys changing the `pcall` value will result in a direct scaling of the density estimate. For example, if you had an estimated calling group density of 5, changing the fixed value for `pcall` to 0.5 and re-fitting the model would result in a group density estimate of 10. For multi-day surveys the `D` parameter is *always* interpreted as the density of groups. In this case you can either fix the value of `pcall` or estimate it from the data. Fixing `pcall` to 1 for a multi-day survey is likely to result in an underestimate of group density.
+
+Bear in mind that fixing a parameter value will often lead to a more precise density estimate. If the fixed parmater is known with certainty then this would be a desirable effect. However, if there is uncertainty over the true value of that parameter (e.g. you may have used an estimate from a previous study) then this will not be incorporated into the undertainty of the density estimate and the precision of the density estimate will therefore be overestimated.
+
 <br/>
 <a href="#model">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
+
 
 
 
@@ -331,6 +570,8 @@ There are two ways to install the `gibbonsecr` software.
 <a name="plots"></a>
 
 ## 7. Plotting results
+
+`**SCREENSHOT**`
 
 <br/>
 <a href="#plots">(Back to top of section)</a>  
@@ -355,6 +596,49 @@ There are two ways to install the `gibbonsecr` software.
 <a name="menu"></a>
 
 ## 9. Menu Options
+
+<a href="#menu-help">**9.1 The Help menu**</a>  
+<a href="#menu-help-examples"> --- 9.1.1 Example Data</a>  
+
+<a href="#menu-workspace">**9.2 The Workspace menu**</a>  
+<a href="#menu-workspace-wd">  --- 9.2.1 Setting the working directory</a>  
+<a href="#menu-workspace-save">--- 9.2.2 Saving and loading workspaces</a>  
+
+<a href="#contents">(Back to contents)</a>
+
+<a name="menu-help"></a>
+
+### 9.1 The Help menu
+
+<a name="menu-help-examples"></a>
+
+#### 9.1.1 Example Data
+
+TODO
+
+<a href="#menu">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="menu-workspace"></a>
+
+### 9.2 The Workspace menu
+
+<a name="menu-workspace-wd"></a>
+
+#### 9.2.1 Setting the working directory
+
+TODO
+
+<a name="menu-workspace-save"></a>
+
+#### 9.2.2 Saving and loading workspaces
+
+TODO
+
+<a href="#menu">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+
 
 <br/>
 <a href="#menu">(Back to top of section)</a>  
