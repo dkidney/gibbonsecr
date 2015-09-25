@@ -424,17 +424,16 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     load_peafowl = function(){
         folder = "~/Dropbox/projects/greenpeafowl/data/dataframes"
-        tclvalue(tvar$detections.path) = file.path(folder, "detections.averaged.csv")
+        tclvalue(tvar$detections.path) = file.path(folder, "detections.averaged.calling.males.csv")
         tclvalue(tvar$posts.path)      = file.path(folder, "posts.csv")
         tclvalue(tvar$covariates.path) = file.path(folder, "covariates.csv")
         tclvalue(tvar$bearings.units)  = "degrees"
         tclvalue(tvar$buffer)          = "2000"
         tclvalue(tvar$spacing)         = "100"
         tclvalue(tvar$region.path)     = ""
-        folder1 = "~/Dropbox/projects/greenpeafowl/data/gis_layers/habitats/all_habitat_types"
-        folder2 = "~/Dropbox/projects/greenpeafowl/data/gis_layers/habitats/distance_settlements_0_1500m_grid"
-        tclvalue(tvar$habitat1.path)   = file.path(folder1, "habitat_layers_0_1500.shp")
-        tclvalue(tvar$habitat2.path)   = file.path(folder2, "distance_settlements_0_1500_pointst.shp")
+        folder = "~/Dropbox/projects/greenpeafowl/data/gis_layers/habitats_3000m"
+        tclvalue(tvar$habitat1.path)   = file.path(folder, "all_habitats_3000m/all_habitats_3000m.shp")
+        tclvalue(tvar$habitat2.path)   = file.path(folder, "distance_roads_river/dist_rds_vill.shp")
         tclvalue(tvar$habitat3.path)   = ""
         tclvalue(tvar$region.use)      = ""
         tclvalue(tvar$habitat1.use)    = ""
@@ -904,6 +903,15 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                                     state = "disabled")
                     }
                 }
+                # disable g0 formula and fixed and set fixed to 1 if all n = 1
+                if(all(n_occasions(robj$capthist) == 1)){
+                    tkconfigure(tobj$model$g0.formula,       state = "disabled")
+                    tkconfigure(tobj$model$g0.formula.radio, state = "disabled")
+                    tkconfigure(tobj$model$g0.fixed,         state = "disabled")
+                    tkconfigure(tobj$model$g0.fixed.radio,   state = "disabled")
+                    tclvalue(tvar$g0.radio) = "fixed"
+                    tclvalue(tvar$g0.fixed) = "1"
+                }
                 # disable pcall formula if all n = 1
                 if(all(n_occasions(robj$capthist) == 1)){
                     tkconfigure(tobj$model$pcall.formula,       state = "disabled")
@@ -926,10 +934,6 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                     tkconfigure(tobj$model$predict, state = "normal")
                     for(i in names(tobj$plots))
                         tkconfigure(tobj$plots[[i]], state = "normal")
-                    # disable components of the model tab depending in the model
-                    # all.covs = do.call(c, lapply(robj$fit$model, all.vars))
-                    # state = if(length(all.covs) == 0) "disabled" else "normal"
-                        # tkconfigure(tobj$model$predict, state = state)
                     # disable components of the plots tab depending in the model
                     for(i in c("bearings", "distances")){ # i = "distances"
                         if(robj$fit$model.options[[i]] == 0){
@@ -1563,7 +1567,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ## plots - bearings
 
     add_separator(tab.plots)
-    add_heading(tab.plots, "Bearings")
+    add_heading(tab.plots, "Bearing error distribution")
     frame.plots.bearings  = tkframe(tab.plots, padding = c(0,0))
     sframe.plots.bearings = tkframe(frame.plots.bearings, padding = c(0,0))
     tkpack(frame.plots.bearings, fill = "both")
@@ -1580,7 +1584,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ## plots - distances
 
     add_separator(tab.plots)
-    add_heading(tab.plots, "Distances")
+    add_heading(tab.plots, "Distance estimates distribution")
     frame.plots.distances  = tkframe(tab.plots, padding = c(0,0))
     sframe.plots.distances = tkframe(frame.plots.distances, padding = c(0,0))
     tkpack(frame.plots.distances, fill = "both")
@@ -1655,7 +1659,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkadd(menu$help, "cascade", label = "Example data", menu = menu$help.examples)
     tkadd(menu$help.examples, "command", label = "N.annamensis", command = load_N_annamensis)
     # tkadd(menu$help.examples, "command", label = "N.siki", command = load_N_siki)
-    # tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
+    tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
     tkadd(menu$help, "command", label = "User manual", command = open_manual_html)
     tkadd(menu$help, "command", label = "About gibbonsecr", command = about)
 

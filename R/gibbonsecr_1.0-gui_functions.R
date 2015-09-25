@@ -47,7 +47,7 @@ check_covariate_classes = function(x){
     tkgrid(ttklabel(upper, text = "Name"), row = 0, column = 1, sticky = "w")
     tkgrid(ttklabel(upper, text = "Type"), row = 0, column = 2, sticky = "w")
     tkgrid(ttklabel(upper, text = "Use"),  row = 0, column = 3, sticky = "w")
-    combo.char = ifelse(sapply(x, is.numeric), "number", "factor")
+    combo.char = ifelse(sapply(x, is.numeric), "number", "category")
     entry.char = colnames(x)
     combo.tvar = list()
     entry.tvar = list()
@@ -62,7 +62,7 @@ check_covariate_classes = function(x){
         tkgrid(entry[[j]], row = j, column = 1)
         combo.tvar[[j]] = tclVar(combo.char[j])
         combo[[j]] = ttkcombobox(upper, textvariable = combo.tvar[[j]], width = 10,
-                             state = "normal", values = c("number", "factor"))
+                             state = "normal", values = c("number", "category"))
         tkgrid(combo[[j]], row = j, column = 2)
         check.tvar[[j]] = tclVar(1)
         check[[j]] = ttkcheckbutton(upper, variable = check.tvar[[j]],
