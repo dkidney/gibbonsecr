@@ -28,7 +28,7 @@ Make sure you have the latest version of **R** installed.
 
 [Download R for Mac](https://cran.r-project.org/bin/macosx/)
 
-Optionally, you can also install **RStudio** which is a non-essential but more user-friendly front end for R.
+Optionally, you can also install **RStudio** which is a non-essential but more user-friendly interface for running R.
 
 [Download RStudio](https://www.rstudio.com/products/rstudio/download/)
 
