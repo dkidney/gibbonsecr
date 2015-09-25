@@ -186,7 +186,7 @@ The first plot in this figure shows a flat surface where the detection probabili
 <br/>
 There are currently two ways to install the `gibbonsecr` software: (i) by installing a statistical software package called **R** from which you can launch the user interface; or (ii) by downloading a pre-compiled version of R and adding a shortcut icon for the user interface to the desktop.
 
-**Note to Mac users:** Before you begin the installation process you need make sure you have the **XQuartz** software (also known as X11)  on your machine. Users of OS X 10.5 (Leopard), 10.6 (Snow Leopard) and 10.7 (Lion) should already have this installed by default (to check, look for the `X11.app` application in your applications folder). Users of OS X 10.8 (Mountain Lion), 10.9 (Mavericks) and 10.10 (Yosemite) to install it manually.
+**Note to Mac users:** Before you begin the installation process you need make sure you have the **XQuartz** software (also known as X11) on your machine. Users of OS X 10.5 (Leopard), 10.6 (Snow Leopard) and 10.7 (Lion) should already have this installed by default (to check, look for the `X11.app` application in your applications folder). Users of OS X 10.8 (Mountain Lion), 10.9 (Mavericks) and 10.10 (Yosemite) will need to install it manually.
 
 [Download XQuartz](http://xquartz.macosforge.org/landing/)
 
@@ -222,7 +222,7 @@ install.packages(c("CircStats", "fields", "MASS", "nlme", "secr", "tcltk2"))
 
 #### 3.1.3 Install the gibbonsecr package
 
-Once the prequisite packages are installed you can install the gibbonsecr package. It's currently hosted on [GitHub](https://github.com) but you can download it and install it by running the code below.
+Once the prequisite packages are installed you can install the `gibbonsecr` package. It's currently hosted on [GitHub](https://github.com) but you can download it and install it by running the code below.
 
 **Windows users:**
 ```{r eval=FALSE}
