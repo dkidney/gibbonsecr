@@ -14,7 +14,7 @@ ttk::style configure "." \
     -foreground       black \
     -lightcolor       grey95 \
     -relief           flat \
-    -selectbackground dodgerblue \
+    -selectbackground "#0064FF" \
     -selectforeground white \
     -insertwidth      1 \
 ;
@@ -29,7 +29,7 @@ ttk::style configure "TButton" \
 ;
 ttk::style map "TButton" \
     -background  {disabled grey95 active aliceblue} \
-    -bordercolor {disabled grey75 active dodgerblue} \
+    -bordercolor {disabled grey75 active "#0064FF"} \
     -darkcolor   {disabled grey95 active aliceblue} \
     -lightcolor  {disabled grey95 active aliceblue} \
     -foreground  {disabled grey75}
@@ -54,7 +54,7 @@ ttk::style map "TCheckbutton" \
 
 ttk::style map "TCombobox" \
     -background      {disabled grey95} \
-    -bordercolor     {disabled grey75 focus dodgerblue} \
+    -bordercolor     {disabled grey75 focus "#0064FF"} \
     -darkcolor       {disabled grey95 focus white} \
     -lightcolor      {disabled grey95 focus white} \
     -fieldbackground {disabled grey95} \
@@ -67,7 +67,7 @@ ttk::style map "TCombobox" \
 
 ttk::style map "TEntry" \
     -background      {disabled grey95} \
-    -bordercolor     {disabled grey75 focus dodgerblue} \
+    -bordercolor     {disabled grey75 focus "#0064FF"} \
     -darkcolor       {disabled grey95 focus white} \
     -lightcolor      {disabled grey95 focus white} \
     -fieldbackground {disabled grey95} \

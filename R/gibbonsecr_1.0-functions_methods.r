@@ -1603,7 +1603,7 @@ summary_capthist = function(capthist){
     detections.table = rbind(
         "ngroups"     = n_groups(capthist),
         "ndetections" = n_detections(capthist),
-        "ndays"       = n_occasions(capthist),
+        "noccasions"  = n_occasions(capthist),
         "nposts"      = n_traps(capthist)
     )
     detections.table = cbind(detections.table,
