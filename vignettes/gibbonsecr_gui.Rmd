@@ -1,15 +1,34 @@
 ---
-title: "gibbonsecr: GUI User Manual"
-date: "`r Sys.Date()`"
+title: 'gibbonsecr: GUI User Manual'
+author: "Darren Kidney"
+date: '`r Sys.Date()`'
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{GUI User Manual}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+ %\VignetteIndexEntry{GUI User Manual}
+ %\VignetteEngine{knitr::rmarkdown}
+ %\VignetteEncoding{UTF-8} 
 ---
 
-<!-- output: rmarkdown::pdf_document --> 
-<!-- output: rmarkdown::html_document --> 
+<!-- 
+title: 'gibbonsecr: GUI User Manual'
+author: "Darren Kidney"
+date: '`r Sys.Date()`'
+output: rmarkdown::html_vignette
+vignette: >
+ %\VignetteIndexEntry{GUI User Manual}
+ %\VignetteEngine{knitr::rmarkdown}
+ %\VignetteEncoding{UTF-8} 
+--> 
+
+<!-- 
+title: 'gibbonsecr: GUI User Manual'
+output: pdf_document
+--> 
+
+<!-- 
+output: rmarkdown::html_document 
+--> 
+
 
 <a name="contents"></a>
 
@@ -32,6 +51,9 @@ vignette: >
 <a href="#selection">**8. Model selection**</a>
 
 <a href="#menu">     **9. Menu options**</a>
+
+<a href="#bugs">     **10. Reporting bugs**</a>
+
 
 
 
@@ -66,7 +88,7 @@ The `gibbonsecr` software package uses **Spatially Explicit Capture--Recapture (
 <a href="#contents">(Back to contents)</a>
 
 <br/>
-Over the past decade SECR has become an increasingly popular tool for wildlife population assessment and has been used to analyse survey data for a wide range of animal groups. The main advantage it has over traditional capure-recapture techniques is that it allows direct estmation of population **density** rather than abundance. Traditional capture-recapture methods can only provide density estimates through the use of separate estimates (or assumptions) about the size of the sampled area. In SECR however, density is estimated from the survey data by using information contained in the pattern of the recapture data (relative to the locations of the detectors) to make inferences about the spatial location of animals. By extracting spatial information in this way SECR can provide direct estimates of density without requiring the exact locations of the detected animals to be known in advance.
+Over the past decade SECR has become an increasingly popular tool for wildlife population assessment and has been used to analyse survey data for a wide range of animal groups. The main advantage it has over traditional capture-recapture techniques is that it allows direct estimation of population **density** rather than abundance. Traditional capture-recapture methods can only provide density estimates through the use of separate estimates (or assumptions) about the size of the sampled area. In SECR however, density is estimated from the survey data by using information contained in the pattern of the recapture data (relative to the locations of the detectors) to make inferences about the spatial location of animals. By extracting spatial information in this way SECR can provide direct estimates of density without requiring the exact locations of the detected animals to be known in advance.
 
 <a name="intro-setup"></a>
 
@@ -74,19 +96,19 @@ Over the past decade SECR has become an increasingly popular tool for wildlife p
 
 The basic data collection setup for an SECR analysis consists of a spatial array of **detectors**. Detectors come in a variety of different forms, including traps which physically detain the animals, and **proximity detectors** which do not. Using proximity detectors it is possible for an animal to be detected at more than one detector (i.e. recaptured) during a single sampling occasion.
 
-The plot below shows a hypothetical array of proximity detectors, with red squares representing detections of the same animal (or the same group in the case of gibbons surveys) and black squares representing no detections.
+The plot below shows a hypothetical array of proximity detectors, with red squares representing detections of the same animal (or the same group in the case of gibbon surveys) and black squares representing no detections.
 
 <br/>
 <img src="figures/intro_5x5_array.jpeg" width="100%" style="border-style: none"/>  
 <br/>
 
-The pattern of the detections (i.e. the pattern of the recapture data) gives us information about the true location of the animal/group; intutitively we would guess that it is probably near the cluster of red detectors. The plot below shows a set of probability contours for this unknown location, given the recapture data.
+The pattern of the detections (i.e. the pattern of the recapture data) gives us information about the true location of the animal/group; intuitively we would guess that it is probably near the cluster of red detectors. The plot below shows a set of probability contours for this unknown location, given the recapture data.
 
 <br/>
 <img src="figures/intro_5x5_array_with_contours.jpeg" width="100%" style="border-style: none"/>  
 <br/>
 
-In the case of acoustic gibbon surveys the listening posts can be treated as proximity detectors and the same logic can be applied to infer the unknown locations of the detected groups. However, the design shown in the figure above would obviously be impractical for gibbon surveys. The next figure shows probability contours for a more reslistic array of listening posts where a group has been detected at two of the posts. 
+In the case of acoustic gibbon surveys the listening posts can be treated as proximity detectors and the same logic can be applied to infer the unknown locations of the detected groups. However, the design shown in the figure above would obviously be impractical for gibbon surveys. The next figure shows probability contours for a more realistic array of listening posts where a group has been detected at two of the posts. 
 
 <br/>
 <img src="figures/intro_3x1_array_no_bearings.jpeg" width="100%" style="border-style: none"/>  
@@ -105,7 +127,7 @@ As you probably guessed from the previous section, using fewer detectors results
 <img src="figures/intro_3x1_array_with_bearings.jpeg" width="100%" style="border-style: none"/>  
 <br/>
 
-Using estimated bearings in this way can lead to density estimates that are less biased and more precise than using recapture data alone. Since the precision of bearing estimates is usually unknown, SECR methods estimate it from the data. This requires the choice of a **bearing error distribution**. The figure below shows two common choices of distribution for modelling bearing errors -- the **von Mises** and the **wrapped Cauchy** -- where the color of the lines indicates the value of the precision parameter (SECR estimates the value of this parameter from the survey data).
+Using estimated bearings in this way can lead to density estimates that are less biased and more precise than using recapture data alone. Since the precision of bearing estimates is usually unknown, SECR methods estimate it from the data. This requires the choice of a **bearing error distribution**. The figure below shows two common choices of distribution for modelling bearing errors -- the **von Mises** and the **wrapped Cauchy** -- where the colour of the lines indicates the value of the precision parameter (SECR estimates the value of this parameter from the survey data).
 
 <img src="figures/intro_bearing_error_distributions.jpeg" width="100%" style="border-style: none"/>  
 <br/>
@@ -140,7 +162,7 @@ Another key feature of SECR is that the probability of detecting a (calling) gib
 
 ### 2.5 Detection surface
 
-The association of a detection function with each detector allows the overall probability of detection by at least one detector during the survey to be calculated for any given animal/group location. The figure below illustrates this idea of overall detection probability using a heatmap of a **detection surface**.
+The association of a detection function with each detector allows the overall probability of detection by at least one detector during the survey to be calculated for any given animal/group location. The figure below illustrates this idea of overall detection probability using a heat map of a **detection surface**.
 
 <img src="figures/intro_detection_surface.jpeg" width="100%" style="border-style: none"/>  
 
@@ -153,11 +175,11 @@ The region near the centre of the surface is close to the detector array and has
 
 ### 2.6 Effective sampling area
 
-The shape of the detection surface is related to the size of the **effective sampling area**. Since the region close to the detectors has a very high detection probability, most animals/groups within this region will be detected and this region will therefore be almost perfectly sampled. However, regions where the detection probability is less than 1 will not be compltely sampled as some animal/groups in these areas will be missed. The figure below illustrates this idea for a series of arbitrary detection surfaces.
+The shape of the detection surface is related to the size of the **effective sampling area**. Since the region close to the detectors has a very high detection probability, most animals/groups within this region will be detected and this region will therefore be almost perfectly sampled. However, regions where the detection probability is less than 1 will not be completely sampled as some animal/groups in these areas will be missed. The figure below illustrates this idea for a series of arbitrary detection surfaces.
 
 <img src="figures/intro_detection_surfaces.jpeg" width="100%" style="border-style: none"/>
 
-The first plot in this figure shows a flat surface where the detection probability is 0.5 everywhere. In this scenario every animal/group has a 50% chance of being detected. If the area covered by the surface was 10km^2^, then the *effective* sampling area would be 10km^2^ x 0.5 = 5km^2^. Using this detection process we would expect to detect the same number of animals/groups as we would if we perfectly sampled an area of 5km^2^. In the second plot in the figure above half of the area is sampled perfectly and the other half is not sampled at all, so this has the same effective sampling area as the first plot. The third plot has a detection gradient and isn't as intuitive to interpret. However, the way we calculate the effective survey area is to calculate the volumn under the detection surface. The third plot has the same volume as the other two, so it has the same effective area.
+The first plot in this figure shows a flat surface where the detection probability is 0.5 everywhere. In this scenario every animal/group has a 50% chance of being detected. If the area covered by the surface was 10km^2^, then the *effective* sampling area would be 10km^2^ x 0.5 = 5km^2^. Using this detection process we would expect to detect the same number of animals/groups as we would if we perfectly sampled an area of 5km^2^. In the second plot in the figure above half of the area is sampled perfectly and the other half is not sampled at all, so this has the same effective sampling area as the first plot. The third plot has a detection gradient and isn't as intuitive to interpret. However, the way we calculate the effective survey area is to calculate the volume under the detection surface. The third plot has the same volume as the other two, so it has the same effective area.
 
 <br/>
 <a href="#intro">(Back to top of section)</a>  
@@ -212,10 +234,11 @@ Optionally you can also install something called **RStudio** which acts as an in
 
 #### 3.1.2 Install prerequisite R packages
 
-The `gibbonsecr` package uses some other R packages which don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R console.
+The `gibbonsecr` package uses some other R packages that don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R console.
 
 ```{r eval=FALSE}
-install.packages(c("CircStats", "fields", "MASS", "nlme", "secr", "tcltk2"))
+install.packages(c("CircStats", "fields", "MASS", "nlme", "secr", "tcltk2"),
+                 dependencies = TRUE)
 ```
 
 <a name="load-r-gibbonsecr"></a>
@@ -232,15 +255,15 @@ install.packages("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibb
 
 **Mac users:**
 ```{r eval=FALSE}
-install.packages("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibbonsecr_1.0.tgz", 
-                 repos = NULL, type = "mac.binary")
+install.packages("devtools", dependencies = TRUE)
+devtools::install_url("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibbonsecr_1.0.tgz")
 ```
 
 <a name="load-r-gui"></a>
 
 #### 3.1.4 Launch the user interface
 
-You only need to run the above steps once. When everything is installed you can launch the user interface by opening R (or RStudio) and typing the following lines into the console.
+You only need to run the above steps once. Once everything is installed you can launch the user interface by opening R (or RStudio) and typing the following lines into the console.
 
 ```{r eval=FALSE}
 library(gibbonsecr)
@@ -285,7 +308,7 @@ TODO
 
 <a href="#data-details">**4.2 Data details**</a>
 
-<a href="#data-buttons">**4.3 The Import button**</a>
+<a href="#data-buttons">**4.3 Data buttons**</a>
 
 <a href="#contents">(Back to contents)</a>
 
@@ -299,7 +322,7 @@ This is done via the *Data* tab.
 
 ### 4.1 CSV files
 
-As a minumim you need to prepare a **detections** file and a **posts** file. You can also include an optional **covariates** file. Advice on how to structure these files is given in the sections below. All raw data files need to be in `.csv` format. The file paths to your data files can be entered manually into the text entry boxes in the *CSV files* section, or you can navigate to the file path using the `...` button.
+As a minimum you need to prepare a **detections** file and a **posts** file. You can also include an optional **covariates** file. Advice on how to structure these files is given in the sections below. All raw data files need to be in `.csv` format. The file paths to your data files can be entered manually into the text entry boxes in the *CSV files* section, or you can navigate to the file path using the `...` button.
 
 <a name="data-csv-detections"></a>
 
@@ -363,14 +386,14 @@ The screenshot below shows an example covariates file for a one-day survey.
 
 ### 4.2 Data details
 
-Once the paths to the data files have been entered, select the relevent units from the *Data details* dropdown boxes for your estimated bearings data (and estimated distances data if it was collected). (Note that the current version of the software only allows `Type = continuous` since interval methods for bearings and distances haven't yet been implemented.)
+Once the paths to the data files have been entered, select the relevant units from the *Data details* dropdown boxes for your estimated bearings data (and estimated distances data if it was collected). (Note that the current version of the software only allows `Type = continuous` since interval methods for bearings and distances haven't yet been implemented.)
 
 <a href="#data">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
 
 <a name="data-buttons"></a>
 
-### 4.3 The Import button
+### 4.3 Data buttons
 
 Once the paths to your data files have been added and the data details checked, you can then press the `Import` button. If your data imports successfully then a summary print out should appear in the output window. You can re-print this summary at any time by pressing the `Summary` button.
 
@@ -399,7 +422,7 @@ The screenshot below shows an example of some summary output after a successful 
 <a href="#mask-shp-region">  --- 5.2.1 Region</a>  
 <a href="#mask-shp-habitat"> --- 5.2.2 Habitat</a>  
 
-<a href="#mask-buttons">**5.3 The Make button**</a>  
+<a href="#mask-buttons">**5.3 Mask buttons**</a>  
 
 <a href="#contents">(Back to contents)</a>
 
@@ -425,7 +448,7 @@ To illustrate this issue, the figure below shows a series of detection surfaces 
 <img src="figures/mask_buffer_10000.jpeg" width="30%" style="border-style: none"/>
 <img src="figures/mask_buffer_5000.jpeg" width="30%" style="border-style: none"/>
 
-The buffer plot 1 looks to be too small, since the detection probability at the buffer distance is much greater than zero. In this case it is extremely likely that the true locations of some of the detected groups were actually outside the buffer zone. In plot 2 the buffer has been increased to 10000m. The detection probabiilty at the buffer distance looks to be at zero so we would expect the density estimate to be unbiased. The density estimate in plot 2 is about 75% lower than the estimate in plot 1, which suggests that the estimate in plot 1 is a big overestimate. The buffer distance plot 3 is intermediate between the other two. The detection probability is still zero at the buffer distance, but the estimated density is very similar to plot 2, so it doesn't look to be biased. In this case the mask in plot 3 would be preferred since (for a given resolution) it will be much quicker to fit models than the mask in plot 2 whilst still giving reliable results.
+The buffer plot 1 looks to be too small, since the detection probability at the buffer distance is much greater than zero. In this case it is extremely likely that the true locations of some of the detected groups were actually outside the buffer zone. In plot 2 the buffer has been increased to 10000m. The detection probability at the buffer distance looks to be at zero so we would expect the density estimate to be unbiased. The density estimate in plot 2 is about 75% lower than the estimate in plot 1, which suggests that the estimate in plot 1 is a big overestimate. The buffer distance plot 3 is intermediate between the other two. The detection probability is still zero at the buffer distance, but the estimated density is very similar to plot 2, so it doesn't look to be biased. In this case the mask in plot 3 would be preferred since (for a given resolution) it will be much quicker to fit models than the mask in plot 2 whilst still giving reliable results.
 
 <a href="#mask">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
@@ -445,6 +468,8 @@ The buffer spacing is the distance between adjacent mask points. Decreasing the 
 
 The *Mask* tab also allows you to upload shapefiles in order to attach spatial covariate values to each of the mask points for use in model formulas.
 
+**NB: Make sure the projection units in your .shp files are compatible with the coordinate system used in your *posts* data file**
+
 <a name="mask-shp-region"></a>
 
 #### 5.2.1 Region
@@ -462,7 +487,7 @@ TODO
 
 <a name="mask-buttons"></a>
 
-### 5.4 The Make button
+### 5.4 Mask buttons
 
 TODO
 
@@ -483,7 +508,11 @@ TODO
 
 <a href="#model-submodels">**6.2 Model parameters**</a>  
 <a href="#model-submodels-formulas">--- 6.2.1 Formulas</a>  
-<a href="#model-submodels-fixed">   --- 6.2.1 Fixing parameter values</a>  
+<a href="#model-submodels-fixed">   --- 6.2.2 Fixing parameter values</a>  
+<a href="#model-submodels-g0">      --- 6.2.3 Estimating g0</a>  
+<a href="#model-submodels-pcall">   --- 6.2.4 Estimating calling probability</a>  
+
+<a href="#model-buttons">**6.3 Model buttons**</a>  
 
 <a href="#contents">(Back to contents)</a>
 
@@ -515,12 +544,12 @@ Setting the bearings/distances distribution to `none` means that the bearings/di
 
 The next section in the *Model* tab provides various options for refining your model. Each row in this section relates to a particular parameter in the SECR model.
 
-* **`D`** -- The number of groups per square kilometer
+* **`D`** -- The number of groups per square kilometre
 * **`g0`** -- The detection function intercept parameter (see <a href="#intro-detfunc">Section 2.4 </a>)
 * **`sigma`** -- The detection function scale parameter (see <a href="#intro-detfunc">Section 2.4 </a>)
 * **`bearings`** -- The parameter of the distribution for the bearing errors (see <a href="#intro-bearings">Section 2.2 </a>)
 * **`distances`** -- The parameter of the distribution for the estimated distances (see <a href="#intro-distances">Section 2.3 </a>)
-* **`pcall`** -- The probablity of a group calling on a given day
+* **`pcall`** -- The probability of a group calling on a given day
 
 Don't worry if you forget these definitions, hovering your cursor over the row labels on the user interface will open a temporary help box to give you a reminder.
 
@@ -531,15 +560,15 @@ Don't worry if you forget these definitions, hovering your cursor over the row l
 
 #### 6.2.1 Formulas
 
-If you wish to specify a formula for a particular component you need to click the radio button on the right hand side of the *Formula* entry box for that component to activate the entry box. If the radio button is clicked but the box is left empty then the default formula using no covariates (i.e. an intercept-only model) will be assumed. If you wish to specify a model using covariates then you need to type in the names of the covariates you wish to use, separated by `+` signs. E.g. to model `sigma` in terms of habitat and weather then you would type,
+If you wish to estimate a particular parameter in your analysis then you need to make sure that the *Formula* entry box for that parameter is activated by clicking on the radio button on the right hand side of box. If the Formula box is activated but left blank then a single coefficient for that parameter will be estimated (i.e. an intercept-only model). If you wish to specify a formula for a particular parameter you need to click the radio button on the right hand side of the *Formula* entry box for that parameter using the available covariates then you need to type the names of the covariates you wish to use into the Formula box, separated by `+` signs. E.g. to model the `sigma` parameter using habitat and weather then you would type,
 
 ```
 habitat + weather
 ```
 
-in the formula box for `sigma`. 
+into the Formula box for `sigma`. 
 
-**A note to experienced R-users:** For those of you who are familiar with R formula syntax, more complicated formula syntax (such as the use of `as.factor` and `as.numeric` to coerce variables, and `-1` to change the model contrasts) are NOT supported. Howerver the use of gam functions `s`, `te`, `ti` and `t2` (from the `mgcv` package) for numeric variables IS supported.
+**A note to experienced R-users:** As well as `+` you can also the `*` and `:` operators to specify formulas. You can also use gam functions `s`, `te`, `ti` and `t2` (from the `mgcv` package) for numeric variables. However, the use of `as.factor` and `as.numeric` to coerce variables, and `-1` to change the model contrasts, is not supported. 
 
 <a href="#model">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
@@ -550,13 +579,49 @@ in the formula box for `sigma`.
 
 Sometimes you many not want or need to estimate a particular parameter, in which case you can fix its value. To do this, click on the radio button on the right hand side of the *Fixed* entry box and type the value of the parameter in the box.
 
-**`g0`**  
-Note that `g0` should be fixed at 1 for one-day surveys. This is because the probability of detecting a calling group at zero distance from a listening post is extraordinarily unlikely to be anything other than 1 (since you will be standing under the tree it's calling from). However, this is *NOT* the case for multi-day surveys. In a multi-day survey the movement of groups between consecutive sampling days means that we have to redefine group 'location' as being the *average* location of the group. As a result, `g0` needs to be interpreted as the probability of detecting a calling group at zero distance from the *average* location -- in other words, the probability of detecting a calling group when the listening post is *at* the average location. Since a group is unlikely to always be at its average location during a multi-day survey (unless it happens not to move) this probability is unlikely to be 1 and the `g0` parameter should be estimated.
+A general point to bear in mind when fixing any parameter is that it will generally lead to a more precise density estimate (i.e. one with narrower confidence intervals). If the fixed parameter is known with a high degree of certainty then this would be a desirable effect. However, if there is uncertainty over the true value of that parameter (e.g. you may have used an estimate from a previous study) then this will not be incorporated into the SECR results and the precision of the density estimate will be overestimated (i.e. the confidence intervals generated by the software will be too narrow).
 
-**`pcall`**  
-Note also that `pcall` is fixed at 1 by default. For one-day surveys, `pcall` can't be estimated so the only option is to provide a fixed value. Fixing `pcall` to 1 for one-day surveys means that the `D` parameter should be interpreted as the density of *calling* groups, rather than the density of groups. However, if prior knowledge of the calling probability is available you can type this into the *Fixed* box, in which case the density parameter can be reinterpreted as the density of groups. For one-day surveys changing the `pcall` value will result in a direct scaling of the density estimate. For example, if you had an estimated calling group density of 5, changing the fixed value for `pcall` to 0.5 and re-fitting the model would result in a group density estimate of 10. For multi-day surveys the `D` parameter is *always* interpreted as the density of groups. In this case you can either fix the value of `pcall` or estimate it from the data. Fixing `pcall` to 1 for a multi-day survey is likely to result in an underestimate of group density.
+<a href="#model">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
 
-Bear in mind that fixing a parameter value will often lead to a more precise density estimate. If the fixed parmater is known with certainty then this would be a desirable effect. However, if there is uncertainty over the true value of that parameter (e.g. you may have used an estimate from a previous study) then this will not be incorporated into the undertainty of the density estimate and the precision of the density estimate will therefore be overestimated.
+<a name="model-submodels-g0"></a>
+
+#### 6.2.3 Estimating g0
+
+For one-day surveys the only option allowed by the software is to fix `g0` at 1. This is because when the listening post is zero distance from a calling group the probability of detecting it is extraordinarily unlikely to be anything other than 1. (Remember that the `g0` parameter gives the detection probability for a calling group at zero distance from the listening post).
+
+For multi-day surveys however, the movement of groups between consecutive sampling days means that we have to redefine group 'location' as being the *average* location of the group. As a result, `g0` needs to be reinterpreted as the probability of detecting a calling group at zero distance from the *average* location. In this case it is much more likely that the detection probability for a calling group whose average location is zero distance from the listening post will be less than one. This is because a group is unlikely to always be at its average location during a multi-day survey (unless it happens not to move). For multi-day survey data it is therefore a good idea to estimate `g0`.
+
+<a href="#model">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="model-submodels-pcall"></a>
+
+#### 6.2.4 Estimating calling probability
+
+For one-day surveys, `pcall` can't be estimated so the only option is to provide a fixed value. By default, `pcall` is fixed at 1 for one-day surveys, which means that the `D` parameter can be interpreted as the density of *calling* groups, rather than the density of groups. However, the software allows you to change this value (e.g. you may have prior knowledge of the calling probability for the study species) in which case the density parameter can be reinterpreted as the density of groups. For one-day surveys, changing the `pcall` value will result in a direct scaling of the density estimate. For example, if you had an estimated calling group density of 5, changing the fixed value for `pcall` to 0.5 and re-fitting the model would result in a group density estimate of 10.
+
+For multi-day surveys there are three possible options for dealing with the `pcall` parameter when analysing your data.
+
+1. **Estimate `pcall` from the survey data** -- This requires that the survey data contain *temporal recaptures* -- i.e. the group IDs should indicate which groups were detected on more than one survey day. The temporal recapture data needs to be reliable for this method to work. Note that the SECR software considers data from each array independently, so you only need to identify the temporal recaptures within arrays (and not between arrays).
+
+2. **Fix `pcall` to a known value** -- E.g. using data from a previous survey. Bear in mind that fixing `pcall` to a value that is too low will result in a overestimate of group density. Furthermore, remember that fixing the value of pcall is likely to lead to an overestimate in the *precision* of your group density estimate. 
+
+3. **Fix `pcall` to 1 and estimate calling group density** -- This can be done by treat the data from each survey day independently. The only way to do this currently is to modify the `array` and `occasion` columns in your data files before you import the data. The values in the `array` columns should be edited so that the IDs are all unique -- for example, array "1" for occasion 1 could be re-labelled "1_1", array "1" for occasion 2 could be re-labelled "1_2", etc. All entries in the `occasion` columns should be set to 1, and all entries in the `usage` column of the traps file should be set to "1". By doing this the SECR software will treat each occasion independently and ignore any temporal recaptures. should be set so that the software treats the data for each array separately. Note that future versions of the software will hopefully automate this process.
+
+<a href="#model">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="model-buttons"></a>
+
+### 6.3 Model buttons
+
+There are four button at the botton of the *Model* tab:
+
+1. **Fit** -- Use this button to fit the model once you are happy with your model specification. Once your model is fitted a summary will appear in the output console.
+2. **Summary** -- Use this button to reprint the model summary 
+3. **Coef** -- This prints a summary of the raw model coefficients
+4. **Predict** -- This allows you to predict the value of each model parameter. If you have used covariates in model formulas a pop-up box will appear allowing you to choose specific values of covariates (e.g. you may wish to predict density for all levels of a habitat covariates) 
 
 <br/>
 <a href="#model">(Back to top of section)</a>  
@@ -571,11 +636,26 @@ Bear in mind that fixing a parameter value will often lead to a more precise den
 
 ## 7. Plotting results
 
-`**SCREENSHOT**`
+Once you have fitted a model you can plot the results. The *Plots* tab currently has five plotting options:
 
-<br/>
+1. **Detection function**
+2. **Detection Surface**
+3. **Density surface**
+4. **Bearing error distribution**
+5. **Distance estimates distribution**
+
+**There is currently no option for choosing covarate levels when making these plots. By default they use the intercapt coefficients for each model parameter.**
+
+The plots below were fitted to the example data set provided with the software (see <a href="#menu-help-examples">Section 9.1.1</a>).
+
+<img src="figures/plots_detfunc.jpeg" width="45%" style="border-style: none"/>
+<img src="figures/plots_detsurf.jpeg" width="45%" style="border-style: none"/>
+<img src="figures/plots_densurf.jpeg" width="45%" style="border-style: none"/>
+<img src="figures/plots_bearings.jpeg" width="45%" style="border-style: none"/>
+
 <a href="#plots">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
+
 
 
 
@@ -585,9 +665,44 @@ Bear in mind that fixing a parameter value will often lead to a more precise den
 
 ## 8. Model selection
 
+<a href="#selection-aic">**8.1 AIC**</a>  
+
+<a href="#selection-aic">**8.2 Model plausibility**</a>  
+
+<br>
+An important element of statistical modelling is choosing a preferred model from a number of candidate models. For example, you may get a slightly different density estimate when using the hazard rate detection function instead of the half normal detection function. How do you decide which model, and therefore which density estimate, should be preferred?
+
+<a name="selection-aic"></a>
+
+### 8.1 AIC
+
+A common way of choosing between competing models is to use something called the **AIC score**. This is a number that can be calculated from the fitted model which tries to measure how well the model balances having a good fit to the data whilst not being overly complex. The AIC score can be found at the bottom of the model summary printout (which is displayed after pressing the model *Summary* button at the bottom of the *Model* tab).
+
+When using AIC it is important to bear in mind the following points:
+
+* **Lower AIC scores are preferred.** For example, if model A has an AIC score of 10, and model B has a score of 100, then model A would be preferred to model B.
+
+* **Negative scores are preferred to postitive scores.** For example, if model A has an AIC score of -10 and model B has a score of -100, then model B would be preferred to model A.
+
+* **Diffences of 2 or more are meaningful.** This is a general rule-of-thumb for deciding between models with different number of coefficients. If the difference is less than this then you should be conservative and keep the model with the fewest coefficients. For example suppose you fitted model A with an intercept-only formula for density (i.e. no covariates) which had an AIC of 100. Then suppose you fitted a model B with habitat as a covariate for density (e.g. `D ~ habitat`) which had an AIC of 99. The difference is only -1 which isn't a big difference, and according to the rule of thumb the difference isn't large enough to prefer model B over model A. Now imagine that you fitted a third model, model C, using altitude as a covariate for density (e.g. `D ~ altitude`) which had an AIC of 95. The difference between model A and model C is 5, so according to the rule of thumb model C would be preferred.
+
+* **Only models fitted to the same data can be compared using AIC.** For example, you could use AIC to help you decide whether or not to use the von Mises distribution or the Wrapped Cauchy distribution to model the bearing errors, because both models would have been fitted using the estimated bearings data. However you could *not* use AIC to compare two models where one used a bearing error distribution and one used no bearing error distribution, since the estimated bearings data would be used in the first model but ignored in the second models (the precision of the density estimate might be a better to make a decision in this case). For a similar reason, you also should *not* use AIC to compare models fitted using different masks. 
+
+* **The magnitude of the AIC score tells you nothing about how *good* a model is.** The difference in AIC between two competing models helps you decide which one is better, but they might both be poor models. Unfortunatley on of the disadvantages of SECR is that there is currently no means for calculating model goodness-of-fit statistics.
+
+<a href="#selection">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
+
+<a name="selection-plausibility"></a>
+
+### 8.2 Model plausibility
+
+Whilst AIC can be extremely useful it shouldn't be used blindly and you should also ensure that any preferred model is also *plausible*. For example, model A might have a lower AIC score than model B, but if model A looks entirely unrealistic (e.g. given your knowledge of the study system) then you should discard it. For example, a fitted bearing error distribution which implied that errors as large as 180 degrees were highly probable might be ignored if such an outcome is known to be very unlikely under normal field conditions.
+
 <br/>
 <a href="#selection">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
+
 
 
 
@@ -614,7 +729,7 @@ Bear in mind that fixing a parameter value will often lead to a more precise den
 
 #### 9.1.1 Example Data
 
-TODO
+This contains a link to data from a single-day survey of *Nomascus annamensis*. Clicking the link should automatically load this data into the interface. It might be a good idea to explore this data first and have a quick practice at fitting models before importing you own data.
 
 <a href="#menu">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
@@ -627,22 +742,29 @@ TODO
 
 #### 9.2.1 Setting the working directory
 
-TODO
+This option allows you to specify a home directory for your project. Once it has been set, this will be the default directory when browsing for files and saving workspaces.
 
 <a name="menu-workspace-save"></a>
 
 #### 9.2.2 Saving and loading workspaces
 
-TODO
-
-<a href="#menu">(Back to top of section)</a>  
-<a href="#contents">(Back to contents)</a>
+These options allows you to save the current session, including the mask and model, and re-load it for later use. E.g. it may take a while to make a high resolution mask (especially if you import gis shapefiles) or fit a model with several covariates and saving the workspace means you won't have to repeat those steps every time you re-open the software. Bear in mind that if you want to save a series of models you should save them in separate workspaces (since each workspace contains a maximum of one fitted model).
 
 
+
+
+********************************************************************************
+
+<a name="bugs"></a>
+
+## 10. Reporting bugs
+
+Version 1.0 of the software is the first release version. Whilst it has been tested on a number of data sets there might still be some bugs or other things that need to be fixed. If you encounter anything that needs to be fixed, or if you have any other suggestions or feedback about the software, please email Darren at darrenkidney@yahoo.co.uk.
 
 <br/>
 <a href="#menu">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
+
 
 
 
