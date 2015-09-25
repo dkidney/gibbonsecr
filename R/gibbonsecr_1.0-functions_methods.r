@@ -692,20 +692,32 @@ get_captures = function(capthist, summarise = NULL){
 get_esa = function(fit){
     if(!inherits(fit, "gibbonsecr_fit"))
         stop("requires a gibbonsecr_fit object")
-    esa = calc_esa(
-        beta            = coef(fit),
-        detectfn        = fit$model.options$detectfn,
-        parindx         = fit$parindx,
-        fixed           = fit$fixed,
-        design.matrices = fit$design.matrices,
-        distances       = calc_distances(traps(fit$capthist), fit$mask),
-        usage           = usage(traps(fit$capthist)),
-        inv.link        = fit$inv.link,
-        S               = n_occasions(fit$capthist),
-        K               = n_traps(fit$capthist),
-        M               = mask_npoints(fit$mask),
-        a               = mask_area(fit$mask)
-    )
+
+    # shortcut if D model is intercept only
+    # otherwise need to calculate
+    esa = if(fit$model$D == ~ 1){
+
+        n_groups(fit$capthist) / fit$inv.link$D(coef(fit)[fit$parindx$D])
+
+    }else{
+
+        calc_esa(
+            beta            = coef(fit),
+            detectfn        = fit$model.options$detectfn,
+            parindx         = fit$parindx,
+            fixed           = fit$fixed,
+            design.matrices = fit$design.matrices,
+            distances       = calc_distances(traps(fit$capthist), fit$mask),
+            usage           = usage(traps(fit$capthist)),
+            inv.link        = fit$inv.link,
+            S               = n_occasions(fit$capthist),
+            K               = n_traps(fit$capthist),
+            M               = mask_npoints(fit$mask),
+            a               = mask_area(fit$mask)
+        )
+
+    }
+
     return(esa)
 }
 
@@ -1728,7 +1740,7 @@ summary.gibbonsecr_fit = function(object, ...){
         ##################################################
         ## model
 
-        cat("Model:\n")
+        cat("Model options:\n")
         cat(" detection func.", switch(object$model.options$detectfn + 1,
                                        "half normal",
                                        "hazard rate"), "\n")
@@ -1750,9 +1762,39 @@ summary.gibbonsecr_fit = function(object, ...){
         # cat("\n")
 
         ##################################################
+        ## formulas
+
+        cat("Formulas:\n")
+        nspace = max(nchar(names(object$parindx)))
+        for(i in names(object$parindx)){
+            cat(rep(" ", 1 + nspace - nchar(i)),
+                paste(i, paste(object$model[[i]], collapse = " ")), "\n", sep = "")
+        }
+        cat("\n")
+
+        ##################################################
+        ## fixed
+
+        if(length(object$fixed) == 0){
+            cat("No fixed parameters\n")
+        }else{
+            cat("Fixed parameters:\n")
+            nspace = max(nchar(names(object$fixed)))
+            for(i in names(object$fixed)){
+                cat(rep(" ", 1 + nspace - nchar(i)),
+                    paste(i, "=", object$fixed[[i]]), "\n", sep = "")
+            }
+            # temp = cbind(value = unlist(object$fixed)) ; temp
+            # rownames(temp) = paste0(" ", names(object$fixed))
+            # print(temp)
+        }
+
+        cat("\n")
+
+        ##################################################
         ## parameter estimates
 
-        cat("Parameter estimates (sub-model intercepts on inverse link scale):\n")
+        cat("Coefficients (model intercepts on inverse link scale):\n")
         est = coef(object)
         par.table = list(estimate = est)
         # confidence intervals
@@ -1789,7 +1831,7 @@ summary.gibbonsecr_fit = function(object, ...){
         # add units
         par.table$units = sapply(rownames(par.table), function(i){
             switch(i,
-                   "D" = "grps / sq km",
+                   "D" = "groups / sq km",
                    "sigma" = "metres",
                    "")
         })
@@ -1798,22 +1840,10 @@ summary.gibbonsecr_fit = function(object, ...){
         cat("\n")
 
         ##################################################
-        ## fixed
-
-        if(length(object$fixed) == 0){
-            cat("No fixed parameters\n")
-        }else{
-            cat("Fixed parameters:\n")
-            temp = cbind(value = unlist(object$fixed)) ; temp
-            rownames(temp) = paste0(" ", names(object$fixed))
-            print(temp)
-        }
-
-        ##################################################
         ## esa, aic and run time
 
         esa = get_esa(object)
-        cat("\nEffective sampling area:", round(mean(esa), 1),
+        cat("Effective sampling area:", round(mean(esa), 1),
             "sq km (average per array)\n")
         cat("\nAIC =", AIC(object), "\n")
         cat("\nTime taken: ", round(object$run.time,1), " ",
@@ -1822,7 +1852,7 @@ summary.gibbonsecr_fit = function(object, ...){
         # cat("\n")
 
     }else{
-        warning("Fitting algorithm did not converge")
+        warning(paste0("Fitting algorithm did not converge (nlm code: ", object$nlm$code, ")"))
     }
 
     invisible()
