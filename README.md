@@ -95,7 +95,7 @@ vignette("gui", package = "gibbonsecr")
 
 ## 3. Report problems
 
-If you experience any problems with the installation process please email me at darrenkidney@yahoo.co.uk (please mention the version numbers for your installations of R, RStudio and XQuartz).  
+If you experience any problems with the installation process please email me at darrenkidney@yahoo.co.uk (please let me know what operating system you are using and the version numbers for your installations of R, RStudio and XQuartz).  
 
 
 
