@@ -394,8 +394,8 @@ gui_appearance_settings = function(){
                                      package = "gibbonsecr")))
 
     general = list(
-        WIDTH  = 1250,
-        HEIGHT = 675,
+        WIDTH  = 1150,
+        HEIGHT = 650,
         frame.padding = c(5,5),
         console.fg    = "grey80",
         console.bg    = "grey15",
@@ -405,6 +405,8 @@ gui_appearance_settings = function(){
     if(.Platform$OS.type == "windows"){
 
         specific = list(
+            min.height = 430,
+            min.width = 355,
             lhs.width = 350,
             rhs.width = general$WIDTH - 350,
             button.width = 9,
@@ -431,6 +433,8 @@ gui_appearance_settings = function(){
     }else{
 
         specific = list(
+            min.height = 425,
+            min.width = 415,
             lhs.width = 410,
             rhs.width = general$WIDTH - 410,
             button.width = 8,

@@ -134,7 +134,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         # model
         detfunc             = "half normal",
         bearings.dist       = "von mises",
-        distances.dist      = "none",
+        distances.dist      = "gamma",
         D.formula           = "",
         g0.formula          = "",
         sigma.formula       = "",
@@ -221,7 +221,10 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         tcltk::ttkradiobutton(parent, value = value, command = command, state = state, ...)
     }
 
-        ##################################################
+    # tkimage.create("photo", "::img::gibbonsecr_logo", width = 100, height = 100,
+                   # file = system.file("doc/icon/gibbonsecr.gif", package = "gibbonsecr"))
+
+    ##################################################
     ## Functions
 
     about = function(){
@@ -232,15 +235,17 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     add_heading = function(parent, text){
-        tkpack(tklabel(parent, text, font = os$heading.font), anchor = "w")
+        tkpack(tklabel(parent, text, font = os$heading.font, foreground = "#0064FF"), anchor = "w")
     }
 
     add_icon = function(window){
         if(.Platform$OS.type == "windows"){
             tcl('wm', 'iconbitmap', window, system.file('doc/icon/gibbonsecr.ico', package = "gibbonsecr"))
         }else{
-            tcl('wm', 'iconphoto', window, tcl('image', 'create', 'photo', '-file', system.file('doc/icon/gibbonsecr.png', package = "gibbonsecr")))
+            tcl('wm', 'iconphoto', window, system.file('doc/icon/gibbonsecr.gif', package = "gibbonsecr"))
+            # tcl('wm', 'iconphoto', window, tcl('image', 'create', 'photo', '-file', system.file('doc/icon/gibbonsecr.png', package = "gibbonsecr")))
         }
+            # tcl('wm', 'iconphoto', window, "::img::gibbonsecr_logo")
     }
 
     add_separator = function(parent){
@@ -249,16 +254,17 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     browse = function(file, ext = "csv"){
-        eval(parse(text = paste0("
+        text = gsub("FILE", file, gsub("EXT", ext, paste("
         function(){
             filepath = tclvalue(tkgetOpenFile(
-                filetypes = '{{} {.", ext, "}}',
+                filetypes = '{{} {.EXT}}',
                 initialdir = robj$wd))
             if(nchar(filepath) > 0){
-                tclvalue(tvar$tobj$data$", file, ") = filepath
+                tclvalue(tvar$FILE.path) = filepath
                 refresh()
             }
-        }")))
+        }"))) # cat(text)
+        eval(parse(text = text))
     }
 
     clear_console = function(){
@@ -351,7 +357,9 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     exit_prompt = function(){
         if(prompt.save.on.exit){
-            response = tkmessageBox(title = "", message = "Save workspace before quitting?", icon = "question", type = "yesnocancel", default = "no")
+            response = tkmessageBox(title = "", icon = "question",
+                                    message = "Save workspace before quitting?",
+                                    type = "yesnocancel", default = "no")
             switch(tclvalue(response),
                    "yes" = {
                        filename = workspace_save()
@@ -365,21 +373,23 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     fixed_radio_command = function(submodel){
-        eval(parse(text = paste0("
+        text = gsub("SUBMODEL", submodel, paste0("
         function(){
-            tkconfigure(tobj$model[['", submodel, ".formula.radio']], state = 'disable')
-            tkconfigure(tobj$model[['", submodel, ".fixed.radio']], state = 'normal')
+            tkconfigure(tobj$model$SUBMODEL.formula.radio, state = 'disable')
+            tkconfigure(tobj$model$SUBMODEL.fixed.radio, state = 'normal')
             refresh()
-        }")))
+        }")) # cat(text)
+        eval(parse(text = text))
     }
 
     formula_radio_command = function(submodel){
-        eval(parse(text = paste0("
+        text = gsub("SUBMODEL", submodel, paste0("
         function(){
-            tkconfigure(tobj$model[['", submodel, ".formula.radio']], state = 'normal')
-            tkconfigure(tobj$model[['", submodel, ".fixed.radio']],  state = 'disable')
+            tkconfigure(tobj$model$SUBMODEL.formula.radio, state = 'normal')
+            tkconfigure(tobj$model$SUBMODEL.fixed.radio,  state = 'disable')
             refresh()
-        }")))
+        }")) # cat(text)
+        eval(parse(text = text))
     }
 
     load_N_annamensis = function(){
@@ -828,10 +838,6 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         if(dashes) print_dashes()
     }
 
-    print_working_directory = function(){
-        print_to_console(paste0("Current working directory:\n", gsub("/","\\\\", robj$wd)))
-    }
-
     refresh = function(){
         # this is run at the end of several functions
         # it updates the state of buttons and entry fields,
@@ -936,13 +942,6 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 }
             }
         }
-    }
-
-    set_working_directory = function(){
-        wd = tclvalue(tkchooseDirectory())
-        if(wd != "") robj$wd = path.expand(wd)
-        tkfocus(main.window)
-        print_working_directory()
     }
 
     shp_check = function(poly, capthist, region = TRUE){
@@ -1089,20 +1088,32 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     #     }
 
     view = function(file){
-        eval(parse(text = paste0("
+        text = gsub("FILE", file, paste0("
         function(){
-            path = tclvalue(tvar[['", file, ".path']])
+            path = tclvalue(tvar$FILE.path)
             if(file.exists(path)){
-                system(paste('open ', path))
+                system(paste('open', path))
             }else{
-                error_message(paste0(\"cant find ", file, " file:\\n- '\", path, \"'\"", "))
+                error_message(paste0(\"cant find FILE file:\\n- '\", path, \"'\"", "))
             }
-        }"
-        )))
+        }")) # cat(text)
+        eval(parse(text = text))
     }
 
     warning_message = function(message){
         print_to_console(paste("Warning:", message), tag = "warningTag")
+    }
+
+    wd_print = function(){
+        print_to_console(paste0("Current working directory:\n", gsub("/","\\\\", robj$wd)),
+                         dashes = TRUE)
+    }
+
+    wd_set = function(){
+        wd = tclvalue(tkchooseDirectory())
+        if(wd != "") robj$wd = path.expand(wd)
+        tkfocus(main.window)
+        wd_print()
     }
 
     workspace_clear = function(){
@@ -1176,7 +1187,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                                       round((screen.width - os$WIDTH) / 2), "+",
                                       round((screen.height - os$HEIGHT) / 2)))
     # set minimum window size
-    tkwm.minsize(main.window, os$WIDTH, os$HEIGHT)
+    tkwm.minsize(main.window, os$min.width, os$min.height)
+    # tkwm.minsize(main.window, os$lhs.width, os$min.height)
     # put notebook widget in left hand side for tabs
     lhs = ttknotebook(main.window, width = os$lhs.width, height = os$HEIGHT,
                       padding = c(0,0))
@@ -1391,7 +1403,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ## submodels
 
     add_separator(tab.model)
-    add_heading(tab.model, "Sub-models")
+    add_heading(tab.model, "Model parameters")
     frame.model.submodels = tkframe(tab.model)
     tkpack(frame.model.submodels)
     label.formula   = tklabel(frame.model.submodels, "Formula")
@@ -1656,12 +1668,12 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkadd(menu$workspace, "command", label = "Load workspace",  command = workspace_load, accelerator = "CTRL+L")
     tkadd(menu$workspace, "command", label = "Clear workspace", command = workspace_clear)
     tkadd(menu$workspace, "separator")
-    tkadd(menu$workspace, "command", label = "Set working directory", command = set_working_directory)
-    tkadd(menu$workspace, "command", label = "Print working directory", command = print_working_directory)
+    tkadd(menu$workspace, "command", label = "Set working directory", command = wd_set)
+    tkadd(menu$workspace, "command", label = "Print working directory", command = wd_print)
 
     for(i in 1:length(menu)){
         tkconfigure(menu[[i]],
-                    activebackground   = "dodgerblue",
+                    activebackground   = "#0064FF",
                     activeborderwidth  = 0,
                     activeforeground   = "white",
                     background         = "white",
@@ -1745,7 +1757,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         # scrollbar
         g = tcl_args(scrollbar) ; g
 
-        tkconfigure(console, selectbackground = "dodgerblue", selectforeground = "white")
+        tkconfigure(console, selectbackground = "#0064FF", selectforeground = "white")
 
         cat(paste0("\"", paste(sort(unique(c(a, b, c, d, e))), collapse = "\", \""), "\""))
 
