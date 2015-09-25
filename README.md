@@ -12,7 +12,7 @@ gibbonsecr
 
 <a href="#problems">**3. Report problems**</a>
 
-
+<br>
 
 ********************************************************************************
 
@@ -66,7 +66,7 @@ install.packages("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibb
                  repos = NULL, type = "mac.binary")
 ```
 
-
+<br>
 
 ********************************************************************************
 
@@ -87,11 +87,11 @@ You can open the GUI user manual using the help menu in the user interface, or b
 vignette("gui", package = "gibbonsecr")
 ```
 
-<a name="problems"></a>
-
-
+<br>
 
 ********************************************************************************
+
+<a name="problems"></a>
 
 ## 3. Report problems
 
