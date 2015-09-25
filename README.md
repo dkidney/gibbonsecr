@@ -2,13 +2,13 @@
 gibbonsecr
 ===========
 
-********************************************************************************
+<br>
 
 ## Contents
 
 <a href="#installation">**1. Installation**</a>
 
-<a href="#launch">**2. Launch the GUI**</a>
+<a href="#launch">**2. Launch the user interface**</a>
 
 <a href="#problems">**3. Report problems**</a>
 
@@ -20,7 +20,7 @@ gibbonsecr
 
 ## 1. Installation
 
-To download and install the `gibbonsecr` package directly from github follow the instructions below.
+To download and install the necessary software to run the `gibbonsecr` package follow the instructions below.
 
 ### Install R
 
@@ -38,13 +38,13 @@ Optionally, you can also install **RStudio** which is a non-essential but more u
 
 ### Mac setup
 
-Mac users using more recent versions of the OS may need to install **XQuartz**. Users of OS X 10.5 (Leopard), 10.6 (Snow Leopard) and 10.7 (Lion) should already have this installed by default (to check, look for the `X11.app` application in your applications folder). Users of OS X 10.8 (Mountain Lion), 10.9 (Mavericks) and 10.10 (Yosemite) will need to install it manually.
+Mac users using more recent versions of the OS may need to install **XQuartz**. Users of OS X 10.5 (Leopard), 10.6 (Snow Leopard) and 10.7 (Lion) should already have this installed by default (to check, look for the `X11.app` application in your applications folder). Users of OS X 10.8 (Mountain Lion), 10.9 (Mavericks) and 10.10 (Yosemite) will need to install it manually:
 
 [Download XQuartz](http://xquartz.macosforge.org/landing/)
 
 ### Install prerequisite packages
 
-The `gibbonsecr` package uses some other R packages which don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R console.
+The `gibbonsecr` package uses some other R packages that don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R console.
 
 ```{r}
 install.packages(c("CircStats", "fields", "MASS", "nlme", "secr", "tcltk2"))
@@ -74,14 +74,14 @@ install.packages("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibb
 
 ## 2. Launch the user interface
 
-Once everything has been successfully installed, load the package and run the `gibbonsecr_gui` function.
+Once everything has been successfully installed, open R (or RStudio) and type the following commands into the console:
 
 ```{r}
 library(gibbonsecr)
 gibbonsecr_gui()
 ```
 
-You can open the GUI user manual using the help menu in the user interface, or by running the following code in the R console.
+You can open the manual for the user interface from the *Help* menu in the interface itself, or by running the following code in R:
 
 ```{r}
 vignette("gui", package = "gibbonsecr")
