@@ -2,9 +2,7 @@
 gibbonsecr
 ===========
 
-<br>
-
-## Contents
+### Contents
 
 <a href="#installation">**1. Installation**</a>
 
