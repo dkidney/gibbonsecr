@@ -1659,7 +1659,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkadd(menu$help, "cascade", label = "Example data", menu = menu$help.examples)
     tkadd(menu$help.examples, "command", label = "N.annamensis", command = load_N_annamensis)
     # tkadd(menu$help.examples, "command", label = "N.siki", command = load_N_siki)
-    tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
+    # tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
     tkadd(menu$help, "command", label = "User manual", command = open_manual_html)
     tkadd(menu$help, "command", label = "About gibbonsecr", command = about)
 

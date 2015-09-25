@@ -750,6 +750,8 @@ This option allows you to specify a home directory for your project. Once it has
 
 These options allows you to save the current session, including the mask and model, and re-load it for later use. E.g. it may take a while to make a high resolution mask (especially if you import gis shapefiles) or fit a model with several covariates and saving the workspace means you won't have to repeat those steps every time you re-open the software. Bear in mind that if you want to save a series of models you should save them in separate workspaces (since each workspace contains a maximum of one fitted model).
 
+<a href="#menu">(Back to top of section)</a>  
+<a href="#contents">(Back to contents)</a>
 
 
 
@@ -762,7 +764,6 @@ These options allows you to save the current session, including the mask and mod
 Version 1.0 of the software is the first release version. Whilst it has been tested on a number of data sets there might still be some bugs or other things that need to be fixed. If you encounter anything that needs to be fixed, or if you have any other suggestions or feedback about the software, please email Darren at darrenkidney@yahoo.co.uk.
 
 <br/>
-<a href="#menu">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>
 
 
