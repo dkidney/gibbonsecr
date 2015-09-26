@@ -78,7 +78,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ##################################################
     ## dynamic R objects
 
-    robj_list = list(
+    robjects = list(
         capthist = NULL,
         mask     = NULL,
         region   = NULL,
@@ -89,11 +89,12 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         wd       = path.expand(getwd())
     )
 
-    robj = list2env(robj_list)
+    robj = list2env(robjects)
 
     ##################################################
     ## static R objects
 
+    version = utils::packageVersion("gibbonsecr")
     csv.files = c("detections", "posts", "covariates")
     shp.files = c("region", "habitat1", "habitat2", "habitat3")
     submodels = c("D", "g0", "sigma", "bearings", "distances", "pcall")
@@ -111,7 +112,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ##################################################
     ## tcl variable values
 
-    tval = list2env(list(
+    tclvalues = list2env(list(
         # data
         detections.path     = "",
         posts.path          = "",
@@ -168,8 +169,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ## tcl variables
 
     tvar = new.env()
-    for(i in names(tval)){
-        tvar[[i]] = tclVar(tval[[i]])
+    for(i in names(tclvalues)){
+        tvar[[i]] = tclVar(tclvalues[[i]])
     }
 
     ##################################################
@@ -185,24 +186,29 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ##################################################
     ## redefinintions of tcltk functions (using preferred defaults)
 
-    tkbutton = function(parent, text, command = null_command, width = os$button.width, state = "disabled", ...){
-        tcltk::ttkbutton(parent, text = text, command = command, width = width, state = state, ...)
+    tkbutton = function(parent, text, command = null_command, width = os$button.width,
+                        ...){
+        tcltk::ttkbutton(parent, text = text, command = command, width = width, ...)
     }
 
-    tkcheck = function(parent, variable, state = "disabled", ...){
-        tcltk::ttkcheckbutton(parent, variable = variable, state = state, ...)
+    tkcheck = function(parent, variable, ...){
+        tcltk::ttkcheckbutton(parent, variable = variable, ...)
     }
 
-    tkcombo = function(parent, textvariable, values, width = os$combo.width, state = "disabled", ...){
-        tcltk::ttkcombobox(parent, textvariable = textvariable, values = values, width = width, state = state, ...)
+    tkcombo = function(parent, textvariable, values, width = os$combo.width,
+                       state = "readonly", ...){
+        tcltk::ttkcombobox(parent, textvariable = textvariable, values = values,
+                           width = width, state = state, ...)
     }
 
-    tkentry = function(parent, textvariable, width = os$entry.width, state = "disabled", ...){
-        tcltk::ttkentry(parent, textvariable = textvariable, width = width, state = state, ...)
+    tkentry = function(parent, textvariable, width = os$entry.width, ...){
+        tcltk::ttkentry(parent, textvariable = textvariable, width = width, ...)
     }
 
-    tkframe = function(parent, width = os$lhs.width, padding = os$frame.padding, relief = os$relief, ...){
-        tcltk::ttkframe(parent, width = width, padding = padding, relief = relief, ...)
+    tkframe = function(parent, width = os$lhs.width, padding = os$frame.padding,
+                       relief = os$relief, ...){
+        tcltk::ttkframe(parent, width = width, padding = padding,
+                        relief = relief, ...)
     }
 
     tkgrid = function(..., sticky = "w", padx = os$grid.padx, pady = os$grid.pady){
@@ -213,12 +219,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         tcltk::ttklabel(parent, text = text, ...)
     }
 
-    tkpack = function(..., side = "top", fill = "none", expand = FALSE, anchor = "center"){
+    tkpack = function(..., side = "top", fill = "none", expand = FALSE,
+                      anchor = "center"){
         tcltk::tkpack(..., side = side, fill = fill, expand = expand, anchor = anchor)
     }
 
-    tkradio = function(parent, value, command = null_command, state = "disabled", ...){
-        tcltk::ttkradiobutton(parent, value = value, command = command, state = state, ...)
+    tkradio = function(parent, value, command = null_command, ...){
+        tcltk::ttkradiobutton(parent, value = value, command = command, ...)
     }
 
     # tkimage.create("photo", "::img::gibbonsecr_logo", width = 100, height = 100,
@@ -229,22 +236,25 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     about = function(){
         tkmessageBox(
-            title = paste0("About gibbonsecr v", utils::packageVersion("gibbonsecr")),
-            message = "This is a pre-release version of the software. If you notice any bugs or have any general queries, please email Darren Kidney at darrenkidney@googlemail.com", icon = "info", type = "ok")
+            title = paste0("About gibbonsecr v", version), icon = "info", type = "ok",
+            message = "This is a pre-release version of the software. If you notice any bugs or have any general queries, please email Darren Kidney at darrenkidney@googlemail.com")
         tkfocus(main.window)
     }
 
     add_heading = function(parent, text){
-        tkpack(tklabel(parent, text, font = os$heading.font, foreground = "#0064FF"), anchor = "w")
+        tkpack(tklabel(parent, text, font = os$heading.font, foreground = "#0064FF"),
+               anchor = "w")
     }
 
+    tkimage.create("photo", "::img::tclLogo", file = system.file("doc/icon/gibbonsecr.gif", package = "gibbonsecr"))
+
     add_icon = function(window){
-        if(.Platform$OS.type == "windows"){
-            tcl('wm', 'iconbitmap', window, system.file('doc/icon/gibbonsecr.ico', package = "gibbonsecr"))
-        }else{
-            tcl('wm', 'iconphoto', window, system.file('doc/icon/gibbonsecr.gif', package = "gibbonsecr"))
+        # if(.Platform$OS.type == "windows"){
+            # tcl('wm', 'iconbitmap', window, system.file('doc/icon/gibbonsecr.ico', package = "gibbonsecr"))
+        # }else{
+            # tcl('wm', 'iconimage', window, system.file('doc/icon/gibbonsecr.gif', package = "gibbonsecr"))
             # tcl('wm', 'iconphoto', window, tcl('image', 'create', 'photo', '-file', system.file('doc/icon/gibbonsecr.png', package = "gibbonsecr")))
-        }
+        # }
             # tcl('wm', 'iconphoto', window, "::img::gibbonsecr_logo")
     }
 
@@ -302,7 +312,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         for(file in c("detections","posts")){ # file = "posts"
             path = tclvalue(tvar[[paste0(file, ".path")]])
             if(!file.exists(path)){
-                error_message(paste0("cant find ", file, " file:\n- '", path, "'"))
+                error_message(paste0("cant find ", file, " file:\n", path))
                 stop(.call = FALSE)
             }
         }
@@ -348,11 +358,16 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         }
     }
 
-    device_popup = eval(parse(text = switch(.Platform$OS.type,
-                                            windows = "windows", "x11")))
+    device_popup = function(width = 5, height = 5, pointsize = 10, ...){
+        FUN = eval(parse(text = switch(.Platform$OS.type,
+                                       windows = "windows", "x11")))
+        FUN(width = width, height = height, pointsize = pointsize, ...)
+    }
 
     error_message = function(message){
-        print_to_console(paste("Error:", gsub("Error : ", "", message)), tag = "errorTag")
+        print_to_console(paste("Error:", gsub("Error : ", "", message)),
+                         tag = "errorTag")
+        print_dashes()
     }
 
     exit_prompt = function(){
@@ -543,17 +558,18 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         cursor("wait") ; on.exit(cursor("normal"))
         if(is.null(covariates(robj$mask)[[1]])){
             device_popup()
-            par(mar = c(0,0,1,0), oma = c(0,0,0,0))
+            par(mar = c(0,0,1,0), oma = c(0,0,0,0), cex = 1, cex.main = 1)
             plot_mask(robj$mask)
             plot_traps(robj$capthist, add = TRUE)
             if(!is.null(robj$region)) plot(robj$region, add = TRUE)
         }else{
             for(j in colnames(covariates(robj$mask[[1]]))){
                 device_popup()
-                par(mar = c(2,2,2,6), oma = c(0,0,0,0))
+                par(mar = c(2,2,2,7), oma = c(0,0,0,0), cex = 1, cex.main = 1)
                 plot_mask(robj$mask, covariate = j, main = j)
                 plot_traps(robj$capthist, add = TRUE)
-                if(!is.null(robj$region)) sp::plot(robj$region, add = TRUE)
+                if(!is.null(robj$region))
+                    sp::plot(robj$region, add = TRUE, usePolypath = FALSE)
             }
         }
     }
@@ -715,7 +731,9 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     model_predict = function(){
         print_to_console("Predictions:\n", tag = "headingTag")
         print_to_console("\n")
-        newdata = try(choose_pred_data(robj$fit), TRUE)
+        newdata = try({
+            choose_newdata(robj$fit, padx = os$grid.padx)
+        }, TRUE)
         if(inherits(newdata, "try-error")){
             error_message(newdata)
         }else{
@@ -767,59 +785,121 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     null_command = function(){}
 
     open_manual_html = function(){
-        system(paste("open", system.file("doc/gibbonsecr_gui.html", package = "gibbonsecr")))
+        system(paste("open", system.file("doc/gibbonsecr_gui.html",
+                                         package = "gibbonsecr")))
     }
 
 #     open_manual_pdf = function(){
-#         system(paste("open ", system.file("doc/gibbonsecr_gui.pdf", package = "gibbonsecr")))
+#         system(paste("open ", system.file("doc/gibbonsecr_gui.pdf",
+#                               package = "gibbonsecr")))
 #     }
 
     plot_bearings = function(){
+        newdata = try({
+            choose_newdata(robj$fit, submodels = "bearings", all = FALSE,
+                           padx = os$grid.padx)
+            }, TRUE)
         device_popup()
-        plot(robj$fit, which = "bearings", session = 1,
+        par(mar = c(4.5,4.5,2,2), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+        plot(robj$fit, which = "bearings", newdata = newdata,
              CI = switch(tclvalue(tvar$bearings.ci.method),
                          "none"  = FALSE,
                          "delta method" = TRUE)
         )
+        if(!is.null(newdata))
+            legend('topright', sapply(colnames(newdata), function(i){
+                paste(i, "=", newdata[[i]])
+            }))
     }
 
     plot_densurf = function(){
-        device_popup()
-        par(oma = c(0,0,0,0), mar = c(4,4,2,6))
-        plot(robj$fit, which = "density", session = 1, CI = FALSE,
-             contour = switch(tclvalue(tvar$densurf.contour),
-                              "0" = FALSE,
-                              "1" = TRUE)
-        )
+        session = choose_array(robj$fit, padx = os$grid.padx)
+        if(!is.na(session)){
+            device_popup()
+            par(mar = c(2.5,2.5,3,6), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+            plot(robj$fit, which = "density", session = session, CI = FALSE,
+                 contour = switch(tclvalue(tvar$densurf.contour),
+                                  "0" = FALSE,
+                                  "1" = TRUE),
+                 main = ""
+            )
+            title(paste0("Density surface\n(using array-level covariates from array '",
+                         session, "')"))
+        }
     }
 
     plot_detfunc = function(){
+        newdata = try({
+            choose_newdata(robj$fit, submodels = c("g0", "sigma"), all = FALSE,
+                           padx = os$grid.padx)
+        }, TRUE)
         device_popup()
-        plot(robj$fit, which = "detectfn", session = 1,
+        par(mar = c(4.5,4.5,2,2), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+        plot(robj$fit, which = "detectfn", newdata = newdata,
              CI = switch(tclvalue(tvar$detfunc.ci.method),
                          "none"         = FALSE,
                          "delta method" = TRUE)
         )
+        if(!is.null(newdata))
+            legend('topright', sapply(colnames(newdata), function(i){
+                paste(i, "=", newdata[[i]])
+            }))
     }
 
     plot_detsurf = function(){
-        device_popup()
-        par(oma = c(0,0,0,0), mar = c(4,4,2,6))
-        plot(robj$fit, which = "pdot", session = 1, CI = FALSE,
-             contour = switch(tclvalue(tvar$detsurf.contour),
-                              "0" = FALSE,
-                              "1" = TRUE)
-        )
+        session = choose_array(robj$fit, padx = os$grid.padx)
+        if(!is.na(session)){
+            device_popup()
+            par(mar = c(2.5,2.5,2,6), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+            plot(robj$fit, which = "pdot", session = session, CI = FALSE,
+                 contour = switch(tclvalue(tvar$detsurf.contour),
+                                  "0" = FALSE,
+                                  "1" = TRUE),
+                 main = ""
+            )
+            title(paste0("Detection surface: array '", session, "'"))
+        }
     }
 
     plot_distances = function(){
+        newdata = try({
+            choose_newdata(robj$fit, submodels = "distances", all = FALSE,
+                           padx = os$grid.padx)
+        }, TRUE)
         device_popup()
-        plot(robj$fit, which = "distances", session = 1,
+        par(mar = c(4.5,4.5,2,2), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+        plot(robj$fit, which = "distances", newdata = newdata,
              CI = switch(tclvalue(tvar$distances.ci.method),
                          "none"         = FALSE,
                          "delta method" = TRUE),
              true.distance = 500
         )
+        if(!is.null(newdata))
+            legend('topright', sapply(colnames(newdata), function(i){
+                paste(i, "=", newdata[[i]])
+            }))
+    }
+
+    plot_save = function(){
+        if(is.null(dev.list())){
+            error_message("no plots to save")
+        }else{
+            device = "jpeg"
+            units = "in"
+            res = 300
+            pointsize = 10
+            for(i in dev.list()){
+                dev.set(i)
+                filename = file.path(robj$wd, paste0("plot_", i, ".", device))
+                size = dev.size(units = units)
+                dev.copy(eval(parse(text = device)), filename = filename,
+                         width = size[1], height = size[2],
+                         units = units, res = res, pointsize = pointsize)
+                dev.off()
+            }
+            print_to_console(paste0("plots saved to working directory:\n",
+                                    path.expand(robj$wd)), dashes = TRUE)
+        }
     }
 
     print_dashes = function(){
@@ -827,10 +907,10 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     print_to_console = function(x, heading = NULL, tag = "normalTag", dashes = FALSE){
-        # if(dashes) print_dashes()
         x[length(x)] = paste0(gsub("\n$", "", x[length(x)]), "\n")
         tkconfigure(console, state = "normal")
-        if(!is.null(heading)) tkinsert(console, "end", paste(heading, "\n\n"), "headingTag")
+        if(!is.null(heading)) tkinsert(console, "end", paste(heading, "\n\n"),
+                                       "headingTag")
         tkinsert(console, "end", paste(x, collapse = "\n"), tag)
         tkconfigure(console, state = "disabled")
         tksee(console, "end")
@@ -853,7 +933,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             # enable data summary button
             # enable everything in the mask tabs except the summary and plot buttons
             tkconfigure(tobj$data$summary,      state = "normal")
-            for(i in names(tobj$mask))  tkconfigure(tobj$mask[[i]],  state = "normal")
+            for(i in names(tobj$mask))  tkconfigure(tobj$mask[[i]],
+                                                    state = "normal")
             tkconfigure(tobj$mask$summary,      state = "disabled")
             tkconfigure(tobj$mask$plot,         state = "disabled")
             # enable/disable region/habitat plot/check buttons
@@ -869,7 +950,11 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 # enable everything in the model tab
                 tkconfigure(tobj$mask$summary,      state = "normal")
                 tkconfigure(tobj$mask$plot,         state = "normal")
-                for(i in names(tobj$model)) tkconfigure(tobj$model[[i]], state = "normal")
+                for(i in names(tobj$model))
+                    tkconfigure(tobj$model[[i]], state = "normal")
+                tkconfigure(tobj$model$detfunc, state = "readonly")
+                tkconfigure(tobj$model$bearings.dist, state = "readonly")
+                tkconfigure(tobj$model$distances.dist, state = "readonly")
                 # disable components of the model tab,
                 # depending on the capthist and model options
                 # - if no bearings/distances data, disable the model options combobox
@@ -1020,14 +1105,14 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             }else{
                 if('FILE' == 'region'){
                     device_popup()
-                    par(oma = c(0,0,0,0), mar = c(0,0,1,0))
+                    par(mar = c(0,0,1,0), oma = c(0,0,0,0), cex = 1, cex.main = 1)
                     plot_shp(robj$FILE)
                     title('Region')
                     plot_traps(robj$capthist, add = TRUE)
                 }else{
                     for(j in colnames(robj$FILE@data)){
                         device_popup()
-                        par(mar = c(2,2,2,7), oma = c(0,0,0,0))
+                        par(mar = c(2,2,2,7), oma = c(0,0,0,0), cex = 1, cex.main = 1)
                         plot_shp(robj$FILE, covariate = j)
                         title(j)
                         plot_traps(robj$capthist, add = TRUE)
@@ -1055,41 +1140,26 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     update_robj = function(){
-        for(i in names(robj_list)){
-            robj[[i]] = robj_list[[i]]
+        for(i in names(robjects)){
+            robj[[i]] = robjects[[i]]
         }
     }
 
-    update_tval = function(){
+    update_tclvalues = function(){
         for(i in names(tvar)){
-            tval[[i]] = tclvalue(tvar[[i]])
+            tclvalues[[i]] = tclvalue(tvar[[i]])
         }
     }
 
     update_tvar = function(){
-        for(i in names(tval)){
-            if(is.null(tvar[[i]])){
-                tvar[[i]] = tclVar(tval[[i]])
-            }else{
-                tclvalue(tvar[[i]]) = tval[[i]]
-            }
+        for(i in names(tclvalues)){
+            # if(is.null(tvar[[i]])){
+                # tvar[[i]] = tclVar(tclvalues[[i]])
+            # }else{
+                tclvalue(tvar[[i]]) = tclvalues[[i]]
+            # }
         }
     }
-
-#     validate_entry = function(file, tab = "data"){
-#         text = gsub("FILE", file, gsub("TAB", tab, paste("
-#             function(){
-#                 filepath = tclvalue(tvar$FILE.path)
-#                 if(filepath == '' || file.exists(filepath)){
-#                     tkconfigure(tobj$TAB$FILE.path, foreground = 'black')
-#                     return(tcl('expr','TRUE'))
-#                 }else{
-#                     tkconfigure(tobj$TAB$FILE.path, foreground = 'red')
-#                     return(tcl('expr','FALSE'))
-#                 }
-#             }"))) # cat(text)
-    #         eval(parse(text = text))
-    #     }
 
     view = function(file){
         text = gsub("FILE", file, paste0("
@@ -1109,7 +1179,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     wd_print = function(){
-        print_to_console(paste0("Current working directory:\n", gsub("/","\\\\", robj$wd)),
+        print_to_console(paste0("Current working directory:\n",
+                                gsub("/","\\\\", robj$wd)),
                          dashes = TRUE)
     }
 
@@ -1123,16 +1194,22 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     workspace_clear = function(){
         response = tkmessageBox(
             title = "", icon = "warning", type = "okcancel", default = "cancel",
-            message = "Clearing the workspace will delete all data and fitted models.
-            Click OK to clear the workspace.")
+            message = "Clearing the workspace will delete all data and fitted models.\nClick OK to clear the workspace.")
         if(tclvalue(response) == "ok"){
-            tclvalue(tvar$detections.path) = ""
-            tclvalue(tvar$posts.path)      = ""
-            tclvalue(tvar$covariates.path) = ""
-            tclvalue(tvar$region.path)     = ""
-            tclvalue(tvar$habitat1.path)   = ""
-            tclvalue(tvar$habitat2.path)   = ""
-            tclvalue(tvar$habitat3.path)   = ""
+            # tclvalue(tvar$detections.path) = ""
+            # tclvalue(tvar$posts.path)      = ""
+            # tclvalue(tvar$covariates.path) = ""
+            # tclvalue(tvar$region.path)     = ""
+            # tclvalue(tvar$habitat1.path)   = ""
+            # tclvalue(tvar$habitat2.path)   = ""
+            # tclvalue(tvar$habitat3.path)   = ""
+            for(i in c(csv.files, shp.files))
+                tclvalue(tvar[[paste0(i, ".path")]]) = ""
+            for(i in submodels){
+                tclvalue(tvar[[paste0(i, ".formula")]]) = ""
+                value = if(i %in% c("g0", "pcall")) "1" else ""
+                tclvalue(tvar[[paste0(i, ".fixed")]]) = value
+            }
             robj$capthist = NULL
             robj$mask     = NULL
             robj$region   = NULL
@@ -1159,7 +1236,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     workspace_save = function(){
-        update_tval()
+        update_tclvalues()
         filename = tclvalue(tkgetSaveFile(
             initialdir = robj$wd,
             filetypes = "{{} {.rda}}"
@@ -1167,8 +1244,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         if(filename != ""){
             if(tools::file_ext(filename) == "")
                 filename = paste0(filename, ".rda")
-            robj_list = as.list(robj)
-            save(tval, robj_list, file = filename)
+            robjects = as.list(robj)
+            save(tclvalues, robjects, version, file = filename)
         }
         tkfocus(main.window)
         return(filename)
@@ -1183,7 +1260,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     # create main window
     main.window = tktoplevel(width = os$WIDTH, height = os$HEIGHT, bg = "white")
     add_icon(main.window)
-    tkwm.title(main.window, paste0("gibbonsecr v", utils::packageVersion("gibbonsecr")))
+    tkwm.title(main.window, paste0("gibbonsecr v", version))
     # put window in centre of computer screen
     screen.width = as.numeric(tclvalue(tkwinfo("screenwidth", main.window)))
     screen.height = as.numeric(tclvalue(tkwinfo("screenheight", main.window)))
@@ -1256,10 +1333,14 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkgrid(tklabel(frame.data.details, "Distances"), row = 0, column = 2, sticky = "we")
     tkgrid(tklabel(frame.data.details, "Units"),     row = 1, column = 0)
     tkgrid(tklabel(frame.data.details, "Type"),      row = 2, column = 0)
-    tobj$data$bearings.units  = tkcombo(frame.data.details, tvar$bearings.units,  values$bearings.units)
-    tobj$data$bearings.type   = tkcombo(frame.data.details, tvar$bearings.type,   values$bearings.type)
-    tobj$data$distances.units = tkcombo(frame.data.details, tvar$distances.units, values$distances.units)
-    tobj$data$distances.type  = tkcombo(frame.data.details, tvar$distances.type,  values$distances.type)
+    tobj$data$bearings.units  = tkcombo(frame.data.details, tvar$bearings.units,
+                                        values$bearings.units)
+    tobj$data$bearings.type   = tkcombo(frame.data.details, tvar$bearings.type,
+                                        values$bearings.type)
+    tobj$data$distances.units = tkcombo(frame.data.details, tvar$distances.units,
+                                        values$distances.units)
+    tobj$data$distances.type  = tkcombo(frame.data.details, tvar$distances.type,
+                                        values$distances.type)
     tkgrid(tobj$data$bearings.units,  row = 1, column = 1)
     tkgrid(tobj$data$bearings.type,   row = 2, column = 1)
     tkgrid(tobj$data$distances.units, row = 1, column = 2)
@@ -1276,20 +1357,10 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkgrid(tobj$data$import, tobj$data$summary)
 
     ##################################################
-    ## enable data widgets
+    ## disable type
 
-    tkconfigure(tobj$data$detections.path,   state = "normal")
-    tkconfigure(tobj$data$posts.path,        state = "normal")
-    tkconfigure(tobj$data$covariates.path,   state = "normal")
-    tkconfigure(tobj$data$detections.browse, state = "normal")
-    tkconfigure(tobj$data$posts.browse,      state = "normal")
-    tkconfigure(tobj$data$covariates.browse, state = "normal")
-    tkconfigure(tobj$data$detections.view,   state = "normal")
-    tkconfigure(tobj$data$posts.view,        state = "normal")
-    tkconfigure(tobj$data$covariates.view,   state = "normal")
-    tkconfigure(tobj$data$bearings.units,    state = "normal")
-    tkconfigure(tobj$data$distances.units,   state = "normal")
-    tkconfigure(tobj$data$import,            state = "normal")
+    tkconfigure(tobj$data$bearings.type,  state = "disabled")
+    tkconfigure(tobj$data$distances.type, state = "disabled")
 
 
     ##################################################
@@ -1393,9 +1464,12 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     label.detfunc        = tklabel(frame.model.options, "Detection function")
     label.bearings.dist  = tklabel(frame.model.options, "Bearings distribution")
     label.distances.dist = tklabel(frame.model.options, "Distances distribution ")
-    tobj$model$detfunc        = tkcombo(frame.model.options, tvar$detfunc,        values$detfunc)
-    tobj$model$bearings.dist  = tkcombo(frame.model.options, tvar$bearings.dist,  values$bearings.dist)
-    tobj$model$distances.dist = tkcombo(frame.model.options, tvar$distances.dist, values$distances.dist)
+    tobj$model$detfunc        = tkcombo(frame.model.options, tvar$detfunc,
+                                        values$detfunc)
+    tobj$model$bearings.dist  = tkcombo(frame.model.options, tvar$bearings.dist,
+                                        values$bearings.dist)
+    tobj$model$distances.dist = tkcombo(frame.model.options, tvar$distances.dist,
+                                        values$distances.dist)
     tkgrid(label.detfunc,        row = 1, column = 1)
     tkgrid(label.bearings.dist,  row = 2, column = 1)
     tkgrid(label.distances.dist, row = 3, column = 1)
@@ -1430,18 +1504,30 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tobj$model$bearings.fixed    = tkentry(frame.model.submodels, tvar$bearings.fixed)
     tobj$model$distances.fixed   = tkentry(frame.model.submodels, tvar$distances.fixed)
     tobj$model$pcall.fixed       = tkentry(frame.model.submodels, tvar$pcall.fixed)
-    tobj$model$D.formula.radio         = tkradio(frame.model.submodels, "formula", fixed_radio_command("D"))
-    tobj$model$g0.formula.radio        = tkradio(frame.model.submodels, "formula", fixed_radio_command("g0"))
-    tobj$model$sigma.formula.radio     = tkradio(frame.model.submodels, "formula", fixed_radio_command("sigma"))
-    tobj$model$bearings.formula.radio  = tkradio(frame.model.submodels, "formula", fixed_radio_command("bearings"))
-    tobj$model$distances.formula.radio = tkradio(frame.model.submodels, "formula", fixed_radio_command("distances"))
-    tobj$model$pcall.formula.radio     = tkradio(frame.model.submodels, "formula", fixed_radio_command("pcall"))
-    tobj$model$D.fixed.radio           = tkradio(frame.model.submodels, "fixed", fixed_radio_command("D"))
-    tobj$model$g0.fixed.radio          = tkradio(frame.model.submodels, "fixed", fixed_radio_command("g0"))
-    tobj$model$sigma.fixed.radio       = tkradio(frame.model.submodels, "fixed", fixed_radio_command("sigma"))
-    tobj$model$bearings.fixed.radio    = tkradio(frame.model.submodels, "fixed", fixed_radio_command("bearings"))
-    tobj$model$distances.fixed.radio   = tkradio(frame.model.submodels, "fixed", fixed_radio_command("distances"))
-    tobj$model$pcall.fixed.radio       = tkradio(frame.model.submodels, "fixed", fixed_radio_command("pcall"))
+    tobj$model$D.formula.radio         = tkradio(frame.model.submodels, "formula",
+                                                 fixed_radio_command("D"))
+    tobj$model$g0.formula.radio        = tkradio(frame.model.submodels, "formula",
+                                                 fixed_radio_command("g0"))
+    tobj$model$sigma.formula.radio     = tkradio(frame.model.submodels, "formula",
+                                                 fixed_radio_command("sigma"))
+    tobj$model$bearings.formula.radio  = tkradio(frame.model.submodels, "formula",
+                                                 fixed_radio_command("bearings"))
+    tobj$model$distances.formula.radio = tkradio(frame.model.submodels, "formula",
+                                                 fixed_radio_command("distances"))
+    tobj$model$pcall.formula.radio     = tkradio(frame.model.submodels, "formula",
+                                                 fixed_radio_command("pcall"))
+    tobj$model$D.fixed.radio           = tkradio(frame.model.submodels, "fixed",
+                                                 fixed_radio_command("D"))
+    tobj$model$g0.fixed.radio          = tkradio(frame.model.submodels, "fixed",
+                                                 fixed_radio_command("g0"))
+    tobj$model$sigma.fixed.radio       = tkradio(frame.model.submodels, "fixed",
+                                                 fixed_radio_command("sigma"))
+    tobj$model$bearings.fixed.radio    = tkradio(frame.model.submodels, "fixed",
+                                                 fixed_radio_command("bearings"))
+    tobj$model$distances.fixed.radio   = tkradio(frame.model.submodels, "fixed",
+                                                 fixed_radio_command("distances"))
+    tobj$model$pcall.fixed.radio       = tkradio(frame.model.submodels, "fixed",
+                                                 fixed_radio_command("pcall"))
     tkgrid(label.formula,                      row = 0, column = 3, sticky = "we")
     tkgrid(label.fixed,                        row = 0, column = 5, sticky = "we")
     tkgrid(label.D,                            row = 1, column = 1)
@@ -1573,8 +1659,9 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkpack(frame.plots.bearings, fill = "both")
     tkpack(sframe.plots.bearings, side = "left")
     label.bearings.ci.method = tklabel(sframe.plots.bearings, "95% CI method")
-    tobj$plots$bearings.ci.method = tkcombo(sframe.plots.bearings, tvar$bearings.ci.method,
-                                           values$ci.method)
+    tobj$plots$bearings.ci.method = tkcombo(sframe.plots.bearings,
+                                            tvar$bearings.ci.method,
+                                            values$ci.method)
     tobj$plots$bearings.plot      = tkbutton(frame.plots.bearings, "Plot", plot_bearings)
     tkgrid(label.bearings.ci.method,      row = 1, column = 1)
     tkgrid(tobj$plots$bearings.ci.method, row = 1, column = 2)
@@ -1590,13 +1677,23 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkpack(frame.plots.distances, fill = "both")
     tkpack(sframe.plots.distances, side = "left")
     label.distances.ci.method = tklabel(sframe.plots.distances, "95% CI method")
-    tobj$plots$distances.ci.method = tkcombo(sframe.plots.distances, tvar$distances.ci.method,
-                                           values$ci.method)
-    tobj$plots$distances.plot      = tkbutton(frame.plots.distances, "Plot", plot_distances)
+    tobj$plots$distances.ci.method = tkcombo(sframe.plots.distances,
+                                             tvar$distances.ci.method,
+                                             values$ci.method)
+    tobj$plots$distances.plot      = tkbutton(frame.plots.distances, "Plot",
+                                              plot_distances)
     tkgrid(label.distances.ci.method,      row = 1, column = 1)
     tkgrid(tobj$plots$distances.ci.method, row = 1, column = 2)
     tkpack(tobj$plots$distances.plot, side = "right")
 
+    ##################################################
+    ## plots - save
+
+    add_separator(tab.plots)
+    frame.plots.buttons = tkframe(tab.plots)
+    tkpack(frame.plots.buttons)
+    tobj$plots$save = tkbutton(frame.plots.buttons, "Save", plot_save)
+    tkpack(tobj$plots$save)
 
     ##################################################
     ##################################################
@@ -1657,9 +1754,10 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkadd(menu$main, "cascade", label = "Help", menu = menu$help)
     menu$help.examples = tkmenu(menu$help, tearoff = FALSE)
     tkadd(menu$help, "cascade", label = "Example data", menu = menu$help.examples)
-    tkadd(menu$help.examples, "command", label = "N.annamensis", command = load_N_annamensis)
+    tkadd(menu$help.examples, "command", label = "N.annamensis",
+          command = load_N_annamensis)
     # tkadd(menu$help.examples, "command", label = "N.siki", command = load_N_siki)
-    # tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
+    tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
     tkadd(menu$help, "command", label = "User manual", command = open_manual_html)
     tkadd(menu$help, "command", label = "About gibbonsecr", command = about)
 
@@ -1668,12 +1766,17 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     menu$workspace = tkmenu(menu$main, tearoff = FALSE)
     tkadd(menu$main, "cascade", label = "Workspace", menu = menu$workspace)
-    tkadd(menu$workspace, "command", label = "Save workspace",  command = workspace_save, accelerator = "CTRL+S")
-    tkadd(menu$workspace, "command", label = "Load workspace",  command = workspace_load, accelerator = "CTRL+L")
-    tkadd(menu$workspace, "command", label = "Clear workspace", command = workspace_clear)
+    tkadd(menu$workspace, "command", label = "Save workspace",
+          command = workspace_save, accelerator = "CTRL+S")
+    tkadd(menu$workspace, "command", label = "Load workspace",
+          command = workspace_load, accelerator = "CTRL+L")
+    tkadd(menu$workspace, "command", label = "Clear workspace",
+          command = workspace_clear)
     tkadd(menu$workspace, "separator")
-    tkadd(menu$workspace, "command", label = "Set working directory", command = wd_set)
-    tkadd(menu$workspace, "command", label = "Print working directory", command = wd_print)
+    tkadd(menu$workspace, "command", label = "Set working directory",
+          command = wd_set)
+    tkadd(menu$workspace, "command", label = "Print working directory",
+          command = wd_print)
 
     for(i in 1:length(menu)){
         tkconfigure(menu[[i]],

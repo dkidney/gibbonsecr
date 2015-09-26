@@ -25,12 +25,12 @@
 # classes = check_covariate_classes(x)
 # print(classes)
 
-check_covariate_classes = function(x){
+check_covariate_classes = function(x, padx = 1){
 
     tt = tktoplevel()
     tkwm.title(tt, "Check covariate classes")
-    w = 400
-    h = 121
+    w = 100
+    h = 100
     scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
     scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
     tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
@@ -96,7 +96,7 @@ check_covariate_classes = function(x){
     ##################################################
     # packing etc.
 
-    tkgrid(ok, cancel)
+    tkgrid(ok, cancel, padx = padx)
     tkpack(upper)
     tkpack(lower)
     tkpack(main)
@@ -131,126 +131,12 @@ check_covariate_classes = function(x){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-# Popup menu to allow choice of covariate values when making predictions
-# Example
-# x = data.frame(
-#     colours = c("red", "green", "blue"),
-#     fruits  = c("Apple", "Orange", "Banana", "Pear", "Cherry", "eggs"),
-#     names   = c("Alice","Darren"),
-#     numbers = 1:6
-# )
-# str(x)
-# newdata = choose_covariate_values(x)
-# print(newdata)
-# str(newdata)
+choose_newdata = function(fit, submodels = NULL, all = TRUE, padx = 1){
 
-choose_covariate_values = function(x){
-    main = tktoplevel()
+    if(is.null(submodels))
+        submodels = names(fit$parindx) ; submodels
 
-    ##################################################
-    ## upper frame for entry and combo boxes
-
-    upper = tkframe(main, padding = c(5,5))
-    ncols = ncol(x)
-    covnames = colnames(x)
-    value  = widget = setNames(vector("list", ncols), covnames)
-    factor = sapply(x, class) == "factor"
-    for(j in 1:ncols){ #
-        tkgrid(tklabel(upper, text = covnames[j]), row = j, column = 1,
-               sticky = "w")
-        if(factor[j]){
-            value[[j]] = tclVar(levels(x[[j]])[1])
-            widget[[j]] = ttkcombobox(upper, textvariable = value[[j]],
-                                      values = levels(x[[j]]))
-        }else{
-            value[[j]] = tclVar(mean(x[[j]]))
-            widget[[j]] = ttkentry(upper, textvariable = value[[j]])
-        }
-        tkgrid(widget[[j]], row = j, column = 2, sticky = "w")
-    }
-
-    ##################################################
-    ## lower frame for buttons
-
-    lower = tkframe(main, padding = c(5,5))
-    done = tclVar(0)
-    ok = ttkbutton(lower, text = "OK", command = function(){
-        # check entries for numeric covariates
-        nvalue = suppressWarnings(sapply(covnames, function(j){
-            as.numeric(tclvalue(value[[j]]))
-        }))
-        invalid = is.na(nvalue) & !factor
-        if(any(invalid)){
-            tkmessageBox(
-                title = "Error", icon = "error", type = "ok",
-                message = paste0("invalid entry for:\n -",
-                                 paste(covnames[invalid], sep = "\n -"))
-            )
-            stop(.call = FALSE)
-        }
-        outside = sapply(covnames, function(j){ # j=4
-            if(factor[j]) FALSE else{
-                nvalue[j] < min(x[[j]]) || nvalue[j] > max(x[[j]])
-            }
-        })
-        if(any(outside)){
-            tkmessageBox(
-                title = "Error", icon = "error", type = "ok",
-                message = paste0("entry outside observed range:\n -",
-                                 paste(covnames[outside], sep = "\n -"))
-            )
-            stop(.call = FALSE)
-        }
-        tclvalue(done) = 1
-    })
-    cancel = ttkbutton(lower, text = "Cancel", command = function(){
-        tclvalue(done) = 2
-    })
-
-    ##################################################
-    # packing etc.
-
-    tkgrid(ok, cancel)
-    tkpack(upper)
-    tkpack(lower)
-    tkwm.protocol(main, "WM_DELETE_WINDOW", function(){
-        tclvalue(done) = 2
-    })
-    tkwait.variable(done)
-
-    ##################################################
-    # make newdata
-
-    newdata = if(tclvalue(done) == 1){
-        # based on entry/combo values
-        do.call(data.frame, sapply(covnames, function(j){
-            if(factor[j]){
-                factor(tclvalue(value[[j]]), levels = levels(x[[j]]))
-            }else{
-                as.numeric(tclvalue(value[[j]]))
-            }
-        }, simplify = FALSE))
-    }else{
-        # using reference levels (factors) or averages (numeric)
-        do.call(data.frame, sapply(covnames, function(j){
-            if(factor[j]){
-                factor(levels(x[[j]])[1], levels = levels(x[[j]]))
-            }else{
-                mean(x[[j]])
-            }
-        }, simplify = FALSE))
-    }
-
-    tkdestroy(main)
-    return(newdata)
-}
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
-
-choose_pred_data = function(fit, submodels = NULL){
-
-    if(length(do.call(c, sapply(fit$model, all.vars))) == 0){
+    if(length(do.call(c, lapply(fit$model[submodels], all.vars))) == 0){
         return(NULL)
     }
 
@@ -259,8 +145,8 @@ choose_pred_data = function(fit, submodels = NULL){
 
     tt = tktoplevel()
     tkwm.title(tt, "Choose prediction data")
-    w = 400
-    h = 121
+    w = 100
+    h = 100
     scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
     scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
     tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
@@ -280,8 +166,6 @@ choose_pred_data = function(fit, submodels = NULL){
     ##################################################
     ## summarise covariates
 
-    if(is.null(submodels))
-        submodels = names(fit$parindx) ; submodels
     covnames = sapply(submodels, function(i){ # submodel = "sigma"
         bigmf = do.call(rbind, lapply(fit$model.frames, function(x) x[[i]]))
         sapply(bigmf, function(x){
@@ -298,9 +182,10 @@ choose_pred_data = function(fit, submodels = NULL){
     for(i in names(covnames)){
         if(inherits(covnames[[i]], "character")){
             boxvar[[i]] = tclVar(covnames[[i]][1])
+            values = if(all) c(covnames[[i]], "all") else covnames[[i]]
             box[[i]] = ttkcombobox(parent       = upper,
                                    textvariable = boxvar[[i]],
-                                   values       = c(covnames[[i]], "all"),
+                                   values       = values,
                                    width        = 30)
         }else{
             values[[i]] = tclVar(mean(covnames[[i]]))
@@ -347,7 +232,7 @@ choose_pred_data = function(fit, submodels = NULL){
     ##################################################
     ## packing etc.
 
-    tkgrid(ok, cancel)
+    tkgrid(ok, cancel, padx = padx)
     tkpack(upper)
     tkpack(lower)
     tkpack(main)
@@ -358,9 +243,9 @@ choose_pred_data = function(fit, submodels = NULL){
     tkwait.variable(done)
 
     ##################################################
-    # return prediction data
+    # return newdata
 
-    preds = if(tclvalue(done) == "1"){
+    newdata = if(tclvalue(done) == "1"){
         do.call(expand.grid, sapply(names(covnames), function(i){
             if(inherits(covnames[[i]], "character")){
                 if(tclvalue(boxvar[[i]]) == "all"){
@@ -377,7 +262,72 @@ choose_pred_data = function(fit, submodels = NULL){
     }
 
     tkdestroy(tt)
-    return(preds)
+    return(newdata)
+
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+choose_array = function(x, padx = 1){
+
+    if(inherits(x, "gibbonsecr_fit"))
+        x = x$capthist
+    if(!inherits(x, "capthist"))
+        stop("capthist object required")
+
+    tt = tktoplevel()
+    tkwm.title(tt)
+    w = 100
+    h = 100
+    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+    tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+    tcl("wm", "attributes", tt, topmost = TRUE)
+    tcl("wm", "attributes", tt, topmost = FALSE)
+    tkwm.geometry(tt, "")
+    tkfocus(tt)
+    main = ttkframe(tt)
+
+    ##################################################
+    ## upper frame for entry and combo boxes
+
+    upper = ttkframe(main, padding = c(5,5))
+    tkgrid(ttklabel(upper, text = "Choose array: "), row = 1, column = 1, sticky = "w")
+    sessions = session(x)
+    combo.tvar = tclVar(sessions[1])
+    combo = ttkcombobox(upper, textvariable = combo.tvar, width = 10,
+                        state = "normal", values = sessions)
+    tkgrid(combo, row = 1, column = 2)
+
+    ##################################################
+    ## lower frame for buttons
+
+    lower = ttkframe(main, padding = c(5,5))
+    done = tclVar(0)
+    ok = ttkbutton(lower, text = "OK", state = "normal", width = 10,
+                   command = function() tclvalue(done) = 1)
+    cancel = ttkbutton(lower, text = "Cancel", state = "normal", width = 10,
+                       command = function() tclvalue(done) = 2)
+
+    ##################################################
+    # packing etc.
+
+    tkgrid(ok, cancel, padx = padx)
+    tkpack(upper)
+    tkpack(lower)
+    tkpack(main)
+    tkwm.resizable(tt, 0, 0)
+    tkwm.protocol(tt, "WM_DELETE_WINDOW", function() tclvalue(done) = 2)
+    tkwait.variable(done)
+
+    ##################################################
+    # return clasess
+
+    result = if(tclvalue(done) == 1) tclvalue(combo.tvar) else NA
+
+    tkdestroy(tt)
+    return(result)
 
 }
 
@@ -433,15 +383,16 @@ gui_appearance_settings = function(){
     }else{
 
         specific = list(
-            min.height = 425,
+            min.height = 500,
             min.width = 415,
             lhs.width = 410,
             rhs.width = general$WIDTH - 410,
             button.width = 8,
             combo.width  = 12,
             entry.width  = 15,
+            csv.entry.width = 25,
             fixed.entry.width  = 6,
-            formula.entry.width  = 25,
+            formula.entry.width  = 22,
             grid.padx    = 2,
             grid.pady    = 2,
             heading.font         = tkfont.create(size = 10, family = "Lucida Grande",
