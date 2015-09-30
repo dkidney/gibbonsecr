@@ -123,7 +123,7 @@ check_covariates = function(covariates, capthist){
     # check for duplicated rows
     i = duplicated(actual)
     if(any(i))
-        stop("the following array-post-occasion combinations have more than one row in the covariates data: ", paste(actual[i,], sep = ", "), call. = FALSE)
+        stop("the following array-post-occasion combinations have more than one row in the covariates data: ", paste(unique(actual[i]), collapse = ", "), call. = FALSE)
     # index of rows that should be present (array-post-occasion)
     # need to take account of trap usage
     in.theory = apply(do.call(rbind, lapply(session(capthist), function(i){ # i = session(capthist)[1] ; i
@@ -407,6 +407,7 @@ check_model = function(model, fixed, model.options, capthist, mask, locations = 
     ##################################################
     ## standardise format of model formulae
 
+    if(!inherits(model, "list")) model = list(model)
     model = lapply(model, as.formula)
     model.components = lapply(model, as.character)
     submodel.names = if(is.null(names(model))){

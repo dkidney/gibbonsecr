@@ -375,7 +375,7 @@ covtable = function(data, w = 50){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "detectfn", true.distance = 500){
+fitted_detectfn_auxiliary_values_old = function(beta, fit, session, x, which = "detectfn", true.distance = 500){
 
     if(!which %in% c("detectfn","bearings","distances"))
         stop("which must be one of: 'detectfn', 'bearings', 'distances'")
@@ -455,6 +455,74 @@ fitted_detectfn_auxiliary_values = function(beta, fit, session, x, which = "dete
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+fitted_detectfn_auxiliary_values = function(beta, fit, newdata, x, which = "detectfn", true.distance = 500){
+
+    if(!which %in% c("detectfn","bearings","distances"))
+        stop("which must be one of: 'detectfn', 'bearings', 'distances'")
+
+    ##################################################
+    ## submodels
+
+    submodels = if(which == "detectfn"){
+        switch(fit$model.options$detectfn + 1, c("g0","sigma"), c("g0","sigma","z"))
+    }else which
+    # check model exists
+    for(submodel in submodels){
+        if(fit$model[[submodel]] == 0) stop("no ", submodel, " model to plot")
+    }
+
+    ##################################################
+    ## function to generate values
+
+    FUN = switch(
+        which,
+        "detectfn"  = list(hn, hr)[[fit$model.options$detectfn + 1]],
+        "bearings"  = list(dvm, dwrpcauchy)[[fit$model.options$bearings]],
+        "distances" = list(dgamma, dlnorm)[[fit$model.options$distances]]
+    )
+    EX = switch(which, "bearings" = 0, "distances" = true.distance, NULL)
+
+    ##################################################
+    ## design matrices
+
+    if(is.null(newdata)){
+        newdata = make_newdata(fit, submodels)
+    }else{
+        if(nrow(newdata) != 1)
+            error("newdata should only have one row")
+    }
+
+    ##################################################
+    ## model matrix
+
+    # use list("1" = ... to make dummy session
+    design.matrices = list("1" = sapply(submodels, function(submodel){
+        make_model_matrix(formula      = fit$model[[submodel]],
+                          data         = newdata,
+                          smooth.setup = fit$smooth.setup[[submodel]])
+    }, simplify = FALSE))
+
+    ##################################################
+    ## convert to submodel arrays and return function values
+
+    submodel.arrays = make_submodel_arrays(
+        beta            = beta,
+        parindx         = fit$parindx,
+        fixed           = fit$fixed,
+        design.matrices = design.matrices,
+        inv.link        = fit$inv.link,
+        S               = c("1" = 1),
+        K               = c("1" = 1),
+        submodels       = submodels,
+        sessions        = "1")[["1"]]
+    par = as.numeric(submodel.arrays)
+    FUN(x, par, EX)
+
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
 fitted_submodel_values = function(beta, fit, newdata = NULL, submodel = "D"){
 
     ##################################################
@@ -469,7 +537,7 @@ fitted_submodel_values = function(beta, fit, newdata = NULL, submodel = "D"){
     ## model matrix
 
     # use list("1" = ... to make dummy session
-    desmat = list("1" = sapply(submodel, function(submodel){
+    design.matrices = list("1" = sapply(submodel, function(submodel){
         make_model_matrix(formula      = fit$model[[submodel]],
                           data         = newdata,
                           smooth.setup = fit$smooth.setup[[submodel]])
@@ -482,7 +550,7 @@ fitted_submodel_values = function(beta, fit, newdata = NULL, submodel = "D"){
         beta            = beta,
         parindx         = fit$parindx,
         fixed           = fit$fixed,
-        design.matrices = desmat,
+        design.matrices = design.matrices,
         inv.link        = setNames(list(function(x) x), submodel),
         S               = c("1" = nrow(newdata)),
         K               = c("1" = 1),
@@ -976,7 +1044,7 @@ MS = function(x, session.names = NULL){
        any(is.na(session.names)))
         session.names = names(x)
     if(is.null(session.names)){
-        message("using default session.names")
+        # message("using default session.names")
         session.names = as.character(1:length(x))
     }
     # check session names are unique and have correct length
@@ -1095,34 +1163,6 @@ predict.gibbonsecr_fit = function(object, newdata = NULL, submodels = NULL, se.f
         rownames(x) = rownames(newdata)
         return(x)
     }, simplify = FALSE)
-
-    #     # make model matrices
-    #     # use list("1" = ... to make dummy session
-    #     desmat = list("1" = sapply(submodels, function(submodel){
-    #         make_model_matrix(formula      = object$model[[submodel]],
-    #                           data         = newdata,
-    #                           smooth.setup = object$smooth.setup[[submodel]])
-    #     }, simplify = FALSE))
-    #
-    #     # make submodel arrays
-    #     preds = make_submodel_arrays(
-    #         beta            = coef(object),
-    #         parindx         = object$parindx,
-    #         fixed           = object$fixed,
-    #         design.matrices = desmat,
-    #         inv.link        = object$inv.link,
-    #         S               = c("1" = nrow(newdata)),
-    #         K               = c("1" = 1),
-    #         sessions        = "1",
-    #         submodels       = submodels
-    #     )[["1"]]
-    #
-    #     ##################################################
-    #     # return summary table
-    #
-    #     preds = do.call(cbind, preds)
-    #     colnames(preds) = submodels
-    #     rownames(preds) = rownames(newdata)
 
     return(preds)
 
@@ -1735,7 +1775,11 @@ summary_capthist = function(capthist){
 
 summary.gibbonsecr_fit = function(object, ...){
 
-    if(object$nlm$code < 3){
+    if(object$nlm$code >= 3){
+        warning(paste0("Fitting algorithm did not converge (nlm code: ", object$nlm$code, ")"))
+    }else if(object$nlm$iterations == 0){
+        warning(paste0("Fitting algorithm did not converge (n iterations: ", object$nlm$iterations, ")"))
+    }else{
 
         ##################################################
         ## model
@@ -1843,7 +1887,7 @@ summary.gibbonsecr_fit = function(object, ...){
         ## esa, aic and run time
 
         esa = get_esa(object)
-        cat("Effective sampling area:", round(mean(esa), 1),
+        cat("Effective sampling area:", round(mean(esa), 3),
             "sq km (average per array)\n")
         cat("\nAIC =", AIC(object), "\n")
         cat("\nTime taken: ", round(object$run.time,1), " ",
@@ -1851,8 +1895,6 @@ summary.gibbonsecr_fit = function(object, ...){
             " iterations)\n", sep = "")
         # cat("\n")
 
-    }else{
-        warning(paste0("Fitting algorithm did not converge (nlm code: ", object$nlm$code, ")"))
     }
 
     invisible()

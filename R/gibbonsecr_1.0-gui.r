@@ -68,6 +68,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 #     library(tcltk2)
 #     library(gibbonsecr)
 
+    flush.console()
+
     gui = environment()
 
     ##################################################
@@ -249,12 +251,12 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkimage.create("photo", "::img::tclLogo", file = system.file("doc/icon/gibbonsecr.gif", package = "gibbonsecr"))
 
     add_icon = function(window){
-        # if(.Platform$OS.type == "windows"){
-            # tcl('wm', 'iconbitmap', window, system.file('doc/icon/gibbonsecr.ico', package = "gibbonsecr"))
-        # }else{
+        if(.Platform$OS.type == "windows"){
+            tcl('wm', 'iconbitmap', window, system.file('doc/icon/gibbonsecr.ico', package = "gibbonsecr"))
+        }else{
             # tcl('wm', 'iconimage', window, system.file('doc/icon/gibbonsecr.gif', package = "gibbonsecr"))
-            # tcl('wm', 'iconphoto', window, tcl('image', 'create', 'photo', '-file', system.file('doc/icon/gibbonsecr.png', package = "gibbonsecr")))
-        # }
+            tcl('wm', 'iconphoto', window, tcl('image', 'create', 'photo', '-file', system.file('doc/icon/gibbonsecr.gif', package = "gibbonsecr")))
+        }
             # tcl('wm', 'iconphoto', window, "::img::gibbonsecr_logo")
     }
 
@@ -309,11 +311,15 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     data_import = function(){
         cursor("wait") ; on.exit(cursor("normal"))
         print_to_console("Importing data...")
-        for(file in c("detections","posts")){ # file = "posts"
+        # check detection and posts exist
+        # check covariates exists if file path isn't blank
+        for(file in csv.files){ # file = "posts"
             path = tclvalue(tvar[[paste0(file, ".path")]])
-            if(!file.exists(path)){
-                error_message(paste0("cant find ", file, " file:\n", path))
-                stop(.call = FALSE)
+            if(!(path == "" && file == "covariates")){
+                if(!file.exists(path)){
+                    error_message(paste0("cant find ", file, " file:\n", path))
+                    stop(.call = FALSE)
+                }
             }
         }
         result = try({
@@ -434,7 +440,30 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     load_N_siki = function(){
-        print_to_console("N.siki data not available.")
+        folder = "~/Dropbox/projects/gibbons/N.siki/data"
+        tclvalue(tvar$detections.path) = file.path(folder, "detections.csv")
+        tclvalue(tvar$posts.path)      = file.path(folder, "posts.csv")
+        tclvalue(tvar$covariates.path) = file.path(folder, "covariates.csv")
+        tclvalue(tvar$bearings.units)  = "degrees"
+        tclvalue(tvar$distances.units) = "m"
+        tclvalue(tvar$buffer)          = "5000"
+        tclvalue(tvar$spacing)         = "250"
+        tclvalue(tvar$region.path)     = ""
+        tclvalue(tvar$habitat1.path)   = ""
+        tclvalue(tvar$habitat2.path)   = ""
+        tclvalue(tvar$habitat3.path)   = ""
+        tclvalue(tvar$region.use)      = ""
+        tclvalue(tvar$habitat1.use)    = ""
+        tclvalue(tvar$habitat2.use)    = ""
+        tclvalue(tvar$habitat3.use)    = ""
+        robj$region   = NULL
+        robj$habitat1 = NULL
+        robj$habitat2 = NULL
+        robj$habitat3 = NULL
+        robj$mask     = NULL
+        robj$fit      = NULL
+        data_import()
+        refresh()
     }
 
     load_peafowl = function(){
@@ -443,6 +472,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         tclvalue(tvar$posts.path)      = file.path(folder, "posts.csv")
         tclvalue(tvar$covariates.path) = file.path(folder, "covariates.csv")
         tclvalue(tvar$bearings.units)  = "degrees"
+        tclvalue(tvar$distances.units) = "km"
         tclvalue(tvar$buffer)          = "2000"
         tclvalue(tvar$spacing)         = "100"
         tclvalue(tvar$region.path)     = ""
@@ -454,7 +484,6 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         tclvalue(tvar$habitat1.use)    = ""
         tclvalue(tvar$habitat2.use)    = ""
         tclvalue(tvar$habitat3.use)    = ""
-        tclvalue(tvar$distances.units) = "km"
         robj$region   = NULL
         robj$habitat1 = NULL
         robj$habitat2 = NULL
@@ -462,6 +491,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         robj$mask     = NULL
         robj$fit      = NULL
         data_import()
+        refresh()
+    }
+
+    load_peafowl_workspace = function(){
+        load("~/Dropbox/projects/greenpeafowl/workspace.rda", envir = gui)
+        update_tvar()
+        update_robj()
         refresh()
     }
 
@@ -558,14 +594,14 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         cursor("wait") ; on.exit(cursor("normal"))
         if(is.null(covariates(robj$mask)[[1]])){
             device_popup()
-            par(mar = c(0,0,1,0), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+            par2(2)
             plot_mask(robj$mask)
             plot_traps(robj$capthist, add = TRUE)
             if(!is.null(robj$region)) plot(robj$region, add = TRUE)
         }else{
             for(j in colnames(covariates(robj$mask[[1]]))){
                 device_popup()
-                par(mar = c(2,2,2,7), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+                par2(2)
                 plot_mask(robj$mask, covariate = j, main = j)
                 plot_traps(robj$capthist, add = TRUE)
                 if(!is.null(robj$region))
@@ -772,12 +808,16 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         if(inherits(result, "try-error")){
             error_message(result)
         }else{
-            if(robj$fit$nlm$code < 3){
-                print_to_console(result, "Model fit summary:", dashes = TRUE)
-            }else{
+            if(robj$fit$nlm$code >= 3){
                 message = paste0("The fitting algorithm did not converge (nlm code = ",
                                  robj$fit$nlm$code, ")")
                 error_message(message)
+            }else if(robj$fit$nlm$iterations == 0){
+                message = paste0("The fitting algorithm did not converge (n iterations = ",
+                                 robj$fit$nlm$iterations, ")")
+                error_message(message)
+            }else{
+                print_to_console(result, "Model fit summary:", dashes = TRUE)
             }
         }
     }
@@ -794,17 +834,26 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 #                               package = "gibbonsecr")))
 #     }
 
+    par2 = function(i){
+        switch(i,
+            par(mar = c(4.5,4.5,2,2), oma = c(0,0,0,0), cex = 1, cex.main = 1, pty = "s"),
+            par(mar = c(2,2,2,6), oma = c(0,0,0,0), cex = 1, cex.main = 1, pty = "s"),
+            par(mar = c(2,2,2,1), oma = c(0,0,0,0), cex = 1, cex.main = 1, pty = "s")
+        )
+    }
+
     plot_bearings = function(){
         newdata = try({
             choose_newdata(robj$fit, submodels = "bearings", all = FALSE,
                            padx = os$grid.padx)
             }, TRUE)
         device_popup()
-        par(mar = c(4.5,4.5,2,2), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+        par2(1)
         plot(robj$fit, which = "bearings", newdata = newdata,
              CI = switch(tclvalue(tvar$bearings.ci.method),
                          "none"  = FALSE,
-                         "delta method" = TRUE)
+                         "delta method" = TRUE),
+             use.global.par.settings = TRUE
         )
         if(!is.null(newdata))
             legend('topright', sapply(colnames(newdata), function(i){
@@ -816,13 +865,15 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         session = choose_array(robj$fit, padx = os$grid.padx)
         if(!is.na(session)){
             device_popup()
-            par(mar = c(2.5,2.5,3,6), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+            par2(2)
             plot(robj$fit, which = "density", session = session, CI = FALSE,
                  contour = switch(tclvalue(tvar$densurf.contour),
                                   "0" = FALSE,
                                   "1" = TRUE),
-                 main = ""
+                 main = "",
+                 use.global.par.settings = TRUE
             )
+            # box()
             title(paste0("Density surface\n(using array-level covariates from array '",
                          session, "')"))
         }
@@ -834,7 +885,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                            padx = os$grid.padx)
         }, TRUE)
         device_popup()
-        par(mar = c(4.5,4.5,2,2), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+        par2(1)
         plot(robj$fit, which = "detectfn", newdata = newdata,
              CI = switch(tclvalue(tvar$detfunc.ci.method),
                          "none"         = FALSE,
@@ -850,13 +901,15 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         session = choose_array(robj$fit, padx = os$grid.padx)
         if(!is.na(session)){
             device_popup()
-            par(mar = c(2.5,2.5,2,6), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+            par2(2)
             plot(robj$fit, which = "pdot", session = session, CI = FALSE,
                  contour = switch(tclvalue(tvar$detsurf.contour),
                                   "0" = FALSE,
                                   "1" = TRUE),
-                 main = ""
+                 main = "",
+                 use.global.par.settings = TRUE
             )
+            # box()
             title(paste0("Detection surface: array '", session, "'"))
         }
     }
@@ -867,12 +920,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                            padx = os$grid.padx)
         }, TRUE)
         device_popup()
-        par(mar = c(4.5,4.5,2,2), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+        par2(1)
         plot(robj$fit, which = "distances", newdata = newdata,
              CI = switch(tclvalue(tvar$distances.ci.method),
                          "none"         = FALSE,
                          "delta method" = TRUE),
-             true.distance = 500
+             true.distance = 500,
+             use.global.par.settings = TRUE
         )
         if(!is.null(newdata))
             legend('topright', sapply(colnames(newdata), function(i){
@@ -1096,31 +1150,35 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         eval(parse(text = text))
     }
 
-    shp_plot = function(file){
-        text = gsub("FILE", file, paste("
-        function(){
-            cursor('wait') ; on.exit(cursor('normal'))
-            if(is.null(poly)){
-                error_message('no data to plot')
+    shp_plot_base = function(file){
+        cursor('wait') ; on.exit(cursor('normal'))
+        if(is.null(poly)){
+            error_message('no data to plot')
+        }else{
+            if(file == 'region'){
+                device_popup()
+                par2(3)
+                # par(mar = c(2,2,0,0), oma = c(0,0,0,0), cex = 1, cex.main = 1)
+                plot_shp(robj[[file]])
+                title("Region")
+                plot_traps(robj$capthist, add = TRUE)
             }else{
-                if('FILE' == 'region'){
+                for(j in colnames(robj[[file]]@data)){
                     device_popup()
-                    par(mar = c(0,0,1,0), oma = c(0,0,0,0), cex = 1, cex.main = 1)
-                    plot_shp(robj$FILE)
-                    title('Region')
+                    par2(2)
+                    plot_shp(robj[[file]], covariate = j, contour = TRUE)
+                    title(j)
+                    # path = tclvalue(tvar[[paste0(file, ".path")]])
+                    # main(basename(tools::file_path_sans_ext(path)))
                     plot_traps(robj$capthist, add = TRUE)
-                }else{
-                    for(j in colnames(robj$FILE@data)){
-                        device_popup()
-                        par(mar = c(2,2,2,7), oma = c(0,0,0,0), cex = 1, cex.main = 1)
-                        plot_shp(robj$FILE, covariate = j)
-                        title(j)
-                        plot_traps(robj$capthist, add = TRUE)
-                    }
+                    # box()
                 }
             }
-        }")) # cat(text)
-        eval(parse(text = text))
+        }
+    }
+
+    shp_plot = function(file){
+        eval(parse(text = paste0("function() shp_plot_base('", file, "')")))
     }
 
     success_message = function(message){
@@ -1756,8 +1814,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkadd(menu$help, "cascade", label = "Example data", menu = menu$help.examples)
     tkadd(menu$help.examples, "command", label = "N.annamensis",
           command = load_N_annamensis)
-    # tkadd(menu$help.examples, "command", label = "N.siki", command = load_N_siki)
-    tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
+    # tkadd(menu$help.examples, "command", label = "N.siki",  command = load_N_siki)
+    # tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
     tkadd(menu$help, "command", label = "User manual", command = open_manual_html)
     tkadd(menu$help, "command", label = "About gibbonsecr", command = about)
 
@@ -1770,6 +1828,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
           command = workspace_save, accelerator = "CTRL+S")
     tkadd(menu$workspace, "command", label = "Load workspace",
           command = workspace_load, accelerator = "CTRL+L")
+    # tkadd(menu$workspace, "command", label = "Load peafowl workspace",
+          # command = load_peafowl_workspace)
     tkadd(menu$workspace, "command", label = "Clear workspace",
           command = workspace_clear)
     tkadd(menu$workspace, "separator")

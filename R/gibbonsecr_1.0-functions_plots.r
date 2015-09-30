@@ -2,11 +2,13 @@
 ## -------------------------------------------------------------------------- ##
 
 add_category_legend = function(legend, col, ...){
+
     args = c(as.list(environment()), list(...))
     if(is.null(args$x))     args$x = 'right'
     if(is.null(args$yjust)) args$yjust = 0.5
     if(is.null(args$pch))   args$pch = 15
     if(is.null(args$inset)) args$inset = -0.1
+    if(is.null(args$pt.cex))args$pt.cex = 1.5
     xpd = par("xpd")
     on.exit(par(xpd = xpd))
     par(xpd = TRUE)
@@ -28,9 +30,9 @@ add_category_legend = function(legend, col, ...){
 # cols = col[i]
 # par(mar = c(4,2,1,5))
 # plot(x, y, pch = 19, cex = 0.5, col = cols)
-# add_number_legend(zlim, col, yscale = 0.8)
+# add_number_legend(zlim, col, yscale = 0.5)
 
-add_number_legend = function(zlim, col, border = 1, xscale = 1, yscale = 0.75, xadj = 1){
+add_number_legend = function(zlim, col, border = 1, xscale = 1.5, yscale = 0.75, xadj = 1){
 
     xpd = par("xpd")
     on.exit(par(xpd = xpd))
@@ -46,14 +48,15 @@ add_number_legend = function(zlim, col, border = 1, xscale = 1, yscale = 0.75, x
     # outer window width
     winw = diff(usr[1:2]) / diff(plt[1:2])
     # bbox width
-    w = xscale * winw / 50
+    boxw = xscale * winw / 50
     # bbox height
-    h = yscale * diff(usr[3:4])
+    boxh = yscale * diff(usr[3:4])
     # bbox coords
     x0 = usr[2] + winw / 100 * xadj
-    x1 = x0 + w
-    y0 = usr[3] + h * (1 - yscale) / 2
-    y1 = y0 + h
+    x1 = x0 + boxw
+    # y0 = usr[3] + boxh * (1 - yscale) / 2
+    y0 = usr[3] + (usr[4] - usr[3] - boxh) / 2
+    y1 = y0 + boxh
     # make bbox
     bbox = data.frame(x = c(x0, x0, x1, x1),
                       y = c(y0, y1, y1, y0))
@@ -90,6 +93,19 @@ add_number_legend = function(zlim, col, border = 1, xscale = 1, yscale = 0.75, x
     invisible()
 
 }
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+# number_palette = fields::tim.colors
+category_palette = function(ncols){
+    h = c(0, 360) + 15
+    if ((diff(h) %% 360) < 1) h[2] <- h[2] - 360 / ncols
+    hcl(h = (seq(h[1], h[2], length = ncols)), c = 100, l = 65)
+}
+# number_palette = function(ncols) rev(rainbow(ncols, start = 0, end = .7))
+# number_palette = colorRampPalette(c("blue","red"), space = "Lab")
+number_palette = colorRampPalette(c("blue","green","red"), space = "Lab")
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -211,7 +227,7 @@ plot_capthist = function(x, mask = NULL){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distances"), session = 1, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = FALSE, ...){
+plot_detectfn_auxiliary_old = function(fit, which = c("detectfn","bearings","distances"), session = 1, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = TRUE, ...){
     which = match.arg(which)
     plotargs = list(...) # plotargs = list() ; which = "distances" ; session = "2" ; nx = 100
     # print(plotargs)
@@ -230,6 +246,96 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
                      fit     = fit,
                      x       = plotargs$x,
                      session = session,
+                     which   = which,
+                     ...)
+    # print(deltaargs)
+    # stop("2")
+    if(CI){
+        deltaargs$f = fitted_detectfn_auxiliary_values
+        deltaargs$vcov = vcov(fit)
+        delta = do.call(delta_method, deltaargs)
+        zvalue = qnorm(1 - alpha / 2)
+        delta$lower = delta$est - zvalue * delta$se
+        delta$upper = delta$est + zvalue * delta$se
+        delta$se = NULL
+    }else{
+        delta = list(est = do.call(fitted_detectfn_auxiliary_values, deltaargs))
+    }
+    # print(delta)
+    # stop("3")
+    plotargs$y = delta$est
+    if(which == "bearings") plotargs$x = plotargs$x * 180/pi
+
+    ##################################################
+    ## plot
+
+    # set up plotting area if add = NULL or FALSE
+    if(is.null(plotargs$add) || !plotargs$add){
+        plotargs$type = "n"
+        if(is.null(plotargs$main)) plotargs$main = switch(
+            which,
+            "detectfn"  = "Detection function",
+            "bearings"  = "Bearing error distribution",
+            "distances" = "Distance error distribution (truth = 500m)"
+        )
+        if(is.null(plotargs$xlab)) plotargs$xlab = switch(
+            which,
+            "detectfn"  = "Distance from detector (m)",
+            "bearings"  = "Bearing error (degrees)",
+            "distances" = "Distance estimate (m)"
+        )
+        if(is.null(plotargs$ylab)) plotargs$ylab = switch(
+            which,
+            "detectfn"  = "Detection probability",
+            "Probability density"
+        )
+        # if(is.null(plotargs$xaxs)) plotargs$xaxs = "i"
+        # if(is.null(plotargs$yaxs)) plotargs$yaxs = "i"
+        if(is.null(plotargs$bty))  plotargs$bty  = "n"
+        if(is.null(plotargs$ylim)) plotargs$ylim = switch(
+            which,
+            "detectfn"  = c(0,1),
+            c(0, max(sapply(delta,max)))
+        )
+        do.call(plot, plotargs)
+    }
+    # draw plot
+    plotargs[c("add","type","main","xlab","ylab","xaxs","yaxs","bty","xlim","ylim")] = NULL
+    plotargs$type = NULL
+    plotargs$lty = 1
+    do.call(lines, plotargs)
+    if(CI){
+        plotargs$lty = 2
+        for(interval in c("lower","upper")){
+            plotargs$y = delta[[interval]]
+            do.call(lines, plotargs)
+        }
+    }
+    invisible()
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distances"), newdata = NULL, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = TRUE, ...){
+    which = match.arg(which)
+    plotargs = list(...) # plotargs = list() ; which = "distances" ; session = "2" ; nx = 100
+    # print(plotargs)
+    # stop("1")
+    plotargs$x = switch(
+        which,
+        "detectfn"  = seq(0, mask_buffer(fit$mask, fit$capthist), length = nx),
+        "bearings"  = seq(-pi/2, pi/2, length = nx),
+        "distances" = seq(0, 2000, length = nx)
+    )
+
+    ##################################################
+    ## delta method
+
+    deltaargs = list(beta    = coef(fit),
+                     fit     = fit,
+                     x       = plotargs$x,
+                     newdata = newdata,
                      which   = which,
                      ...)
     # print(deltaargs)
@@ -313,7 +419,7 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
 #' @method plot gibbonsecr_fit
 #' @export
 
-plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distances","density"), session = 1, use.global.par.settings = TRUE, ...){
+plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distances","density"), session = 1, newdata = NULL, use.global.par.settings = TRUE, ...){
     which = match.arg(which)
     # print(list(...))
     # stop()
@@ -323,19 +429,19 @@ plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distan
         if(x$model.options[[which]] == 0) stop("no ", which, " model")
     if(is.numeric(session))
         session = session(x$capthist)[session]
-    if(!use.global.par.settings) pop = par(no.readonly = TRUE)
+    # if(!use.global.par.settings) pop = par(no.readonly = TRUE)
     if(which %in% c("detectfn","bearings","distances")){
-        if(!use.global.par.settings)
-            pop = par(mfrow = c(1,1), oma = c(0,0,0,0), mar = c(4,4,2,2))
-        plot_detectfn_auxiliary(x, which = which, ...)
+        # if(!use.global.par.settings)
+            # pop = par(mfrow = c(1,1), oma = c(0,0,0,0), mar = c(4,4,2,2))
+        plot_detectfn_auxiliary(x, which = which, newdata = newdata, ...)
     }else{
-        if(!use.global.par.settings)
-            par(mfrow = c(1,1), oma = c(0,0,0,0), mar = c(4,4,2,6))
+        # if(!use.global.par.settings)
+            # par(mfrow = c(1,1), oma = c(0,0,0,0), mar = c(4,4,2,6))
         plot_surface(x, which = which, session = session, ...)
     }
     # usr = par()$usr
     # mfg = par()$mfg
-    if(!use.global.par.settings) par(pop)
+    # if(!use.global.par.settings) par(pop)
     # par(usr = usr, mfg = mfg)
     invisible()
 }
@@ -355,17 +461,17 @@ plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distan
 # @method plot gibbonsecr_sim
 # @export
 
-plot.gibbonsecr_sim = function(x, CI = TRUE, exp = FALSE, use.global.par.settings = FALSE, ...){
+plot.gibbonsecr_sim = function(x, CI = TRUE, exp = FALSE, use.global.par.settings = TRUE, ...){
 
     ##################################################
     ## par settings
 
-    if(!use.global.par.settings){
-        pop = par(no.readonly = TRUE)
-        on.exit(par(pop))
-        npars = ncol(x$gibbonsecr_fit)
-        par(mfrow = n2mfrow(npars), mar = c(2,2,2,2), oma = c(0,0,2,0))
-    }
+    # if(!use.global.par.settings){
+        # pop = par(no.readonly = TRUE)
+        # on.exit(par(pop))
+        # npars = ncol(x$gibbonsecr_fit)
+        # par(mfrow = n2mfrow(npars), mar = c(2,2,2,2), oma = c(0,0,2,0))
+    # }
 
     ##################################################
     ## modify secr.fit par names and D values
@@ -505,7 +611,7 @@ plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = 
                 var = covariates(regionmask)[[covariate]]
                 number = inherits(var, c("integer", "numeric"))
                 ncol = 25
-                palette = if(number) colorRampPalette(c("blue","red")) else terrain.colors
+                palette = if(number) number_palette else category_palette
                 cols = var2col(var, palette = palette, ncol = ncol)
             }
         }
@@ -537,7 +643,7 @@ plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = 
 # @param add TODO
 # @author Darren Kidney \email{darrenkidney@@googlemail.com}
 # @export
-plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = NULL, add.legend = TRUE, ...){
+plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = NULL, add.legend = TRUE, axes = TRUE, contour = TRUE){
     # check class
     if(!inherits(shp, c("SpatialPolygons", "SpatialPoints")))
         stop("method only works for SpatialPolygons or SpatialPoints")
@@ -568,7 +674,7 @@ plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = N
 
     # draw plot
     if(inherits(shp, "SpatialPolygons")){
-        sp::plot(shp, col = cols, usePolypath = FALSE)
+        sp::plot(shp, col = cols, usePolypath = FALSE, border = NA)
     }else{
         sp::plot(shp, col = cols, pch = 15, cex = 0.5)
     }
@@ -578,12 +684,25 @@ plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = N
         if(!is.null(covariate)){
             col = attr(cols, "col")
             if(number){
-                add_number_legend(zlim, col, ...)
+                add_number_legend(zlim, col)
             }else{
+#                 strip.legend('right', levels(var), col = col, "other", inset = 0.05,
+#                              height = 0.04 * length(levels(var)),
+#                              width = 0.075, title = covariate)
                 x = shp@bbox[1,"max"] + 0.05 * diff(range(shp@bbox[1,]))
                 y = mean(shp@bbox[2,])
-                add_category_legend(x = x, y = y, legend = levels(var), col = col, ...)
+                add_category_legend(x = x, y = y, legend = levels(var), col = col, bty = "n")
             }
+        }
+    }
+# add axes
+    if(axes){
+        axis(1)
+        axis(2)
+    }
+    if(contour){
+        if(inherits(shp, "SpatialPoints")){
+            contour(sp::SpatialPixelsDataFrame(shp@coords, shp@data[, covariate, drop = FALSE]), add = TRUE)
         }
     }
     invisible()
@@ -593,7 +712,7 @@ plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = N
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = TRUE, centered = FALSE, session, ...){
+plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = TRUE, legend = TRUE, centered = FALSE, session, ...){
     which = match.arg(which)
     # which = "pdot"; session = "2"; CI = FALSE; contour = TRUE; centered = TRUE
 
@@ -639,8 +758,8 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
 
     plotargs = list(...) # plotargs = list()
     plotargs = c(mask_image(mask[[session]], delta$est, plot = FALSE), plotargs)
-    legend.mar = plotargs$legend.mar
-    plotargs$legend.mar = NULL
+    # legend.mar = plotargs$legend.mar
+    # plotargs$legend.mar = NULL
     plotargs = plotargs[!sapply(plotargs, is.null)]
     if(is.null(plotargs$add) || !plotargs$add){
         if(is.null(plotargs$main)) plotargs$main = switch(
@@ -651,20 +770,20 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
         if(is.null(plotargs$xlab)) plotargs$xlab = ""
         if(is.null(plotargs$ylab)) plotargs$ylab = ""
         if(is.null(plotargs$axes)) plotargs$axes = TRUE
-        if(is.null(plotargs$xaxs)) plotargs$xaxs = "i"
-        if(is.null(plotargs$yaxs)) plotargs$yaxs = "i"
+        if(is.null(plotargs$xaxs)) plotargs$xaxs = "r"
+        if(is.null(plotargs$yaxs)) plotargs$yaxs = "r"
         if(is.null(plotargs$asp))  plotargs$asp  = 1
         if(is.null(plotargs$bty))  plotargs$bty  = "n"
     }
     if(is.null(plotargs$nlevel)) plotargs$nlevel = 25
     if(is.null(plotargs$col))
-        plotargs$col    = colorRampPalette(c("blue","red"))(plotargs$nlevel)
+        plotargs$col    = number_palette(plotargs$nlevel)
     if(is.null(plotargs$ylim))   plotargs$zlim   = switch(
         which,
         "pdot"    = c(0,1),
         "density" = range(delta)
     )
-    nlevel = plotargs$nlevel
+    # nlevel = plotargs$nlevel
     plotargs$nlevel = NULL
     axes = plotargs$axes
     if(centered && plotargs$axes) plotargs$axes = FALSE
@@ -676,7 +795,7 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
             cent = mean(traps[[1]][,i])
             at = sort(unique(c(
                 seq(cent, cent - buffer, by = -tick.length),
-                seq(cent, cent + buffer, by = tick.length)
+                seq(cent, cent + buffer, by =  tick.length)
             )))
             axis(i, at, as.character(at - cent))
         }
@@ -691,12 +810,13 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
         # contour
         if(contour) contour(plotargs$x, plotargs$y, plotargs$z, add = TRUE)
         # legend
-        plotargs$nlevel = nlevel
-        plotargs$graphics.reset = TRUE
-        plotargs$legend.only = TRUE
-        plotargs$legend.mar = legend.mar
-        plotargs$breaks = seq(plotargs$zlim[1], plotargs$zlim[2], length = nlevel + 1)
-        do.call(fields::image.plot, plotargs)
+        if(legend) add_number_legend(zlim = plotargs$zlim, col = plotargs$col)
+#         plotargs$nlevel = nlevel
+#         plotargs$graphics.reset = TRUE
+#         plotargs$legend.only = TRUE
+#         plotargs$legend.mar = legend.mar
+#         plotargs$breaks = seq(plotargs$zlim[1], plotargs$zlim[2], length = nlevel + 1)
+#         do.call(fields::image.plot, plotargs)
     }
     # par(usr = usr, mfg = mfg)
     invisible()
@@ -772,7 +892,7 @@ var2col = function(x, col = NULL, palette = NULL, ncol = NULL, zlim = NULL){
         if(is.null(zlim)) zlim = range(x)
         if(is.null(col)){
             if(is.null(ncol)) ncol = 25
-            if(is.null(palette)) palette = colorRampPalette(c("blue","red"))
+            if(is.null(palette)) palette = number_palette
             col = palette(ncol)
         }
         i = cut(x, include.lowest = TRUE,
@@ -782,7 +902,7 @@ var2col = function(x, col = NULL, palette = NULL, ncol = NULL, zlim = NULL){
         x = as.factor(x)
         if(is.null(col)){
             ncol = length(levels(x))
-            if(is.null(palette)) palette = terrain.colors
+            if(is.null(palette)) palette = category_palette
             col = palette(ncol)
         }
         cols = col[x]
