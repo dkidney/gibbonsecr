@@ -1687,9 +1687,10 @@ summary_capthist = function(capthist){
                 }
             })))
             details = if(type == "continuous"){
-                paste("range:", paste(prettyNum(range(sapply(capthist, function(x){
-                    as.numeric(attr(x, i))
-                }), na.rm = TRUE), 1), collapse = " to "))
+                paste("range:", paste(prettyNum(range(
+                    sapply(capthist, function(x){
+                        as.numeric(attr(x, i))
+                    }), na.rm = TRUE)), collapse = " to "))
             }else{
                 stop("not implemented for interval data")
             }
@@ -1838,7 +1839,7 @@ summary.gibbonsecr_fit = function(object, ...){
         ##################################################
         ## parameter estimates
 
-        cat("Coefficients (model intercepts on inverse link scale):\n")
+        cat("Estimates (model intercepts on inverse link scale):\n")
         est = coef(object)
         par.table = list(estimate = est)
         # confidence intervals
@@ -2095,7 +2096,7 @@ make_regiontraps = function(traps){
     # add attributes
     class(regiontraps) = c("traps","data.frame")
     covariates(regiontraps) = do.call(rbind, lapply(traps, covariates))
-    usage(regiontraps) = do.call(rbind, lapply(traps, usage))
+    # usage(regiontraps) = do.call(rbind, lapply(traps, usage))
     attr(regiontraps, "spacex") = NA
     attr(regiontraps, "spacey") = NA
     attr(regiontraps, "spacing") = NA

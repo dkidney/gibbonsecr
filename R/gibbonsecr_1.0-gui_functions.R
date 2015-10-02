@@ -417,3 +417,50 @@ gui_appearance_settings = function(){
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
+
+# code adadpted from utils::sessionInfo
+
+welcome_message = function(){
+    if(.Platform$OS.type == "windows") {
+        running = win.version()
+    }else if(nzchar(Sys.which("uname"))){
+        uname = system("uname -a", intern = TRUE)
+        os = sub(" .*", "", uname)
+        running = switch(os, Linux = if (file.exists("/etc/os-release")) {
+            tmp = readLines("/etc/os-release")
+            t2 = if (any(grepl("^PRETTY_NAME=", tmp))) sub("^PRETTY_NAME=",
+                "", grep("^PRETTY_NAME=", tmp, value = TRUE)[1L]) else if (any(grepl("^NAME",
+                tmp))) sub("^NAME=", "", grep("^NAME=", tmp,
+                value = TRUE)[1L]) else "Linux (unknown distro)"
+            sub("\"(.*)\"", "\\1", t2)
+        } else if (file.exists("/etc/system-release")) {
+            readLines("/etc/system-release")
+        }, Darwin = {
+            ver = readLines("/System/Library/CoreServices/SystemVersion.plist")
+            ind = grep("ProductUserVisibleVersion", ver)
+            ver = ver[ind + 1L]
+            ver = sub(".*<string>", "", ver)
+            ver = sub("</string>$", "", ver)
+            ver1 = strsplit(ver, ".", fixed = TRUE)[[1L]][2L]
+            sprintf("OS X %s (%s)", ver, switch(ver1, `4` = "Tiger",
+                `5` = "Leopard", `6` = "Snow Leopard", `7` = "Lion",
+                `8` = "Mountain Lion", `9` = "Mavericks", `10` = "Yosemite",
+                `11` = "El Capitan", "unknown"))
+        }, SunOS = {
+            ver = system("uname -r", intern = TRUE)
+            paste("Solaris", strsplit(ver, ".", fixed = TRUE)[[1L]][2L])
+        }, uname)
+    }
+    paste0("\n",
+          "Welcome to gibbonsecr version ", utils::packageVersion("gibbonsecr"), "\n",
+          "\n",
+          R.Version()$version, "\n",
+          running, "\n",
+          "\n",
+          "This software was developed in partnership with the IUCN SSC \nPrimate Specialist Group Section on Small Apes and the Centre \nfor Research into Ecological and Environmental Modelling at \nthe Univerisity of St Andrews, UK\n\n",
+          "For help on using the software go to Help > User manual\n\n",
+          "This is a pre-release version of the softare. If you notice \nany bugs or have any general queries, please email Darren \nKidney at darrenkidney@yahoo.co.uk\n",
+          "\n"
+    )
+}
+

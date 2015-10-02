@@ -433,6 +433,42 @@ gibbonsecr_fit = function(capthist, model = list(), mask = NULL, fixed = list(),
         timecov       = timecov(capthist),
         debug         = debug
     )
+
+    ##################################################
+    ## in development: use gam to get model frame, model matrix and smooth setup
+
+    if(0){
+        make_G = function(formula, data){
+            # if no response variable then add dummy response to lhs of formula
+            if(attr(terms(formula), "response") == 0){
+                i = "dummy"
+                continue = TRUE
+                while(continue){
+                    if(!i %in% colnames(data)) continue = FALSE
+                    i = paste0(i, "_1")
+                }
+                eval(parse(text = paste0("formula = update.formula(formula,", i, " ~ .)")))
+            }
+            # add response variable to data
+            data[[all.vars(formula)[1]]] = rep(1, nrow(data))
+            mgcv::gam(formula, data = data, fit = FALSE)
+        }
+
+        # G = lapply(names(model.frames), function(session){ # session = names(model.frames)[1] ; session
+            # lapply(names(model), function(submodel){ # submodel = names(model)[1] ; submodel
+        for(session in names(model.frames)){ # session = names(model.frames)[1] ; session
+            for(submodel in names(model)){ # session = names(model.frames)[1] ; session
+                make_G(formula = model[[submodel]],
+                       data    = model.frames[[session]][[submodel]])
+            }
+        }
+            # })
+        # })
+
+
+
+    }
+
     # traps = traps(capthist) ; n_occasions = n_occasions(capthist) ; sessioncov = sessioncov(capthist) ; timecov = timecov(capthist) ; sessions = NULL ; submodels = NULL
 
     smooth.setup = make_smooth_setup(model, model.frames)
@@ -842,6 +878,7 @@ import_data = function(detections, posts, covariates = NULL, details = list()){
     array.names = levels(detections$array)
     capthist = sapply(array.names, function(array){ # array = array.names[2] ; array
 
+        # print(array)
         ##================================================
         ## traps
 
@@ -998,6 +1035,7 @@ import_data = function(detections, posts, covariates = NULL, details = list()){
 #                 return(sub)
 #             }, simplify = FALSE)
             timecov(capthist) = sapply(session(capthist), function(session){ # session = session(capthist)[1] ; session
+                print(session)
                 sub = tempcov[temparray == session, , drop = FALSE]
                 rownames(sub) = NULL
                 return(sub)

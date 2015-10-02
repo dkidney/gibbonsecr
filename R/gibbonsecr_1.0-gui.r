@@ -59,14 +59,14 @@
 
 gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
-#     # only uncomment these lines if sourcing
-#     # rm(list = ls())
-#     prompt.save.on.exit = FALSE
-#     quit.r.on.exit = FALSE
-#     library(secr)
-#     library(tcltk)
-#     library(tcltk2)
-#     library(gibbonsecr)
+    #         # only uncomment these lines if sourcing
+    #         # rm(list = ls())
+    #         prompt.save.on.exit = FALSE
+    #         quit.r.on.exit = FALSE
+    #         library(secr)
+    #         library(tcltk)
+    #         library(tcltk2)
+    #         library(gibbonsecr)
 
     flush.console()
 
@@ -114,7 +114,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ##################################################
     ## tcl variable values
 
-    tclvalues = list2env(list(
+    tvar = list2env(list(
         # data
         detections.path     = "",
         posts.path          = "",
@@ -170,9 +170,9 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ##################################################
     ## tcl variables
 
-    tvar = new.env()
-    for(i in names(tclvalues)){
-        tvar[[i]] = tclVar(tclvalues[[i]])
+    # tvar = new.env()
+    for(i in names(tvar)){
+        tvar[[i]] = tclVar(tvar[[i]])
     }
 
     ##################################################
@@ -231,7 +231,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     # tkimage.create("photo", "::img::gibbonsecr_logo", width = 100, height = 100,
-                   # file = system.file("doc/icon/gibbonsecr.gif", package = "gibbonsecr"))
+    # file = system.file("doc/icon/gibbonsecr.gif", package = "gibbonsecr"))
 
     ##################################################
     ## Functions
@@ -255,9 +255,9 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             tcl('wm', 'iconbitmap', window, system.file('doc/icon/gibbonsecr.ico', package = "gibbonsecr"))
         }else{
             # tcl('wm', 'iconimage', window, system.file('doc/icon/gibbonsecr.gif', package = "gibbonsecr"))
-            tcl('wm', 'iconphoto', window, tcl('image', 'create', 'photo', '-file', system.file('doc/icon/gibbonsecr.gif', package = "gibbonsecr")))
+            # tcl('wm', 'iconphoto', window, tcl('image', 'create', 'photo', '-file', system.file('doc/icon/gibbonsecr.gif', package = "gibbonsecr")))
         }
-            # tcl('wm', 'iconphoto', window, "::img::gibbonsecr_logo")
+        # tcl('wm', 'iconphoto', window, "::img::gibbonsecr_logo")
     }
 
     add_separator = function(parent){
@@ -496,8 +496,14 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     load_peafowl_workspace = function(){
         load("~/Dropbox/projects/greenpeafowl/workspace.rda", envir = gui)
-        update_tvar()
-        update_robj()
+        for(i in names(robj)){
+            robj[[i]] = gibbonsecr_workspace$robj[[i]]
+        }
+        for(i in names(tvar)){
+            tclvalue(tvar[[i]]) = gibbonsecr_workspace$tclvalues[[i]]
+        }
+        # update_tvar()
+        # update_robj()
         refresh()
     }
 
@@ -622,8 +628,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     model_coef = function(){
-        result = try(utils::capture.output(cbind(estimate = coef(robj$fit),
-                                                 confint(robj$fit))))
+        result = try(utils::capture.output(
+            cbind(
+                estimate = coef(robj$fit),
+                confint(robj$fit),
+                se = sqrt(diag(vcov(robj$fit)))
+                # "cv %" = round(sqrt(diag(vcov(robj$fit))) / coef(robj$fit) * 100, 2)
+        )))
         if(inherits(result, "try-error")){
             error_message(result)
         }else{
@@ -829,16 +840,17 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                                          package = "gibbonsecr")))
     }
 
-#     open_manual_pdf = function(){
-#         system(paste("open ", system.file("doc/gibbonsecr_gui.pdf",
-#                               package = "gibbonsecr")))
-#     }
+    #     open_manual_pdf = function(){
+    #         system(paste("open ", system.file("doc/gibbonsecr_gui.pdf",
+    #                               package = "gibbonsecr")))
+    #     }
 
     par2 = function(i){
+        par(oma = c(0,0,0,0), cex = 1, cex.main = 1, pty = "s")
         switch(i,
-            par(mar = c(4.5,4.5,2,2), oma = c(0,0,0,0), cex = 1, cex.main = 1, pty = "s"),
-            par(mar = c(2,2,2,6), oma = c(0,0,0,0), cex = 1, cex.main = 1, pty = "s"),
-            par(mar = c(2,2,2,1), oma = c(0,0,0,0), cex = 1, cex.main = 1, pty = "s")
+               par(mar = c(4.5,4.5,2.0,2.0)),
+               par(mar = c(2.0,2.0,2.0,6.0)),
+               par(mar = c(2.0,2.0,2.0,1.0))
         )
     }
 
@@ -846,7 +858,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         newdata = try({
             choose_newdata(robj$fit, submodels = "bearings", all = FALSE,
                            padx = os$grid.padx)
-            }, TRUE)
+        }, TRUE)
         device_popup()
         par2(1)
         plot(robj$fit, which = "bearings", newdata = newdata,
@@ -859,6 +871,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             legend('topright', sapply(colnames(newdata), function(i){
                 paste(i, "=", newdata[[i]])
             }))
+    }
+
+    plot_close = function(){
+        for(i in dev.list()){
+            dev.set(i)
+            dev.off()
+        }
     }
 
     plot_densurf = function(){
@@ -1076,10 +1095,10 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                     # disable components of the plots tab depending in the model
                     for(i in c("bearings", "distances")){ # i = "distances"
                         if(robj$fit$model.options[[i]] == 0){
-                           tkconfigure(tobj$plots[[paste0(i, ".ci.method")]],
-                                       state = "disabled")
-                           tkconfigure(tobj$plots[[paste0(i, ".plot")]],
-                                       state = "disabled")
+                            tkconfigure(tobj$plots[[paste0(i, ".ci.method")]],
+                                        state = "disabled")
+                            tkconfigure(tobj$plots[[paste0(i, ".plot")]],
+                                        state = "disabled")
                         }
                     }
                 }
@@ -1197,32 +1216,32 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         }))
     }
 
-    update_robj = function(){
-        for(i in names(robjects)){
-            robj[[i]] = robjects[[i]]
-        }
-    }
+    #     update_robj = function(){
+    #         for(i in names(robjects)){
+    #             robj[[i]] = robjects[[i]]
+    #         }
+    #     }
 
-    update_tclvalues = function(){
-        for(i in names(tvar)){
-            tclvalues[[i]] = tclvalue(tvar[[i]])
-        }
-    }
+    # update_tclvalues = function(){
+    # for(i in names(tvar)){
+    # tclvalues[[i]] = tclvalue(tvar[[i]])
+    # }
+    # }
 
-    update_tvar = function(){
-        for(i in names(tclvalues)){
-            # if(is.null(tvar[[i]])){
-                # tvar[[i]] = tclVar(tclvalues[[i]])
-            # }else{
-                tclvalue(tvar[[i]]) = tclvalues[[i]]
-            # }
-        }
-    }
+    # update_tvar = function(){
+    # for(i in names(tclvalues)){
+    # if(is.null(tvar[[i]])){
+    # tvar[[i]] = tclVar(tclvalues[[i]])
+    # }else{
+    # tclvalue(tvar[[i]]) = tclvalues[[i]]
+    # }
+    # }
+    # }
 
     view = function(file){
         text = gsub("FILE", file, paste0("
         function(){
-            path = tclvalue(tvar$FILE.path)
+            path = path.expand(tclvalue(tvar$FILE.path))
             if(file.exists(path)){
                 system(paste('open', path))
             }else{
@@ -1286,15 +1305,21 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         ))
         if(filename != ""){
             load(filename, envir = gui)
-            update_tvar()
-            update_robj()
+            for(i in names(robj)){
+                robj[[i]] = gibbonsecr_workspace$robj[[i]]
+            }
+            for(i in names(tvar)){
+                tclvalue(tvar[[i]]) = gibbonsecr_workspace$tclvalues[[i]]
+            }
+            # update_tvar()
+            # update_robj()
             refresh()
         }
         tkfocus(main.window)
     }
 
     workspace_save = function(){
-        update_tclvalues()
+        # update_tclvalues()
         filename = tclvalue(tkgetSaveFile(
             initialdir = robj$wd,
             filetypes = "{{} {.rda}}"
@@ -1302,8 +1327,12 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         if(filename != ""){
             if(tools::file_ext(filename) == "")
                 filename = paste0(filename, ".rda")
-            robjects = as.list(robj)
-            save(tclvalues, robjects, version, file = filename)
+            gibbonsecr_workspace = list(
+                robj      = as.list(robj),
+                tclvalues = sapply(tvar, tclvalue),
+                version   = version
+            )
+            save(gibbonsecr_workspace, file = filename)
         }
         tkfocus(main.window)
         return(filename)
@@ -1640,10 +1669,10 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tobj$model$summary = tkbutton(frame.model.buttons, "Summary", model_summary)
     tobj$model$predict = tkbutton(frame.model.buttons, "Predict", model_predict)
     tobj$model$coef    = tkbutton(frame.model.buttons, "Coef",    model_coef)
-#     tkgrid(tobj$model$fit,     row = 1, column = 1)
-#     tkgrid(tobj$model$summary, row = 1, column = 2)
-#     tkgrid(tobj$model$coef,    row = 2, column = 1)
-#     tkgrid(tobj$model$predict, row = 2, column = 2)
+    #     tkgrid(tobj$model$fit,     row = 1, column = 1)
+    #     tkgrid(tobj$model$summary, row = 1, column = 2)
+    #     tkgrid(tobj$model$coef,    row = 2, column = 1)
+    #     tkgrid(tobj$model$predict, row = 2, column = 2)
 
     tkgrid(tobj$model$fit,
            tobj$model$summary,
@@ -1751,7 +1780,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     frame.plots.buttons = tkframe(tab.plots)
     tkpack(frame.plots.buttons)
     tobj$plots$save = tkbutton(frame.plots.buttons, "Save", plot_save)
-    tkpack(tobj$plots$save)
+    tobj$plots$close = tkbutton(frame.plots.buttons, "Close", plot_close)
+    tkgrid(tobj$plots$save, tobj$plots$close)
 
     ##################################################
     ##################################################
@@ -1759,8 +1789,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     ##################################################
     ## BOOTSTRAP TAB
 
-#     boot.tab = tkframe(lhs)
-#     tkadd(lhs, boot.tab, text = "Bootstrap", compound = "right", state = "disabled")
+    #     boot.tab = tkframe(lhs)
+    #     tkadd(lhs, boot.tab, text = "Bootstrap", compound = "right", state = "disabled")
 
 
 
@@ -1848,7 +1878,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                     disabledforeground = "grey85",
                     foreground         = "black",
                     relief             = "flat"
-                    )
+        )
     }
 
 
@@ -1928,14 +1958,14 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
         cat(paste0("\"", paste(sort(unique(c(a, b, c, d, e))), collapse = "\", \""), "\""))
 
-
-
         # tkconfigure(tobj$data$posts.path, validate = "focus", validatecommand = validate_entry("posts"))
-
 
     }
 
     refresh()
+    print_dashes()
+    print_to_console(welcome_message())
+    print_dashes()
 
     invisible()
 
