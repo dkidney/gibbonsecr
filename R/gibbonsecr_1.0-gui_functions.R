@@ -459,7 +459,7 @@ welcome_message = function(){
           "\n",
           "This software was developed in partnership with the IUCN SSC \nPrimate Specialist Group Section on Small Apes and the Centre \nfor Research into Ecological and Environmental Modelling at \nthe Univerisity of St Andrews, UK\n\n",
           "For help on using the software go to Help > User manual\n\n",
-          "This is a pre-release version of the softare. If you notice \nany bugs or have any general queries, please email Darren \nKidney at darrenkidney@yahoo.co.uk\n",
+          "This is a pre-release version of the software. If you notice \nany bugs or have any general queries, please email Darren \nKidney at darrenkidney@yahoo.co.uk\n",
           "\n"
     )
 }
