@@ -36,7 +36,7 @@ add_distances = function(capthist, value){
 ## -------------------------------------------------------------------------- ##
 
 # update to addCovariates which allows for SpatialPointsDataFrame class
-add_covariates = function(x, shp){
+add_shp_covariates = function(x, shp){
     if(!inherits(x, c("mask","traps")))
         stop("expecting a mask or traps object")
     if(!inherits(shp, c("SpatialPolygonsDataFrame","SpatialPointsDataFrame")))
@@ -44,7 +44,7 @@ add_covariates = function(x, shp){
     class  = if(inherits(x, "mask")) "mask" else "traps"
     covnames = colnames(shp@data)
     if(ms(x)){
-        x = lapply(x, function(x) add_covariates(x, shp))
+        x = lapply(x, function(x) add_shp_covariates(x, shp))
         class(x) = c("list", class)
     }else{
         # check mask covs for covnames
@@ -325,7 +325,11 @@ covlevels = function(x){
         covlevels$groupcov   = colnames(covariates(SS))
         covlevels$sessioncov = colnames(attr(x, "sessioncov"))
         covlevels$timecov    = colnames(attr(SS, "timecov"))
-        covlevels$trapcov    = c("x", "y", unique(colnames(covariates(traps(SS)))))
+        covlevels$trapcov    = if(is.null(covariates(traps(SS)))){
+            NULL
+        }else{
+            sort(unique(colnames(covariates(traps(SS)))))
+        }
         if(!is.null(covlevels$trapcov)){
             covlevels$timevaryingcov = names(timevaryingcov(traps(SS)))
             if(!is.null(covlevels$timevaryingcov)){
@@ -336,7 +340,11 @@ covlevels = function(x){
     }
     if(inherits(x, "mask")){
         if(ms(x)) x = x[[1]]
-        covlevels$maskcov = sort(c("x", "y", colnames(covariates(x))))
+        covlevels$maskcov = if(is.null(covariates(x))){
+            NULL
+        }else{
+            sort(colnames(covariates(x)))
+        }
     }
     covlevels = if(length(covlevels) == 0) NULL else{
         lapply(covlevels, sort)
@@ -375,85 +383,85 @@ covtable = function(data, w = 50){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-fitted_detectfn_auxiliary_values_old = function(beta, fit, session, x, which = "detectfn", true.distance = 500){
-
-    if(!which %in% c("detectfn","bearings","distances"))
-        stop("which must be one of: 'detectfn', 'bearings', 'distances'")
-
-    ##################################################
-    ## submodels
-
-    submodels = if(which == "detectfn"){
-        switch(fit$model.options$detectfn + 1, c("g0","sigma"), c("g0","sigma","z"))
-    }else which
-    # check model exists
-    for(submodel in submodels){
-        if(fit$model[[submodel]] == 0) stop("no ", submodel, " model to plot")
-    }
-
-    ##################################################
-    ## function to generate values
-
-    FUN = switch(
-        which,
-        "detectfn"  = list(hn, hr)[[fit$model.options$detectfn + 1]],
-        "bearings"  = list(dvm, dwrpcauchy)[[fit$model.options$bearings]],
-        "distances" = list(dgamma, dlnorm)[[fit$model.options$distances]]
-    )
-    EX = switch(which, "bearings" = 0, "distances" = true.distance, NULL)
-
-    ##################################################
-    ## design matrices
-
-    design.matrices = sapply(submodels, function(submodel){ # submodel = "sigma"
-        covs = all.vars(fit$model[[submodel]]) # covs
-        if(length(covs) == 0){
-            model.frame = data.frame(matrix(0, nrow = 1, ncol = 0))
-        }else{
-            # all covariates (from all sessions)
-            model.frame = do.call(rbind, lapply(fit$model.frames, function(x){
-                x[[submodel]]
-            })) # head(model.frame)
-            # extract reference level (factors) or mean (numeric) for each cov
-            model.frame = do.call(cbind, sapply(covs, function(cov){
-                # cov = covs[1] ; cov
-                out = list()
-                out[[cov]] = if(inherits(model.frame[[cov]], "factor")){
-                    levs = levels(model.frame[[cov]])
-                    factor(levs[1], levels = levs)
-                }else{
-                    mean(model.frame[,cov])
-                }
-                as.data.frame(out)
-            }, simplify = FALSE)) # str(model.frame)
-        }
-        make_model_matrix(fit$model[[submodel]],
-                          model.frame,
-                          fit$smooth.setup[[submodel]])
-    }, simplify = FALSE)
-    # get submodel arrays - each array will be a 1 by 1 matrix
-    design.matrices = list("1" = design.matrices)
-
-    ##################################################
-    ## convert to submodel arrays and return function values
-
-    submodel.arrays = make_submodel_arrays(
-        beta            = beta,
-        parindx         = fit$parindx,
-        fixed           = fit$fixed,
-        design.matrices = design.matrices,
-        inv.link        = fit$inv.link,
-        S               = c("1" = 1),
-        K               = c("1" = 1),
-        submodels       = submodels,
-        sessions        = "1")[["1"]]
-    par = as.numeric(submodel.arrays)
-    FUN(x, par, EX)
-
-}
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
+# fitted_detectfn_auxiliary_values_old = function(beta, fit, session, x, which = "detectfn", true.distance = 500){
+#
+#     if(!which %in% c("detectfn","bearings","distances"))
+#         stop("which must be one of: 'detectfn', 'bearings', 'distances'")
+#
+#     ##################################################
+#     ## submodels
+#
+#     submodels = if(which == "detectfn"){
+#         switch(fit$model.options$detectfn + 1, c("g0","sigma"), c("g0","sigma","z"))
+#     }else which
+#     # check model exists
+#     for(submodel in submodels){
+#         if(fit$model[[submodel]] == 0) stop("no ", submodel, " model to plot")
+#     }
+#
+#     ##################################################
+#     ## function to generate values
+#
+#     FUN = switch(
+#         which,
+#         "detectfn"  = list(hn, hr)[[fit$model.options$detectfn + 1]],
+#         "bearings"  = list(dvm, dwrpcauchy)[[fit$model.options$bearings]],
+#         "distances" = list(dgamma, dlnorm)[[fit$model.options$distances]]
+#     )
+#     EX = switch(which, "bearings" = 0, "distances" = true.distance, NULL)
+#
+#     ##################################################
+#     ## design matrices
+#
+#     design.matrices = sapply(submodels, function(submodel){ # submodel = "sigma"
+#         covs = all.vars(fit$model[[submodel]]) # covs
+#         if(length(covs) == 0){
+#             model.frame = data.frame(matrix(0, nrow = 1, ncol = 0))
+#         }else{
+#             # all covariates (from all sessions)
+#             model.frame = do.call(rbind, lapply(fit$model.frames, function(x){
+#                 x[[submodel]]
+#             })) # head(model.frame)
+#             # extract reference level (factors) or mean (numeric) for each cov
+#             model.frame = do.call(cbind, sapply(covs, function(cov){
+#                 # cov = covs[1] ; cov
+#                 out = list()
+#                 out[[cov]] = if(inherits(model.frame[[cov]], "factor")){
+#                     levs = levels(model.frame[[cov]])
+#                     factor(levs[1], levels = levs)
+#                 }else{
+#                     mean(model.frame[,cov])
+#                 }
+#                 as.data.frame(out)
+#             }, simplify = FALSE)) # str(model.frame)
+#         }
+#         make_model_matrix(fit$model[[submodel]],
+#                           model.frame,
+#                           fit$smooth.setup[[submodel]])
+#     }, simplify = FALSE)
+#     # get submodel arrays - each array will be a 1 by 1 matrix
+#     design.matrices = list("1" = design.matrices)
+#
+#     ##################################################
+#     ## convert to submodel arrays and return function values
+#
+#     submodel.arrays = make_submodel_arrays(
+#         beta            = beta,
+#         parindx         = fit$parindx,
+#         fixed           = fit$fixed,
+#         design.matrices = design.matrices,
+#         inv.link        = fit$inv.link,
+#         S               = c("1" = 1),
+#         K               = c("1" = 1),
+#         submodels       = submodels,
+#         sessions        = "1")[["1"]]
+#     par = as.numeric(submodel.arrays)
+#     FUN(x, par, EX)
+#
+# }
+#
+# ## -------------------------------------------------------------------------- ##
+# ## -------------------------------------------------------------------------- ##
 
 fitted_detectfn_auxiliary_values = function(beta, fit, newdata, x, which = "detectfn", true.distance = 500){
 
@@ -497,8 +505,10 @@ fitted_detectfn_auxiliary_values = function(beta, fit, newdata, x, which = "dete
 
     # use list("1" = ... to make dummy session
     design.matrices = list("1" = sapply(submodels, function(submodel){
-        make_model_matrix(formula      = fit$model[[submodel]],
-                          data         = newdata,
+#         make_model_matrix(formula      = fit$model[[submodel]],
+#                           data         = newdata,
+#                           smooth.setup = fit$smooth.setup[[submodel]])
+        make_model_matrix2(data         = newdata,
                           smooth.setup = fit$smooth.setup[[submodel]])
     }, simplify = FALSE))
 
@@ -538,8 +548,10 @@ fitted_submodel_values = function(beta, fit, newdata = NULL, submodel = "D"){
 
     # use list("1" = ... to make dummy session
     design.matrices = list("1" = sapply(submodel, function(submodel){
-        make_model_matrix(formula      = fit$model[[submodel]],
-                          data         = newdata,
+#         make_model_matrix(formula      = fit$model[[submodel]],
+#                           data         = newdata,
+#                           smooth.setup = fit$smooth.setup[[submodel]])
+        make_model_matrix2(data         = newdata,
                           smooth.setup = fit$smooth.setup[[submodel]])
     }, simplify = FALSE))
 
@@ -995,11 +1007,12 @@ maskcov = function(mask){
     if(ms(mask)){
         lapply(mask, maskcov)
     }else{
-        if(is.null(covariates(mask))){
-            as.data.frame(mask)
-        }else{
-            cbind(as.data.frame(mask), covariates(mask))
-        }
+        covariates(mask)
+#         if(is.null(covariates(mask))){
+#             as.data.frame(mask)
+#         }else{
+#             cbind(as.data.frame(mask), covariates(mask))
+#         }
     }
 }
 
@@ -1688,8 +1701,9 @@ summary_capthist = function(capthist){
             })))
             details = if(type == "continuous"){
                 paste("range:", paste(prettyNum(range(
-                    sapply(capthist, function(x){
-                        as.numeric(attr(x, i))
+                    lapply(capthist, function(x){
+                        values = as.numeric(attr(x, i))
+                        if(length(values) == 0) return(NA) else return(values)
                     }), na.rm = TRUE)), collapse = " to "))
             }else{
                 stop("not implemented for interval data")
@@ -1933,10 +1947,15 @@ summary_mask = function(mask, traps = NULL){
     ##################################################
     ## covariates
 
-    cat("\nCovariates:\n")
-    data = do.call(rbind, maskcov(MS(mask)))
-    covtable = covtable(data)
-    print(as.data.frame(covtable), quote = FALSE, row.names = FALSE, right = FALSE)
+    if(is.null(covariates(mask)[[1]])){
+        cat("\nNo covariates\n")
+    }else{
+        cat("\nCovariates:\n")
+        data = do.call(rbind, maskcov(MS(mask)))
+        covtable = covtable(data)
+        print(as.data.frame(covtable), quote = FALSE, row.names = FALSE, right = FALSE)
+    }
+
     invisible()
 }
 
@@ -2028,11 +2047,12 @@ trapcov = function(traps){
     if(ms(traps)){
         sapply(traps, trapcov, simplify = FALSE)
     }else{
-        if(is.null(covariates(traps))){
-            as.data.frame(traps)
-        }else{
-            cbind(as.data.frame(traps), covariates(traps))
-        }
+        covariates(traps)
+        # if(is.null(covariates(traps))){
+            # as.data.frame(traps)
+        # }else{
+            # cbind(as.data.frame(traps), covariates(traps))
+        # }
     }
 }
 
@@ -2074,6 +2094,15 @@ trapcov = function(traps){
             structure(traps, covariates = value)
         }
     }
+}
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+traps_meanSD = function(traps){
+    if(!inherits(traps, "traps")) stop("expecting a traps object")
+    if(ms(traps)) traps = make_regiontraps(traps)
+    getMeanSD(traps)
 }
 
 ## -------------------------------------------------------------------------- ##

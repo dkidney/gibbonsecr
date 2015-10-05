@@ -8,6 +8,7 @@ data_prep
 data/N.Siki.rda
 debugging
 development
+inst/extdata/N.siki
 notes
 src/*.dll
 src/*.o

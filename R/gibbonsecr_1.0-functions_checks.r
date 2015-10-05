@@ -6,38 +6,51 @@
 
 check_capthist = function(capthist){
 
+    ##################################################
+    ## check input
+
     # check class and detector type
     if(!inherits(capthist, "capthist"))
         stop("requires 'capthist' object", call. = FALSE)
     if(detector(traps(capthist)) != "proximity")
         stop("requires proximity detectors", call. = FALSE)
     # convert to multi-session
-    timecov = timecov(capthist)
-    sessioncov = sessioncov(capthist)
+    # timecov = timecov(capthist)
     capthist = MS(capthist)
 
-    # sessioncov
+    ##################################################
+    ## trapcov
+
+    # add scaled version of x and y to covariates
+    meanSD = traps_meanSD(traps(capthist))
+    for(session in session(capthist)){
+        coords = as.data.frame(mapply(function(x, y, z) ((x - y) / z),
+                        x = traps(capthist[[session]]),
+                        y = meanSD[1,],
+                        z = meanSD[2,]))
+        rownames(coords) = rownames(traps(capthist[[session]]))
+        if(is.null(covariates(traps(capthist[[session]])))){
+            covariates(traps(capthist[[session]])) = coords
+        }else{
+            covariates(traps(capthist[[session]])) = cbind(
+                covariates(traps(capthist[[session]])),
+                coords
+            )
+        }
+    }
+
+    ##################################################
+    ## sessioncov
+
+    sessioncov = sessioncov(capthist)
     if(!is.null(sessioncov)){
         if(!all(rownames(sessioncov) == session(capthist)))
             stop("!all(rownames(sessioncov) == session(capthist))", call. = FALSE)
     }
-    # delete sessions with no detections
-    n = n_groups(capthist)
-    if(any(n == 0)){
-        if(all(n == 0)){
-            stop("no capture history data", call. = FALSE)
-        }else{
-            message("deleting arrays with no captures: ", paste(session(capthist)[n == 0], collapse = ", "))
-            capthist = subset_capthist(capthist, n > 0)
-            if(!is.null(sessioncov)){
-                sessioncov = sessioncov[n > 0, , drop = FALSE]
-                if(!is.null(timecov)){
-                    timecov = timecov[n > 0]
-                }
-            }
-        }
-    }
-    # usage - if missing then assume full usage
+
+    ##################################################
+    ## usage - if missing then assume full usage
+
     if(is.null(usage(traps(capthist)))){
         for(session in session(capthist)){
             usage(traps(capthist[[session]])) = matrix(
@@ -47,7 +60,10 @@ check_capthist = function(capthist){
             )
         }
     }
-    # bearings - if present, convert to radians
+
+    ##################################################
+    ## bearings - if present, convert to radians
+
     if(!is.null(get_bearings(capthist))){
         for(session in session(capthist)){ # session = session(capthist)[1] ; session
             bearings = get_bearings(capthist[[session]])
@@ -58,7 +74,10 @@ check_capthist = function(capthist){
             }
         }
     }
-    # distances - if present, convert to metres
+
+    ##################################################
+    ## distances - if present, convert to metres
+
     if(!is.null(get_distances(capthist))){
         for(session in session(capthist)){ # session = session(capthist)[1] ; session
             distances = get_distances(capthist[[session]])
@@ -69,8 +88,9 @@ check_capthist = function(capthist){
             }
         }
     }
-    attr(capthist, "sessioncov") = sessioncov
-    attr(capthist, "timecov") = timecov
+
+    # attr(capthist, "sessioncov") = sessioncov
+    # attr(capthist, "timecov") = timecov
     return(capthist)
 }
 
@@ -257,7 +277,7 @@ check_detections = function(detections, details){
     ##################################################
     ## column classes
 
-    detections$array = as.factor(detections$array)
+    detections$array = as.character(detections$array)
     detections$post  = as.character(detections$post)
     detections$group = as.character(detections$group)
     if(inherits(detections$occasion, c("integer","numeric"))){
@@ -393,6 +413,27 @@ check_mask = function(mask, capthist, mask.options = list()){
                 }
             }
         # }
+    }
+
+    ##################################################
+    ## add scaled x y covariates
+
+    # add scaled version of x and y to covariates
+    meanSD = traps_meanSD(traps(capthist))
+    for(session in session(capthist)){
+        coords = as.data.frame(mapply(function(x, y, z) ((x - y) / z),
+                        x = mask[[session]],
+                        y = meanSD[1,],
+                        z = meanSD[2,]))
+        rownames(coords) = rownames(mask[[session]])
+        if(is.null(covariates(mask[[session]]))){
+            covariates(mask[[session]]) = coords
+        }else{
+            covariates(mask[[session]]) = cbind(
+                covariates(mask[[session]]),
+                coords
+            )
+        }
     }
 
     return(mask)
@@ -621,18 +662,20 @@ check_posts = function(posts, detections, details){
     colnames(posts) = tolower(colnames(posts))
     if(!all(c("array", "post", "x", "y", "usage") %in% colnames(posts)))
         stop("Posts data must contain the following columns: 'array', 'post', 'x', 'y' and 'usage'", call. = FALSE)
+    # check all array names in detections data appear in posts data
+    if(!all(detections[["array"]] %in% posts[["array"]]))
+        stop("some array names in detections data not present in posts data", call. = FALSE)
+    # check all posts names in detections data appear in posts data
     if(!all(detections[["post"]] %in% posts[["post"]]))
         stop("some post names in detections data not present in posts data", call. = FALSE)
     # delete posts in arrays without any detections
-    index = posts$array %in% detections$array
-    if(any(!index)){
-        message("- deleting posts for arrays with no detections: ", paste(unique(posts$array[!index]), collapse = ", "))
-        posts = posts[index,]
-    }
+    # index = posts$array %in% detections$array
+    # if(any(!index)){
+        # message("- deleting posts for arrays with no detections: ", paste(unique(posts$array[!index]), collapse = ", "))
+        # posts = posts[index,]
+    # }
     # column classes
-    posts$array = as.factor(posts$array)
-    if(!all(levels(posts$array) == levels(detections$array)))
-        stop("post array levels dont match detections array levels", call. = FALSE)
+    posts$array = as.character(posts$array)
     posts$post  = as.character(posts$post)
     posts$usage = as.character(posts$usage)
     # check usage...

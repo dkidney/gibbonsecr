@@ -110,6 +110,44 @@ number_palette = colorRampPalette(c("blue","green","red"), space = "Lab")
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+# bearing must be in radians
+draw_bearing_arrows = function(bearing = 0, distance = NULL, origin = c(0,0), length = 0.1, ...){
+    if(!inherits(origin, c("matrix","data.fame")))
+        origin = rbind(origin)
+    if(ncol(origin) != 2) stop()
+    if(is.null(distance)) distance = 1000
+    ne = bearing >= (0.0 * pi) & bearing < (0.5 * pi) ; ne
+    se = bearing >= (0.5 * pi) & bearing < (1.0 * pi) ; se
+    sw = bearing >= (1.0 * pi) & bearing < (1.5 * pi) ; sw
+    nw = bearing >= (1.5 * pi) & bearing <=(2.0 * pi) ; nw
+    theta     = bearing              ; theta
+    theta[ne] = bearing[ne]          ; theta
+    theta[se] = pi - bearing[se]     ; theta
+    theta[sw] = bearing[sw] - pi     ; theta
+    theta[nw] = 2 * pi - bearing[nw] ; theta
+    east  = ifelse(ne | se, 1, -1) ; east
+    north = ifelse(nw | ne, 1, -1) ; north
+    dx = sin(theta) * distance * east  ; dx
+    dy = cos(theta) * distance * north ; dy
+    arrows(
+        x0 = origin[,1],
+        x1 = origin[,1] + dx,
+        y0 = origin[,2],
+        y1 = origin[,2] + dy,
+        length = length,
+        ...)
+    invisible()
+}
+
+# plot(-10:10, -10:10, type = "n", asp = 1)
+# n = 17
+# bearing = seq(0, 360, length = n) * pi/180 ; bearing
+# distance = seq(1, 10, length = n)
+# bearing_arrows(bearing, distance, col = 1:n, length = 0.1)
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
 plot_bearings = function(capthist, session = NULL, group = NULL, length = 0.05, legend = TRUE, buffer = 6000, add = FALSE){
     if(!inherits(capthist, "capthist"))
         stop("expecting a capthist object")
@@ -227,97 +265,97 @@ plot_capthist = function(x, mask = NULL){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-plot_detectfn_auxiliary_old = function(fit, which = c("detectfn","bearings","distances"), session = 1, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = TRUE, ...){
-    which = match.arg(which)
-    plotargs = list(...) # plotargs = list() ; which = "distances" ; session = "2" ; nx = 100
-    # print(plotargs)
-    # stop("1")
-    plotargs$x = switch(
-        which,
-        "detectfn"  = seq(0, mask_buffer(fit$mask, fit$capthist), length = nx),
-        "bearings"  = seq(-pi/2, pi/2, length = nx),
-        "distances" = seq(0, 2000, length = nx)
-    )
-
-    ##################################################
-    ## delta method
-
-    deltaargs = list(beta    = coef(fit),
-                     fit     = fit,
-                     x       = plotargs$x,
-                     session = session,
-                     which   = which,
-                     ...)
-    # print(deltaargs)
-    # stop("2")
-    if(CI){
-        deltaargs$f = fitted_detectfn_auxiliary_values
-        deltaargs$vcov = vcov(fit)
-        delta = do.call(delta_method, deltaargs)
-        zvalue = qnorm(1 - alpha / 2)
-        delta$lower = delta$est - zvalue * delta$se
-        delta$upper = delta$est + zvalue * delta$se
-        delta$se = NULL
-    }else{
-        delta = list(est = do.call(fitted_detectfn_auxiliary_values, deltaargs))
-    }
-    # print(delta)
-    # stop("3")
-    plotargs$y = delta$est
-    if(which == "bearings") plotargs$x = plotargs$x * 180/pi
-
-    ##################################################
-    ## plot
-
-    # set up plotting area if add = NULL or FALSE
-    if(is.null(plotargs$add) || !plotargs$add){
-        plotargs$type = "n"
-        if(is.null(plotargs$main)) plotargs$main = switch(
-            which,
-            "detectfn"  = "Detection function",
-            "bearings"  = "Bearing error distribution",
-            "distances" = "Distance error distribution (truth = 500m)"
-        )
-        if(is.null(plotargs$xlab)) plotargs$xlab = switch(
-            which,
-            "detectfn"  = "Distance from detector (m)",
-            "bearings"  = "Bearing error (degrees)",
-            "distances" = "Distance estimate (m)"
-        )
-        if(is.null(plotargs$ylab)) plotargs$ylab = switch(
-            which,
-            "detectfn"  = "Detection probability",
-            "Probability density"
-        )
-        # if(is.null(plotargs$xaxs)) plotargs$xaxs = "i"
-        # if(is.null(plotargs$yaxs)) plotargs$yaxs = "i"
-        if(is.null(plotargs$bty))  plotargs$bty  = "n"
-        if(is.null(plotargs$ylim)) plotargs$ylim = switch(
-            which,
-            "detectfn"  = c(0,1),
-            c(0, max(sapply(delta,max)))
-        )
-        do.call(plot, plotargs)
-    }
-    # draw plot
-    plotargs[c("add","type","main","xlab","ylab","xaxs","yaxs","bty","xlim","ylim")] = NULL
-    plotargs$type = NULL
-    plotargs$lty = 1
-    do.call(lines, plotargs)
-    if(CI){
-        plotargs$lty = 2
-        for(interval in c("lower","upper")){
-            plotargs$y = delta[[interval]]
-            do.call(lines, plotargs)
-        }
-    }
-    invisible()
-}
+# plot_detectfn_auxiliary_old = function(fit, which = c("detectfn","bearings","distances"), session = 1, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = TRUE, ...){
+#     which = match.arg(which)
+#     plotargs = list(...) # plotargs = list() ; which = "distances" ; session = "2" ; nx = 100
+#     # print(plotargs)
+#     # stop("1")
+#     plotargs$x = switch(
+#         which,
+#         "detectfn"  = seq(0, mask_buffer(fit$mask, fit$capthist), length = nx),
+#         "bearings"  = seq(-pi/2, pi/2, length = nx),
+#         "distances" = seq(0, 2000, length = nx)
+#     )
+#
+#     ##################################################
+#     ## delta method
+#
+#     deltaargs = list(beta    = coef(fit),
+#                      fit     = fit,
+#                      x       = plotargs$x,
+#                      session = session,
+#                      which   = which,
+#                      ...)
+#     # print(deltaargs)
+#     # stop("2")
+#     if(CI){
+#         deltaargs$f = fitted_detectfn_auxiliary_values
+#         deltaargs$vcov = vcov(fit)
+#         delta = do.call(delta_method, deltaargs)
+#         zvalue = qnorm(1 - alpha / 2)
+#         delta$lower = delta$est - zvalue * delta$se
+#         delta$upper = delta$est + zvalue * delta$se
+#         delta$se = NULL
+#     }else{
+#         delta = list(est = do.call(fitted_detectfn_auxiliary_values, deltaargs))
+#     }
+#     # print(delta)
+#     # stop("3")
+#     plotargs$y = delta$est
+#     if(which == "bearings") plotargs$x = plotargs$x * 180/pi
+#
+#     ##################################################
+#     ## plot
+#
+#     # set up plotting area if add = NULL or FALSE
+#     if(is.null(plotargs$add) || !plotargs$add){
+#         plotargs$type = "n"
+#         if(is.null(plotargs$main)) plotargs$main = switch(
+#             which,
+#             "detectfn"  = "Detection function",
+#             "bearings"  = "Bearing error distribution",
+#             "distances" = "Distance error distribution (truth = 500m)"
+#         )
+#         if(is.null(plotargs$xlab)) plotargs$xlab = switch(
+#             which,
+#             "detectfn"  = "Distance from detector (m)",
+#             "bearings"  = "Bearing error (degrees)",
+#             "distances" = "Distance estimate (m)"
+#         )
+#         if(is.null(plotargs$ylab)) plotargs$ylab = switch(
+#             which,
+#             "detectfn"  = "Detection probability",
+#             "Probability density"
+#         )
+#         # if(is.null(plotargs$xaxs)) plotargs$xaxs = "i"
+#         # if(is.null(plotargs$yaxs)) plotargs$yaxs = "i"
+#         if(is.null(plotargs$bty))  plotargs$bty  = "n"
+#         if(is.null(plotargs$ylim)) plotargs$ylim = switch(
+#             which,
+#             "detectfn"  = c(0,1),
+#             c(0, max(sapply(delta,max)))
+#         )
+#         do.call(plot, plotargs)
+#     }
+#     # draw plot
+#     plotargs[c("add","type","main","xlab","ylab","xaxs","yaxs","bty","xlim","ylim")] = NULL
+#     plotargs$type = NULL
+#     plotargs$lty = 1
+#     do.call(lines, plotargs)
+#     if(CI){
+#         plotargs$lty = 2
+#         for(interval in c("lower","upper")){
+#             plotargs$y = delta[[interval]]
+#             do.call(lines, plotargs)
+#         }
+#     }
+#     invisible()
+# }
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distances"), newdata = NULL, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = TRUE, ...){
+plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distances"), newdata = NULL, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = TRUE, true.distance = 500,  ...){
     which = match.arg(which)
     plotargs = list(...) # plotargs = list() ; which = "distances" ; session = "2" ; nx = 100
     # print(plotargs)
@@ -337,7 +375,7 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
                      x       = plotargs$x,
                      newdata = newdata,
                      which   = which,
-                     ...)
+                     true.distance = true.distance)
     # print(deltaargs)
     # stop("2")
     if(CI){

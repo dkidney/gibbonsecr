@@ -59,14 +59,14 @@
 
 gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
-    #         # only uncomment these lines if sourcing
-    #         # rm(list = ls())
-    #         prompt.save.on.exit = FALSE
-    #         quit.r.on.exit = FALSE
-    #         library(secr)
-    #         library(tcltk)
-    #         library(tcltk2)
-    #         library(gibbonsecr)
+#             # only uncomment these lines if sourcing
+#             # rm(list = ls())
+#             prompt.save.on.exit = FALSE
+#             quit.r.on.exit = FALSE
+#             library(secr)
+#             library(tcltk)
+#             library(tcltk2)
+#             library(gibbonsecr)
 
     flush.console()
 
@@ -364,7 +364,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         }
     }
 
-    device_popup = function(width = 5, height = 5, pointsize = 10, ...){
+    device_popup = function(width = 5, height = 4.5, pointsize = 10, ...){
         FUN = eval(parse(text = switch(.Platform$OS.type,
                                        windows = "windows", "x11")))
         FUN(width = width, height = height, pointsize = pointsize, ...)
@@ -473,7 +473,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         tclvalue(tvar$covariates.path) = file.path(folder, "covariates.csv")
         tclvalue(tvar$bearings.units)  = "degrees"
         tclvalue(tvar$distances.units) = "km"
-        tclvalue(tvar$buffer)          = "2000"
+        tclvalue(tvar$buffer)          = "1500"
         tclvalue(tvar$spacing)         = "100"
         tclvalue(tvar$region.path)     = ""
         folder = "~/Dropbox/projects/greenpeafowl/data/gis_layers/habitats_3000m"
@@ -551,6 +551,12 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             type    = "trapbuffer",
             poly    = if(tclvalue(tvar$region.use) == "1") robj$region else NULL
         )
+        # add centred x and y covariates
+#         centre = apply(do.call(rbind, traps(robj$capthist)), 2, mean)
+#         for(i in 1:length(robj$mask)){
+#             covariates(robj$mask[[i]]) = mapply(function(x, y) x - y, robj$mask[[i]], centre)
+#             rownames(covariates(robj$mask[[i]])) = rownames(robj$mask[[i]])
+#         }
         # habitat
         for(i in c("habitat1","habitat2","habitat3")){ # i = "habitat1"
             if(tclvalue(tvar[[paste0(i, ".use")]]) == "1"){
@@ -558,7 +564,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                                         " to mask..."))
                 result = try({
                     utils::capture.output({
-                        robj$mask = add_covariates(robj$mask, robj[[i]])
+                        robj$mask = add_shp_covariates(robj$mask, robj[[i]])
                     })
                 }, TRUE)
                 if(inherits(result, "try-error")){
@@ -570,7 +576,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                     attrs = attributes(robj$capthist)
                     result = try({
                         utils::capture.output({
-                            traps(robj$capthist) = add_covariates(
+                            traps(robj$capthist) = add_shp_covariates(
                                 traps(robj$capthist),
                                 robj[[i]]
                             )
@@ -701,7 +707,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
         result = try({
             utils::capture.output({
-                robj$fit = gibbonsecr::gibbonsecr_fit(
+                robj$fit = gibbonsecr::gibbonsecr_fit2(
                     capthist = robj$capthist,
                     model = formulas,
                     fixed = fixed,
@@ -1299,11 +1305,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     }
 
     workspace_load = function(){
+        cursor("wait") ; on.exit(cursor("normal"))
         filename = tclvalue(tkgetOpenFile(
             initialdir = robj$wd,
             filetypes = "{{} {.rda}}"
         ))
         if(filename != ""){
+            print_to_console("Loading workspace...")
             load(filename, envir = gui)
             for(i in names(robj)){
                 robj[[i]] = gibbonsecr_workspace$robj[[i]]
@@ -1314,17 +1322,20 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             # update_tvar()
             # update_robj()
             refresh()
+            print_to_console(paste("Workspace loaded:\n", filename),
+                             dashes = TRUE)
         }
         tkfocus(main.window)
     }
 
     workspace_save = function(){
-        # update_tclvalues()
+        cursor("wait") ; on.exit(cursor("normal"))
         filename = tclvalue(tkgetSaveFile(
             initialdir = robj$wd,
             filetypes = "{{} {.rda}}"
         ))
         if(filename != ""){
+            print_to_console("Saving workspace...")
             if(tools::file_ext(filename) == "")
                 filename = paste0(filename, ".rda")
             gibbonsecr_workspace = list(
@@ -1333,6 +1344,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 version   = version
             )
             save(gibbonsecr_workspace, file = filename)
+            print_to_console(paste("Workspace saved:\n", filename),
+                             dashes = TRUE)
         }
         tkfocus(main.window)
         return(filename)
@@ -1844,8 +1857,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkadd(menu$help, "cascade", label = "Example data", menu = menu$help.examples)
     tkadd(menu$help.examples, "command", label = "N.annamensis",
           command = load_N_annamensis)
-    # tkadd(menu$help.examples, "command", label = "N.siki",  command = load_N_siki)
-    # tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
+    tkadd(menu$help.examples, "command", label = "N.siki",  command = load_N_siki)
+    tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
     tkadd(menu$help, "command", label = "User manual", command = open_manual_html)
     tkadd(menu$help, "command", label = "About gibbonsecr", command = about)
 
@@ -1858,8 +1871,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
           command = workspace_save, accelerator = "CTRL+S")
     tkadd(menu$workspace, "command", label = "Load workspace",
           command = workspace_load, accelerator = "CTRL+L")
-    # tkadd(menu$workspace, "command", label = "Load peafowl workspace",
-          # command = load_peafowl_workspace)
+    tkadd(menu$workspace, "command", label = "Load peafowl workspace",
+          command = load_peafowl_workspace)
     tkadd(menu$workspace, "command", label = "Clear workspace",
           command = workspace_clear)
     tkadd(menu$workspace, "separator")
