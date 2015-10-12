@@ -1,4 +1,6 @@
-## Not run: 
+## Not run:
+
+library(gibbonsecr)
 
 data(N.annamensis)
 

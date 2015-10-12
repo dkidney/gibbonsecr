@@ -5,8 +5,7 @@
 \title{Plot a fitted model}
 \usage{
 \method{plot}{gibbonsecr_fit}(x, which = c("detectfn", "pdot", "bearings",
-  "distances", "density"), session = 1, newdata = NULL,
-  use.global.par.settings = TRUE, ...)
+  "distances", "density"), ...)
 }
 \arguments{
 \item{x}{a \code{gibbonsecr} model object (i.e. an object returned from the
@@ -14,11 +13,11 @@
 
 \item{which}{TODO}
 
+\item{...}{additional arguments (not used)}
+
 \item{session}{TODO}
 
 \item{use.global.par.settings}{TODO}
-
-\item{...}{additional arguments (not used)}
 }
 \description{
 TODO

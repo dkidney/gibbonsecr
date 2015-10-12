@@ -517,13 +517,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         large.buffer  = buffer > 6000
         if(large.spacing || small.spacing || small.buffer || large.buffer){
             if(small.spacing)
-                warning_message("models using a smaller mask spacing should give more\n reliable results but will take longer to fit.")
+                warning_message("models using a smaller mask spacing should give more reliable results but will take longer to fit.")
             if(large.spacing)
-                warning_message("models using a larger mask spacing will be quicker \nto fit but may give less reliable results.")
+                warning_message("models using a larger mask spacing will be quicker to fit but may give less reliable results.")
             if(small.buffer)
-                warning_message("models using a smaller mask buffer will be quicker \nto fit but may give less reliable results.")
+                warning_message("models using a smaller mask buffer will be quicker to fit but may give less reliable results.")
             if(large.buffer)
-                warning_message("models using a larger mask buffer should give more \nreliable results but will take longer to fit.")
+                warning_message("models using a larger mask buffer should give more reliable results but will take longer to fit.")
         }
         if(!is.null(covariates(robj$mask)[[1]])){
             missing = sapply(covariates(robj$mask), function(x){
@@ -551,12 +551,6 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             type    = "trapbuffer",
             poly    = if(tclvalue(tvar$region.use) == "1") robj$region else NULL
         )
-        # add centred x and y covariates
-#         centre = apply(do.call(rbind, traps(robj$capthist)), 2, mean)
-#         for(i in 1:length(robj$mask)){
-#             covariates(robj$mask[[i]]) = mapply(function(x, y) x - y, robj$mask[[i]], centre)
-#             rownames(covariates(robj$mask[[i]])) = rownames(robj$mask[[i]])
-#         }
         # habitat
         for(i in c("habitat1","habitat2","habitat3")){ # i = "habitat1"
             if(tclvalue(tvar[[paste0(i, ".use")]]) == "1"){
@@ -707,7 +701,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
         result = try({
             utils::capture.output({
-                robj$fit = gibbonsecr::gibbonsecr_fit2(
+                robj$fit = gibbonsecr::gibbonsecr_fit(
                     capthist = robj$capthist,
                     model = formulas,
                     fixed = fixed,
@@ -1130,49 +1124,104 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         return(poly)
     }
 
-    shp_import = function(file){
-        text = gsub("FILE", file, paste("
-        function(){
-            cursor('wait') ; on.exit(cursor('normal'))
-            print_to_console('Importing FILE shapefile...')
-            filepath = tclvalue(tvar$FILE.path)
-            if(!file.exists(filepath)){
-                error_message('file does not exist')
+#     shp_import = function(file){
+#         text = gsub("FILE", file, paste("
+#         function(){
+#             cursor('wait') ; on.exit(cursor('normal'))
+#             print_to_console('Importing FILE shapefile...')
+#             filepath = tclvalue(tvar$FILE.path)
+#             if(!file.exists(filepath)){
+#                 error_message('file does not exist')
+#             }else{
+#                 result = try(utils::capture.output({
+#                     poly = raster::shapefile(filepath)
+#                 }))
+#                 if(inherits(result, 'try-error')){
+#                     error_message(result)
+#                 }else{
+#                     if('FILE' != 'region'){
+#                         print_to_console('- checking covariate classes...')
+#                         out = check_covariate_classes(poly@data)
+#                         colnames(poly@data) = out$name
+#                         for(j in 1:ncol(poly@data)){
+#                             poly@data[[j]] = if(out$class[j] == 'number'){
+#                                 as.numeric(poly@data[[j]])
+#                             }else{
+#                                 as.factor(poly@data[[j]])
+#                             }
+#                         }
+#                         if(all(!out$use)){
+#                             error_message('no covariates chosen')
+#                             stop(.call = FALSE)
+#                         }
+#                         poly@data = poly@data[, out$use, drop = FALSE]
+#                     }
+#                     print_to_console('- checking for errors...')
+#                     poly = shp_check(poly, robj$capthist, region = 'FILE' == 'region')
+#                     success_message('Import successful')
+#                     print_dashes()
+#                     robj$FILE = poly
+#                     tclvalue(tvar$FILE.use) = '1'
+#                     refresh()
+#                 }
+#             }
+#         }")) # cat(text)
+    #         eval(parse(text = text))
+    #     }
+
+    shp_import_base = function(file){
+        cursor('wait') ; on.exit(cursor('normal'))
+        print_to_console(paste("Importing", file, "shapefile..."))
+        filepath = tclvalue(tvar[[paste0(file, ".path")]])
+        if(!file.exists(filepath)){
+            error_message(paste("file does not exist:\n", filepath))
+        }else{
+            result = try(utils::capture.output({
+                poly = raster::shapefile(filepath)
+            }))
+            if(inherits(result, 'try-error')){
+                error_message(result)
             }else{
-                result = try(utils::capture.output({
-                    poly = raster::shapefile(filepath)
-                }))
-                if(inherits(result, 'try-error')){
-                    error_message(result)
-                }else{
-                    if('FILE' != 'region'){
-                        print_to_console('- checking covariate classes...')
-                        out = check_covariate_classes(poly@data)
-                        colnames(poly@data) = out$name
-                        for(j in 1:ncol(poly@data)){
-                            poly@data[[j]] = if(out$class[j] == 'number'){
-                                as.numeric(poly@data[[j]])
-                            }else{
-                                as.factor(poly@data[[j]])
-                            }
-                        }
-                        if(all(!out$use)){
-                            error_message('no covariates chosen')
-                            stop(.call = FALSE)
-                        }
-                        poly@data = poly@data[, out$use, drop = FALSE]
+                if(file != 'region'){
+                    print_to_console('- checking covariate classes...')
+                    out = check_covariate_classes(poly@data)
+                    poly@data = poly@data[,out$use]
+                    out = out[out$use,,drop = FALSE]
+                    colnames(poly@data) = out$name
+                    for(j in 1:ncol(poly@data)){ # j=2
+                        var = out$name[j]
+                        # class
+                        FUN = if(out$class[j] == 'number') as.numeric else as.factor
+                        poly@data[[var]] = FUN(poly@data[[var]])
+                        # center
+                        if(out$center[j])
+                            poly@data[[paste0(var, "_centered")]] = as.numeric(scale(poly@data[[var]], TRUE, FALSE))
+                        # scale
+                        if(out$scale[j])
+                            poly@data[[paste0(var, "_scaled")]] = as.numeric(scale(poly@data[[var]], TRUE, TRUE))
+                        # log
+                        if(out$log[j])
+                            poly@data[[paste0(var, "_log")]] = log(poly@data[[var]])
                     }
-                    print_to_console('- checking for errors...')
-                    poly = shp_check(poly, robj$capthist, region = 'FILE' == 'region')
-                    success_message('Import successful')
-                    print_dashes()
-                    robj$FILE = poly
-                    tclvalue(tvar$FILE.use) = '1'
-                    refresh()
+                    if(all(!out$use)){
+                        error_message('no covariates chosen')
+                        stop(.call = FALSE)
+                    }
+                    poly@data = poly@data[, out$use, drop = FALSE]
                 }
+                print_to_console('- checking for errors...')
+                poly = shp_check(poly, robj$capthist, region = file == 'region')
+                success_message('Import successful')
+                print_dashes()
+                robj[[file]] = poly
+                tclvalue(tvar[[paste0(file, ".use")]]) = '1'
+                refresh()
             }
-        }")) # cat(text)
-        eval(parse(text = text))
+        }
+    }
+
+    shp_import = function(file){
+        eval(parse(text = paste0("function() shp_import_base('", file, "')")))
     }
 
     shp_plot_base = function(file){
@@ -1244,21 +1293,22 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     # }
     # }
 
+    view_base = function(file){
+        path = path.expand(tclvalue(tvar[[paste0(file, ".path")]]))
+        if(file.exists(path)){
+            system(paste('open', path))
+        }else{
+            error_message(paste0("cant find ", file, " file:\n'", path, "'"))
+        }
+    }
+
     view = function(file){
-        text = gsub("FILE", file, paste0("
-        function(){
-            path = path.expand(tclvalue(tvar$FILE.path))
-            if(file.exists(path)){
-                system(paste('open', path))
-            }else{
-                error_message(paste0(\"cant find FILE file:\\n- '\", path, \"'\"", "))
-            }
-        }")) # cat(text)
-        eval(parse(text = text))
+        eval(parse(text = paste0("function() view_base('", file, "')")))
     }
 
     warning_message = function(message){
-        print_to_console(paste("Warning:", message), tag = "warningTag")
+        print_to_console(stringr::str_wrap(paste("Warning:", message), 60),
+                         tag = "warningTag")
     }
 
     wd_print = function(){
@@ -1269,9 +1319,13 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     wd_set = function(){
         wd = tclvalue(tkchooseDirectory())
-        if(wd != "") robj$wd = path.expand(wd)
+        if(wd != ""){
+            robj$wd = path.expand(wd)
+            print_to_console(paste0("Working directory set to:\n",
+                                    gsub("/","\\\\", robj$wd)),
+                             dashes = TRUE)
+        }
         tkfocus(main.window)
-        wd_print()
     }
 
     workspace_clear = function(){
@@ -1344,7 +1398,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 version   = version
             )
             save(gibbonsecr_workspace, file = filename)
-            print_to_console(paste("Workspace saved:\n", filename),
+            print_to_console(paste("Workspace saved to:\n", filename),
                              dashes = TRUE)
         }
         tkfocus(main.window)
@@ -1857,8 +1911,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     tkadd(menu$help, "cascade", label = "Example data", menu = menu$help.examples)
     tkadd(menu$help.examples, "command", label = "N.annamensis",
           command = load_N_annamensis)
-    tkadd(menu$help.examples, "command", label = "N.siki",  command = load_N_siki)
-    tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
+    # tkadd(menu$help.examples, "command", label = "N.siki",  command = load_N_siki)
+    # tkadd(menu$help.examples, "command", label = "Peafowl", command = load_peafowl)
     tkadd(menu$help, "command", label = "User manual", command = open_manual_html)
     tkadd(menu$help, "command", label = "About gibbonsecr", command = about)
 
@@ -1871,8 +1925,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
           command = workspace_save, accelerator = "CTRL+S")
     tkadd(menu$workspace, "command", label = "Load workspace",
           command = workspace_load, accelerator = "CTRL+L")
-    tkadd(menu$workspace, "command", label = "Load peafowl workspace",
-          command = load_peafowl_workspace)
+    # tkadd(menu$workspace, "command", label = "Load peafowl workspace",
+          # command = load_peafowl_workspace)
     tkadd(menu$workspace, "command", label = "Clear workspace",
           command = workspace_clear)
     tkadd(menu$workspace, "separator")

@@ -71,6 +71,7 @@ add_shp_covariates = function(x, shp){
         }else{
             x = addCovariates(x, shp)
         }
+        if(inherits(x, "mask")) x = mask_tbl(x)
     }
     return(x)
 }
@@ -435,7 +436,7 @@ covtable = function(data, w = 50){
 #                 as.data.frame(out)
 #             }, simplify = FALSE)) # str(model.frame)
 #         }
-#         make_model_matrix(fit$model[[submodel]],
+#         make_model_matrix_old(fit$model[[submodel]],
 #                           model.frame,
 #                           fit$smooth.setup[[submodel]])
 #     }, simplify = FALSE)
@@ -505,10 +506,10 @@ fitted_detectfn_auxiliary_values = function(beta, fit, newdata, x, which = "dete
 
     # use list("1" = ... to make dummy session
     design.matrices = list("1" = sapply(submodels, function(submodel){
-#         make_model_matrix(formula      = fit$model[[submodel]],
+#         make_model_matrix_old(formula      = fit$model[[submodel]],
 #                           data         = newdata,
 #                           smooth.setup = fit$smooth.setup[[submodel]])
-        make_model_matrix2(data         = newdata,
+        make_model_matrix(data         = newdata,
                           smooth.setup = fit$smooth.setup[[submodel]])
     }, simplify = FALSE))
 
@@ -548,10 +549,10 @@ fitted_submodel_values = function(beta, fit, newdata = NULL, submodel = "D"){
 
     # use list("1" = ... to make dummy session
     design.matrices = list("1" = sapply(submodel, function(submodel){
-#         make_model_matrix(formula      = fit$model[[submodel]],
+#         make_model_matrix_old(formula      = fit$model[[submodel]],
 #                           data         = newdata,
 #                           smooth.setup = fit$smooth.setup[[submodel]])
-        make_model_matrix2(data         = newdata,
+        make_model_matrix(data         = newdata,
                           smooth.setup = fit$smooth.setup[[submodel]])
     }, simplify = FALSE))
 
@@ -575,7 +576,14 @@ fitted_submodel_values = function(beta, fit, newdata = NULL, submodel = "D"){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-fitted_surface_values = function(beta, fit, session, mask, traps, which = "pdot"){ # beta=coef(fit); session="2"; which = "density"
+# internal function used for obtaining predicted detection or density surface
+# mask and traps need to be supplied separately to allow the use of
+# regionmask and regiontraps when plotting density surfaces
+# the beta argument is also supplied separately so that the function can be
+# passed into delta_method
+
+fitted_surface_values = function(beta, fit, session, mask, traps, which = "pdot"){
+    # beta=coef(fit); session="2"; which = "density"
 
     if(!which %in% c("pdot","density"))
         stop("which must be one of: 'pdot', 'density")
@@ -586,22 +594,24 @@ fitted_surface_values = function(beta, fit, session, mask, traps, which = "pdot"
     submodels = switch(
         which,
         "density" = "D",
-        "pdot"    = switch(
-            fit$model.options$detectfn + 1,
-            c("g0","sigma","pcall"),
-            c("g0","sigma","z","pcall"))
+        "pdot"    = switch(fit$model.options$detectfn + 1,
+                           c("g0","sigma","pcall"),
+                           c("g0","sigma","z","pcall"))
     )
 
     ##################################################
     ## design matrices
 
     if(which == "density"){
+        # need to make a model frame and design matrix for 'D'
+        # using the supplied regionmask
         model.frame = make_model_frames(
             model       = fit$model,
             traps       = traps,
             mask        = mask,
             n_occasions = n_occasions(fit$capthist),
             sessioncov  = sessioncov(fit$capthist),
+            timecov     = timecov(fit$capthist),
             sessions    = session,
             submodels   = submodels
         )
@@ -614,6 +624,8 @@ fitted_surface_values = function(beta, fit, session, mask, traps, which = "pdot"
         )
     }
     if(which == "pdot"){
+        # can use the original design matrix for this session
+        # since the sessionmask will have been
         design.matrices = fit$design.matrices[session]
     }
 
@@ -828,7 +840,7 @@ make_newdata = function(fit, submodels = NULL){
     newdata = do.call(cbind, sapply(submodels, function(submodel){
         # if no covariates, use model frame with no columns
         # otherwise make big model frame by collapsing sessions
-        # and get average / reference level for each covariate
+        # and get the average / reference level for each covariate
         covnames = all.vars(fit$model[[submodel]])
         if(length(covnames) == 0){
             data.frame(matrix(0, nrow = 1, ncol = 0))
@@ -848,6 +860,7 @@ make_newdata = function(fit, submodels = NULL){
             }, simplify = FALSE))
         }
     }, simplify = FALSE))
+    newdata = newdata[,unique(colnames(newdata)), drop = FALSE]
     return(newdata)
 }
 
@@ -917,10 +930,11 @@ mask_clip = function(mask, poly){
 }
 
 mask_image = function(mask, values, plot = TRUE){
+    if(!inherits(mask, "mask")) stop("mask object required")
     l = mask_spacing(mask)
-    x = unique(mask$x)
+    x = range(mask$x)
     x = seq(min(x), max(x), l)
-    y = unique(mask$y)
+    y = range(mask$y)
     y = seq(min(y), max(y), l)
     z = matrix(NA, nrow = length(x), ncol = length(y))
     i = cbind(match(mask$x, x), match(mask$y, y))
@@ -985,6 +999,32 @@ mask_spacing = function(mask){
     #     })
     if(all(spacing == spacing[1])) spacing = unname(spacing[1])
     return(spacing)
+}
+
+# convert mask and mask covariats to tbl format (nicer printing)
+mask_tbl = function(mask){
+    if(ms(mask)){
+        for(i in session(mask)){
+            mask[[i]] = mask_tbl(mask[[i]])
+        }
+    }else{
+        head(attr(mask, "row.names"))
+        row.names = rownames(mask)
+        mask = dplyr::tbl_df(mask)
+        class(mask) = c(class(mask), "mask")
+        head(attr(mask, "row.names"))
+        attr(mask, "row.names") = row.names
+        head(attr(mask, "row.names"))
+        if(is.null(covariates(mask))){
+            temp = dplyr::tbl_df(data.frame())
+            attr(temp, "dim") = c(nrow(mask), 0)
+            attr(temp, "row.names") = row.names
+            attr(mask, "covariates") = temp
+        }else{
+            attr(mask, "covariates") = dplyr::tbl_df(covariates(mask))
+        }
+    }
+    return(mask)
 }
 
 mask_type = function(mask){
@@ -1164,18 +1204,28 @@ predict.gibbonsecr_fit = function(object, newdata = NULL, submodels = NULL, se.f
         return(delta)
     }, simplify = FALSE)
 
-    # apply inverse link
+    ##################################################
+    ## apply inverse link
+
     delta = sapply(submodels, function(submodel){ # submodel = "D"
         lapply(delta[[submodel]], object$inv.link[[submodel]])
     }, simplify = FALSE)
 
-    # reshape
-    index = if(se.fit) c("lower","upper","est") else "est"
-    preds = sapply(index, function(i){ # i="est"
-        x = do.call(cbind, sapply(delta, function(x) x[[i]], simplify = FALSE))
-        rownames(x) = rownames(newdata)
-        return(x)
+    ##################################################
+    ## reshape
+
+    index = if(se.fit) c("lower","upper","estimate") else "estimate"
+    preds = sapply(index, function(i){ # i="estimate"
+#         x = do.call(cbind, sapply(delta, function(x) x[[i]], simplify = FALSE))
+#         rownames(x) = rownames(newdata)
+#         return(x)
+        dplyr::tbl_df(do.call(data.frame, sapply(delta, function(x) x[[i]], simplify = FALSE)))
     }, simplify = FALSE)
+
+    ##################################################
+    ## add newdata as attribute
+
+    # attr(preds, "newdata") = newdata
 
     return(preds)
 
@@ -2056,48 +2106,62 @@ trapcov = function(traps){
     }
 }
 
-'trapcov<-' = function(traps, value){
-    capt = inherits(traps, "capthist")
-    if(capt){
-        capthist = traps
-        traps = traps(capthist)
-    }
-    if(!inherits(traps, "traps"))
-        stop("requires a 'traps' object")
-    if(ms(traps)){
-        # if value is NULL then set value to list of NULLs
-        if(is.null(value))
-            value = sapply(session(traps), function(i) NULL, simplify = FALSE)
-        if(!inherits(value, "list") || inherits(value, "data.frame")){
-            stop("expecting a list")
-        }else{
-            if(length(value) != length(traps)){
-                stop("length(trapcov) should equal nsessions")
-            }
-            for(i in 1:length(value)){
-                trapcov(traps[[i]]) <- value[[i]]
-            }
-            traps
-        }
-    }else{
-        if(!is.null(value)){
-            if(!inherits(value, "data.frame")){
-                stop("expecting a data.frame")
-            }else{
-                if(nrow(value) != n_occasions(traps))
-                    stop("nrow(trapcov) should be equal to number of occasions")
-            }
-        }
-        if(capt){
-            structure(traps(capthist), covariates = value)
-        }else{
-            structure(traps, covariates = value)
-        }
-    }
-}
+# 'trapcov<-' = function(traps, value){
+#     capt = inherits(traps, "capthist")
+#     if(capt){
+#         capthist = traps
+#         traps = traps(capthist)
+#     }
+#     if(!inherits(traps, "traps"))
+#         stop("requires a 'traps' object")
+#     if(ms(traps)){
+#         # if value is NULL then set value to list of NULLs
+#         if(is.null(value))
+#             value = sapply(session(traps), function(i) NULL, simplify = FALSE)
+#         if(!inherits(value, "list") || inherits(value, "data.frame")){
+#             stop("expecting a list")
+#         }else{
+#             if(length(value) != length(traps)){
+#                 stop("length(trapcov) should equal nsessions")
+#             }
+#             for(i in 1:length(value)){
+#                 trapcov(traps[[i]]) <- value[[i]]
+#             }
+#             traps
+#         }
+#     }else{
+#         if(!is.null(value)){
+#             if(!inherits(value, "data.frame")){
+#                 stop("expecting a data.frame")
+#             }else{
+#                 if(nrow(value) != n_occasions(traps))
+#                     stop("nrow(trapcov) should be equal to number of occasions")
+#             }
+#         }
+#         if(capt){
+#             structure(traps(capthist), covariates = value)
+#         }else{
+#             structure(traps, covariates = value)
+#         }
+#     }
+# }
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
+
+traps_bbox = function(x){
+    if(inherits(x, "gibbonsecr_fit"))
+        x = traps(x$capthist)
+    if(inherits(x, "capthist"))
+        x = traps(x)
+    if(!inherits(x, "traps"))
+        stop("traps object required")
+    regiontraps = make_regiontraps(x)
+    lim = apply(regiontraps, 2, range)
+    bbox = cbind(x = lim[c(1,2,2,1), 1],
+                 y = lim[c(1,1,2,2), 2])
+    return(bbox)
+}
 
 traps_meanSD = function(traps){
     if(!inherits(traps, "traps")) stop("expecting a traps object")
@@ -2108,24 +2172,29 @@ traps_meanSD = function(traps){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-make_regiontraps = function(traps){
-    if(!inherits(traps, "traps")) stop("expecting a traps object")
-    if(!ms(traps)){
+make_regiontraps = function(x){
+    if(inherits(x, "gibbonsecr_fit"))
+        x = traps(x$capthist)
+    if(inherits(x, "capthist"))
+        x = traps(x)
+    if(!inherits(x, "traps"))
+        stop("expecting a traps object")
+    if(!ms(x)){
         message("can't rbind single-session traps")
-        return(traps)
+        return(x)
     }
     # trap attributes
-    attrs = lapply(traps, attributes)
+    attrs = lapply(x, attributes)
     # check detector types
     types = sapply(attrs, function(x) x$detector)
     if(!all(types == types[1]))
         stop("can't rbind traps with different detector types")
     # combine coordinates
-    regiontraps = do.call(rbind, lapply(traps, as.data.frame))
+    regiontraps = do.call(rbind, lapply(x, as.data.frame))
     # add attributes
     class(regiontraps) = c("traps","data.frame")
-    covariates(regiontraps) = do.call(rbind, lapply(traps, covariates))
-    # usage(regiontraps) = do.call(rbind, lapply(traps, usage))
+    covariates(regiontraps) = do.call(rbind, lapply(x, covariates))
+    # usage(regiontraps) = do.call(rbind, lapply(x, usage))
     attr(regiontraps, "spacex") = NA
     attr(regiontraps, "spacey") = NA
     attr(regiontraps, "spacing") = NA

@@ -71,33 +71,33 @@ calc_pdot = function(detectfn, g0, sigma, z, pcall, distances, usage, M, S, K){
 ## -------------------------------------------------------------------------- ##
 
 # check to see if a formula contains gam smooth terms
-contains_smooth_terms = function(formula){
-    if(!inherits(formula, "formula")) stop("expecting a formula")
-    length(smooth_terms(formula)) > 0
-}
-
-# extract smooth terms from gam formula
-smooth_terms = function(formula){
-    if(!inherits(formula, "formula")) stop("expecting a formula")
-    terms = attr(terms(formula), "term.labels")
-    i = grepl("s\\(", terms) |
-        grepl("te\\(", terms) |
-        grepl("ti\\(", terms) |
-        grepl("t2\\(", terms)
-    return(terms[i])
-}
-
-# extract variables used in smooth terms in gam formula
-smooth_vars = function(formula){
-    if(!inherits(formula, "formula")) stop("expecting a formula")
-    if(contains_smooth_terms(formula)){
-        unique(do.call(c, lapply(smooth_terms(formula), function(x){
-            all.vars(as.formula(paste("~", x)))
-        })))
-    }else{
-        character(0)
-    }
-}
+# contains_smooth_terms = function(formula){
+#     if(!inherits(formula, "formula")) stop("expecting a formula")
+#     length(smooth_terms(formula)) > 0
+# }
+#
+# # extract smooth terms from gam formula
+# smooth_terms = function(formula){
+#     if(!inherits(formula, "formula")) stop("expecting a formula")
+#     terms = attr(terms(formula), "term.labels")
+#     i = grepl("s\\(", terms) |
+#         grepl("te\\(", terms) |
+#         grepl("ti\\(", terms) |
+#         grepl("t2\\(", terms)
+#     return(terms[i])
+# }
+#
+# # extract variables used in smooth terms in gam formula
+# smooth_vars = function(formula){
+#     if(!inherits(formula, "formula")) stop("expecting a formula")
+#     if(contains_smooth_terms(formula)){
+#         unique(do.call(c, lapply(smooth_terms(formula), function(x){
+#             all.vars(as.formula(paste("~", x)))
+#         })))
+#     }else{
+#         character(0)
+#     }
+# }
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -220,7 +220,7 @@ delta_method = function(f, beta, vcov, ...){
     est  = as.numeric(est)
 
     # return list
-    list(est = est, se = sqrt(var))
+    list(estimate = est, se = sqrt(var))
 }
 
 
@@ -335,7 +335,9 @@ get_design_matrices = function(smooth.setup, model.frames){
     sapply(names(model.frames), function(session){
         sapply(names(smooth.setup), function(submodel){
             i = rows[[submodel]][[session]]
-            smooth.setup[[submodel]]$X[i, , drop = FALSE]
+            X = smooth.setup[[submodel]][["X"]][i, , drop = FALSE]
+            colnames(X) = smooth.setup[[submodel]][["term.names"]]
+            return(X)
         }, simplify = FALSE)
     }, simplify = FALSE)
 }
@@ -366,6 +368,224 @@ get_inv_link = function(model, fixed, model.options){
     }
     return(inv.link)
 }
+
+## -------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------- ##
+
+# gibbonsecr_fit_old = function(capthist, model = list(), mask = NULL, fixed = list(), model.options = list(), mask.options = list(), fitting.options = list(), start = NULL, trace = FALSE, debug = TRUE){
+#
+#     start.time = Sys.time()
+#
+#     ##################################################
+#     ## check inputs
+#
+#     # original.capthist = capthist
+#     capthist      = check_capthist(capthist)
+#     mask          = check_mask(mask, capthist, mask.options)
+#     model.options = check_model_options(model.options, capthist)
+#     fixed         = check_fixed(fixed, model.options, capthist)
+#     model         = check_model(model, fixed, model.options, capthist, mask)
+#
+#     ##################################################
+#     ## capthist and mask stats
+#
+#     R = n_arrays(capthist)
+#     n = n_groups(capthist)
+#     S = n_occasions(capthist)
+#     K = n_traps(capthist)
+#     a = mask_area(mask)
+#     M = mask_npoints(mask)
+#
+#     ##################################################
+#     ## fitting function arguments
+#
+#     model.frames = make_model_frames(
+#         model         = model,
+#         traps         = traps(capthist),
+#         mask          = mask,
+#         n_occasions   = n_occasions(capthist),
+#         sessioncov    = sessioncov(capthist),
+#         timecov       = timecov(capthist),
+#         debug         = debug
+#     )
+#
+#     ##################################################
+#     ## in development: use gam to get model frame, model matrix and smooth setup
+#
+#     if(0){
+#         make_G = function(formula, data){
+#             # if no response variable then add dummy response to lhs of formula
+#             if(attr(terms(formula), "response") == 0){
+#                 i = "dummy"
+#                 continue = TRUE
+#                 while(continue){
+#                     if(!i %in% colnames(data)) continue = FALSE
+#                     i = paste0(i, "_1")
+#                 }
+#                 eval(parse(text = paste0("formula = update.formula(formula,", i, " ~ .)")))
+#             }
+#             # add response variable to data
+#             data[[all.vars(formula)[1]]] = rep(1, nrow(data))
+#             mgcv::gam(formula, data = data, fit = FALSE)
+#         }
+#
+#         # G = lapply(names(model.frames), function(session){ # session = names(model.frames)[1] ; session
+#             # lapply(names(model), function(submodel){ # submodel = names(model)[1] ; submodel
+#         for(session in names(model.frames)){ # session = names(model.frames)[1] ; session
+#             for(submodel in names(model)){ # session = names(model.frames)[1] ; session
+#                 make_G(formula = model[[submodel]],
+#                        data    = model.frames[[session]][[submodel]])
+#             }
+#         }
+#             # })
+#         # })
+#
+#
+#
+#     }
+#
+#     # traps = traps(capthist) ; n_occasions = n_occasions(capthist) ; sessioncov = sessioncov(capthist) ; timecov = timecov(capthist) ; sessions = NULL ; submodels = NULL
+#
+#     smooth.setup = make_smooth_setup(model, model.frames)
+#     design.matrices = make_design_matrices(model, model.frames, smooth.setup, debug = debug)
+#    # model.frames = model.frames ; smooth.setup = NULL ; sessions = NULL ; submodels = NULL
+#
+#     par.labels = make_par_labels(design.matrices, fixed)
+#     parindx    = make_parindx(par.labels[,"unique"])
+#     inv.link   = get_inv_link(model, fixed, model.options)
+#     detected   = get_captures(capthist, summarise = "occasions")
+#     data       = prepare_data(capthist, model.options)
+#     mask.info  = prepare_mask_info(mask, capthist, model.options)
+#     usage      = usage(traps(capthist))
+#     start      = check_start_values(start, capthist, mask, model.options, fixed, S, K, M, a, usage, design.matrices, par.labels, parindx, inv.link, mask.info)
+#     # use default fitting options if not supplied
+#     default.fitting.options = list(hessian = TRUE, iterlim = 1000, LLonly = FALSE)
+#     fitting.options = replace(default.fitting.options, names(fitting.options), fitting.options)
+#
+#     ##################################################
+#     # choose fitting function
+#     nll.function = negloglik_wrapper
+#     nll.args = list(
+#         beta            = start,
+#         data            = data,
+#         mask.info       = mask.info,
+#         design.matrices = design.matrices,
+#         parindx         = parindx,
+#         fixed           = fixed,
+#         inv.link        = inv.link,
+#         model.options   = model.options,
+#         usage           = usage,
+#         detected        = detected,
+#         R               = R,
+#         n               = n,
+#         S               = S,
+#         K               = K,
+#         M               = M,
+#         a               = a,
+#         trace           = trace
+#     )
+#
+#     # debugging
+#     if(0){
+#         for(i in names(nll.args))
+#             eval(parse(text = paste(i, "= nll.args[[i]]")), envir = globalenv())
+#     }
+#
+#     ##################################################
+#     ## LLonly
+#     if(fitting.options$LLonly){
+#         nll = try(do.call(nll.function, nll.args))
+#         if(inherits(nll,"try-error")){
+#             stop("Unable to evaluate loglikelihood using start values")
+#         }else{
+#             return(-nll)
+#         }
+#     }
+#
+#     ##################################################
+#     ## fit model using nlm
+#     nll.args$beta = NULL
+#     nll.args = c(nll.args, list(
+#         f               = nll.function,
+#         p               = start,
+#         hessian         = fitting.options$hessian,
+#         iterlim         = fitting.options$iterlim
+#     ))
+#     nlm.results = try(do.call(nlm, nll.args))
+#
+# #     nlm.args = list(
+# #         f               = nll.function,
+# #         p               = start,
+# #         data            = data,
+# #         mask.info       = mask.info,
+# #         design.matrices = design.matrices,
+# #         par.labels      = par.labels,
+# #         fixed           = fixed,
+# #         inv.link        = inv.link,
+# #         model.options   = model.options,
+# #         usage           = usage,
+# #         detected        = detected,
+# #         R               = R,
+# #         n               = n,
+# #         S               = S,
+# #         K               = K,
+# #         M               = M,
+# #         a               = a,
+# #         trace           = trace,
+# #         hessian         = fitting.options$hessian,
+# #         iterlim         = fitting.options$iterlim)
+#
+#     # #     negloglik = if(locations){
+#     # #         negloglik_locations_known_wrapper
+#     # #     }else{
+#     # #         negloglik_locations_unknown_wrapper
+#     # #     }
+#
+#     #     #     if(!locations){
+#     #     #         nlm.args$detected = detected
+#     #     #         nlm.args$S = S
+#     #     #     }
+#     #
+#
+#     # fit model
+#     # nlm.results = try(do.call(nlm, nlm.args))
+#
+#     ##################################################
+#     ## process nlm results
+#
+#     if(nlm.results$code > 2) warning("nlm code = ", nlm.results$code)
+#     if(nlm.results$iterations <= 1)  warning("nlm iterations = ", nlm.results$iterations)
+#     names(nlm.results$estimate) = par.labels[,"unique"]
+#     if(!is.null(nlm.results$hessian))
+#         rownames(nlm.results$hessian) = colnames(nlm.results$hessian) = par.labels[,"unique"]
+#
+#     ##################################################
+#     ## return gibbonsecr_fit object
+#
+#     fit = list(
+#         capthist        = capthist,
+#         # capthist        = original.capthist,
+#         mask            = mask,
+#         model           = model,
+#         model.options   = model.options,
+#         fixed           = fixed,
+#         model.frames    = model.frames,
+#         design.matrices = design.matrices,
+#         inv.link        = inv.link,
+#         start           = start,
+#         smooth.setup    = smooth.setup,
+#         mask.info       = mask.info,
+#         # locations       = locations,
+#         nlm             = nlm.results,
+#         parindx         = parindx,
+#         par.labels      = par.labels,
+#         run.time        = difftime(Sys.time(), start.time)
+#     )
+#     class(fit) = c("gibbonsecr_fit", class(fit))
+#
+#     return(fit)
+#
+# }
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -424,241 +644,6 @@ gibbonsecr_fit = function(capthist, model = list(), mask = NULL, fixed = list(),
         debug         = debug
     )
 
-    ##################################################
-    ## in development: use gam to get model frame, model matrix and smooth setup
-
-    if(0){
-        make_G = function(formula, data){
-            # if no response variable then add dummy response to lhs of formula
-            if(attr(terms(formula), "response") == 0){
-                i = "dummy"
-                continue = TRUE
-                while(continue){
-                    if(!i %in% colnames(data)) continue = FALSE
-                    i = paste0(i, "_1")
-                }
-                eval(parse(text = paste0("formula = update.formula(formula,", i, " ~ .)")))
-            }
-            # add response variable to data
-            data[[all.vars(formula)[1]]] = rep(1, nrow(data))
-            mgcv::gam(formula, data = data, fit = FALSE)
-        }
-
-        # G = lapply(names(model.frames), function(session){ # session = names(model.frames)[1] ; session
-            # lapply(names(model), function(submodel){ # submodel = names(model)[1] ; submodel
-        for(session in names(model.frames)){ # session = names(model.frames)[1] ; session
-            for(submodel in names(model)){ # session = names(model.frames)[1] ; session
-                make_G(formula = model[[submodel]],
-                       data    = model.frames[[session]][[submodel]])
-            }
-        }
-            # })
-        # })
-
-
-
-    }
-
-    # traps = traps(capthist) ; n_occasions = n_occasions(capthist) ; sessioncov = sessioncov(capthist) ; timecov = timecov(capthist) ; sessions = NULL ; submodels = NULL
-
-    smooth.setup = make_smooth_setup(model, model.frames)
-    design.matrices = make_design_matrices(model, model.frames, smooth.setup, debug = debug)
-   # model.frames = model.frames ; smooth.setup = NULL ; sessions = NULL ; submodels = NULL
-
-    par.labels = make_par_labels(design.matrices, fixed)
-    parindx    = make_parindx(par.labels[,"unique"])
-    inv.link   = get_inv_link(model, fixed, model.options)
-    detected   = get_captures(capthist, summarise = "occasions")
-    data       = prepare_data(capthist, model.options)
-    mask.info  = prepare_mask_info(mask, capthist, model.options)
-    usage      = usage(traps(capthist))
-    start      = check_start_values(start, capthist, mask, model.options, fixed, S, K, M, a, usage, design.matrices, par.labels, parindx, inv.link, mask.info)
-    # use default fitting options if not supplied
-    default.fitting.options = list(hessian = TRUE, iterlim = 1000, LLonly = FALSE)
-    fitting.options = replace(default.fitting.options, names(fitting.options), fitting.options)
-
-    ##################################################
-    # choose fitting function
-    nll.function = negloglik_wrapper
-    nll.args = list(
-        beta            = start,
-        data            = data,
-        mask.info       = mask.info,
-        design.matrices = design.matrices,
-        parindx         = parindx,
-        fixed           = fixed,
-        inv.link        = inv.link,
-        model.options   = model.options,
-        usage           = usage,
-        detected        = detected,
-        R               = R,
-        n               = n,
-        S               = S,
-        K               = K,
-        M               = M,
-        a               = a,
-        trace           = trace
-    )
-
-    # debugging
-    if(0){
-        for(i in names(nll.args))
-            eval(parse(text = paste(i, "= nll.args[[i]]")), envir = globalenv())
-    }
-
-    ##################################################
-    ## LLonly
-    if(fitting.options$LLonly){
-        nll = try(do.call(nll.function, nll.args))
-        if(inherits(nll,"try-error")){
-            stop("Unable to evaluate loglikelihood using start values")
-        }else{
-            return(-nll)
-        }
-    }
-
-    ##################################################
-    ## fit model using nlm
-    nll.args$beta = NULL
-    nll.args = c(nll.args, list(
-        f               = nll.function,
-        p               = start,
-        hessian         = fitting.options$hessian,
-        iterlim         = fitting.options$iterlim
-    ))
-    nlm.results = try(do.call(nlm, nll.args))
-
-#     nlm.args = list(
-#         f               = nll.function,
-#         p               = start,
-#         data            = data,
-#         mask.info       = mask.info,
-#         design.matrices = design.matrices,
-#         par.labels      = par.labels,
-#         fixed           = fixed,
-#         inv.link        = inv.link,
-#         model.options   = model.options,
-#         usage           = usage,
-#         detected        = detected,
-#         R               = R,
-#         n               = n,
-#         S               = S,
-#         K               = K,
-#         M               = M,
-#         a               = a,
-#         trace           = trace,
-#         hessian         = fitting.options$hessian,
-#         iterlim         = fitting.options$iterlim)
-
-    # #     negloglik = if(locations){
-    # #         negloglik_locations_known_wrapper
-    # #     }else{
-    # #         negloglik_locations_unknown_wrapper
-    # #     }
-
-    #     #     if(!locations){
-    #     #         nlm.args$detected = detected
-    #     #         nlm.args$S = S
-    #     #     }
-    #
-
-    # fit model
-    # nlm.results = try(do.call(nlm, nlm.args))
-
-    ##################################################
-    ## process nlm results
-
-    if(nlm.results$code > 2) warning("nlm code = ", nlm.results$code)
-    if(nlm.results$iterations <= 1)  warning("nlm iterations = ", nlm.results$iterations)
-    names(nlm.results$estimate) = par.labels[,"unique"]
-    if(!is.null(nlm.results$hessian))
-        rownames(nlm.results$hessian) = colnames(nlm.results$hessian) = par.labels[,"unique"]
-
-    ##################################################
-    ## return gibbonsecr_fit object
-
-    fit = list(
-        capthist        = capthist,
-        # capthist        = original.capthist,
-        mask            = mask,
-        model           = model,
-        model.options   = model.options,
-        fixed           = fixed,
-        model.frames    = model.frames,
-        design.matrices = design.matrices,
-        inv.link        = inv.link,
-        start           = start,
-        smooth.setup    = smooth.setup,
-        mask.info       = mask.info,
-        # locations       = locations,
-        nlm             = nlm.results,
-        parindx         = parindx,
-        par.labels      = par.labels,
-        run.time        = difftime(Sys.time(), start.time)
-    )
-    class(fit) = c("gibbonsecr_fit", class(fit))
-
-    return(fit)
-
-}
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
-
-#' @title Fit an SECR model to acoustic gibbon survey data
-#' @description TODO
-#' @details TODO
-#' @param capthist a \code{\link{capthist}} object
-#' @param model TODO
-#' @param mask TODO
-#' @param fixed TODO
-#' @param model.options a list of control options determining the type of model to be fitted (see Details).
-#' @param mask.options TODO
-#' @param fitting.options TODO
-#' @param start TODO
-#' @param trace TODO
-#' @param debug TODO
-#' @author Darren Kidney \email{darrenkidney@@googlemail.com}
-#' @example inst/examples/example_fit.r
-#' @export
-
-gibbonsecr_fit2 = function(capthist, model = list(), mask = NULL, fixed = list(), model.options = list(), mask.options = list(), fitting.options = list(), start = NULL, trace = FALSE, debug = TRUE){
-
-    start.time = Sys.time()
-
-    ##################################################
-    ## check inputs
-
-    # original.capthist = capthist
-    capthist      = check_capthist(capthist)
-    mask          = check_mask(mask, capthist, mask.options)
-    model.options = check_model_options(model.options, capthist)
-    fixed         = check_fixed(fixed, model.options, capthist)
-    model         = check_model(model, fixed, model.options, capthist, mask)
-
-    ##################################################
-    ## capthist and mask stats
-
-    R = n_arrays(capthist)
-    n = n_groups(capthist)
-    S = n_occasions(capthist)
-    K = n_traps(capthist)
-    a = mask_area(mask)
-    M = mask_npoints(mask)
-
-    ##################################################
-    ## fitting function arguments
-
-    model.frames = make_model_frames(
-        model         = model,
-        traps         = traps(capthist),
-        mask          = mask,
-        n_occasions   = n_occasions(capthist),
-        sessioncov    = sessioncov(capthist),
-        timecov       = timecov(capthist),
-        debug         = debug
-    )
-
     if(0){
         names(model.frames)
         names(model.frames[[1]])
@@ -673,7 +658,7 @@ gibbonsecr_fit2 = function(capthist, model = list(), mask = NULL, fixed = list()
     ##################################################
     ## in development: use gam to get model frame, model matrix and smooth setup
 
-    smooth.setup = make_smooth_setup2(model, model.frames)
+    smooth.setup = make_smooth_setup(model, model.frames)
 
     if(0){
         names(smooth_setup)
@@ -1059,7 +1044,7 @@ import_data = function(detections, posts, covariates = NULL, details = list()){
     # posts      = system.file("extdata/example_posts_file.csv"     , package = "gibbonsecr")
 
     ##################################################
-    ## data
+    ## detections and posts data
 
     # read detections and posts data csv files
     if(!is.data.frame(detections))
@@ -1067,6 +1052,9 @@ import_data = function(detections, posts, covariates = NULL, details = list()){
     # read posts and posts data csv files
     if(!is.data.frame(posts))
         posts = read.csv(posts, stringsAsFactors = FALSE)
+    # convert to tbl class
+    detections = dplyr::tbl_df(detections)
+    posts      = dplyr::tbl_df(posts)
     # run checks on detections and posts data
     details    = check_details(details)
     detections = check_detections(detections, details)
@@ -1181,6 +1169,8 @@ import_data = function(detections, posts, covariates = NULL, details = list()){
             covariates = read.csv(covariates, stringsAsFactors = FALSE)
         }
     }
+    # convert to tbl class
+    covariates = dplyr::tbl_df(covariates)
     # run checks
     covariates = check_covariates(covariates, capthist) # head(covariates)
     # add covariates to capthist
@@ -1422,18 +1412,19 @@ import_shp = function(filepath, type = c("region","habitat"), verbose = FALSE, .
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-make_design_matrices = function(model, model.frames, smooth.setup = NULL, sessions = NULL, submodels = NULL, debug = FALSE){
+make_design_matrices = function(model, model.frames, smooth.setup, sessions = NULL, submodels = NULL, debug = FALSE){
     if(is.null(sessions)) sessions = names(model.frames)
     if(is.null(submodels)) submodels = names(model.frames[[1]])
     design.matrices = sapply(sessions, function(session){
-        # session = names(model.frames)[1]
+        # session = names(model.frames)[1] ; session
         sapply(submodels, function(submodel){
+            # submodel = submodels[1] ; submodel
 #             make_model_matrix(
 #                 formula      = model[[submodel]],
 #                 data         = model.frames[[session]][[submodel]],
 #                 smooth.setup = smooth.setup[[submodel]]
 #             )
-            make_model_matrix2(
+            make_model_matrix(
                 data         = model.frames[[session]][[submodel]],
                 smooth.setup = smooth.setup[[submodel]]
             )
@@ -1645,29 +1636,29 @@ make_model_frames = function(model, traps, mask, n_occasions, sessioncov = NULL,
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-# used inside make_design_matrices
-# if no smooth.setup then uses model.matrix
-# if smooth.setup is provided then this is used to pursuade mgcv::predict.gam to
-# provide a design matrix using an existing gam model and new covariate data
-
-make_model_matrix = function(formula, data, smooth.setup){
-    if(is.null(smooth.setup)){
-        # if no gam model then use conventional method
-        X = model.matrix(formula, data)
-    }else{
-        # add dummy response to lhs of formula
-        formula = update.formula(formula, dummy ~ .)
-        # make sure left hand side variable is present in data
-        response = all.vars(formula)[1]
-        if(is.null(data[[response]])) data[[response]] = 1
-        # get design matrix from predict.gam
-        class(smooth.setup) = "gam"
-        smooth.setup$coefficients = rep(NA, ncol(smooth.setup$X))
-        X = mgcv::predict.gam(smooth.setup, newdata = data, type = 'lpmatrix')
-        colnames(X) = smooth.setup$term.names
-    }
-    return(X)
-}
+# # used inside make_design_matrices
+# # if no smooth.setup then uses model.matrix
+# # if smooth.setup is provided then this is used to pursuade mgcv::predict.gam to
+# # provide a design matrix using an existing gam model and new covariate data
+#
+# make_model_matrix_old = function(formula, data, smooth.setup){
+#     if(is.null(smooth.setup)){
+#         # if no gam model then use conventional method
+#         X = model.matrix(formula, data)
+#     }else{
+#         # add dummy response to lhs of formula
+#         formula = update.formula(formula, dummy ~ .)
+#         # make sure left hand side variable is present in data
+#         response = all.vars(formula)[1]
+#         if(is.null(data[[response]])) data[[response]] = 1
+#         # get design matrix from predict.gam
+#         class(smooth.setup) = "gam"
+#         smooth.setup$coefficients = rep(NA, ncol(smooth.setup$X))
+#         X = mgcv::predict.gam(smooth.setup, newdata = data, type = 'lpmatrix')
+#         colnames(X) = smooth.setup$term.names
+#     }
+#     return(X)
+# }
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -1677,7 +1668,7 @@ make_model_matrix = function(formula, data, smooth.setup){
 # if smooth.setup is provided then this is used to pursuade mgcv::predict.gam to
 # provide a design matrix using an existing gam model and new covariate data
 
-make_model_matrix2 = function(data, smooth.setup){
+make_model_matrix = function(data, smooth.setup){
     formula = smooth.setup$formula
     response = all.vars(formula)[1]
     # add response variable to data
@@ -1705,7 +1696,9 @@ make_par_labels = function(design.matrices, fixed){
     # list of term names by submodel
     # - list names are equal to submodel names
     # - list elements are term names
-    term.names = sapply(submodel.names, function(submodel) colnames(design.matrices[[1]][[submodel]]), simplify = FALSE)
+    term.names = sapply(submodel.names, function(submodel){
+        colnames(design.matrices[[1]][[submodel]])
+    }, simplify = FALSE)
     # return a table with three columns:
     # - sumbmodel = submodel name ("D", "g0", sigma", etc.)
     # - term      = name of term in submodel, generated by model.matrix (e.g. "(Intercept)")
@@ -1791,22 +1784,22 @@ make_regular_regionmask = function(mask, traps){ # mask=fit$mask; traps=fit$capt
 # otherwise trik mgcv::gam into providing
 # smooth.setup used inside make_model_matrix (which is inside make_design_matrices)
 
-make_smooth_setup = function(model, model.frames){
-    sapply(names(model), function(submodel){
-        if(!contains_smooth_terms(model[[submodel]]))
-            return(NULL)
-        # combine covariates from all sessions
-        data = do.call(rbind, sapply(names(model.frames), function(session){
-                model.frames[[session]][[submodel]]
-            }, simplify = FALSE)
-        )
-        # add a dummy response variable since gam requires a two-sided formula
-        data$dummy = 1
-        formula = update.formula(model[[submodel]], dummy ~ .)
-        # get smooth details using gam
-        mgcv::gam(formula, data = data, fit = FALSE)
-    })
-}
+# make_smooth_setup_old = function(model, model.frames){
+#     sapply(names(model), function(submodel){
+#         if(!contains_smooth_terms(model[[submodel]]))
+#             return(NULL)
+#         # combine covariates from all sessions
+#         data = do.call(rbind, sapply(names(model.frames), function(session){
+#                 model.frames[[session]][[submodel]]
+#             }, simplify = FALSE)
+#         )
+#         # add a dummy response variable since gam requires a two-sided formula
+#         data$dummy = 1
+#         formula = update.formula(model[[submodel]], dummy ~ .)
+#         # get smooth details using gam
+#         mgcv::gam(formula, data = data, fit = FALSE)
+#     })
+# }
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
@@ -1819,7 +1812,7 @@ make_smooth_setup = function(model, model.frames){
 
 #' @importFrom dplyr bind_rows
 
-make_smooth_setup2 = function(model, model.frames){
+make_smooth_setup = function(model, model.frames){
     sapply(names(model), function(submodel){ # submodel = "D"
         # combine covariates for all sessions
         data = as.data.frame(do.call(

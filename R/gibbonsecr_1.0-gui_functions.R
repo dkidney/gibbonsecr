@@ -1,19 +1,20 @@
 ## -------------------------------------------------------------------------- ##
-## gui functions which are independent of the gui environment
 ## -------------------------------------------------------------------------- ##
 
-# center_window = function(tt){
-#     winw = as.numeric(tclvalue(tkwinfo("width", tt)))
-#     winh = as.numeric(tclvalue(tkwinfo("height", tt)))
-#     scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
-#     scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
-#     tkwm.geometry(tt, paste0(winw, "x", winh, "+", round((scrw - winw) / 2), "+", round((scrh - winh) / 2)))
-# }
+# centre a tcl window
+
+center_window = function(tt, w = 100, h = 100){
+    # w = as.numeric(tclvalue(tkwinfo("width", tt)))
+    # h = as.numeric(tclvalue(tkwinfo("height", tt)))
+    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+    tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+}
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-# Popup menu to allow choice of covariate class
+# Popup menu to allow choice of covariate classes when importing shp files
 # Example
 # x = data.frame(
 #     colours = c("red", "green", "blue"),
@@ -27,13 +28,17 @@
 
 check_covariate_classes = function(x, padx = 1){
 
+    ##################################################
+    ## main window
+
     tt = tktoplevel()
     tkwm.title(tt, "Check covariate classes")
-    w = 100
-    h = 100
-    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
-    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
-    tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+#     w = 100
+#     h = 100
+#     scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+#     scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+#     tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+    center_window(tt, w = 150)
     tcl("wm", "attributes", tt, topmost = TRUE)
     tcl("wm", "attributes", tt, topmost = FALSE)
     tkwm.geometry(tt, "")
@@ -44,30 +49,80 @@ check_covariate_classes = function(x, padx = 1){
     ## upper frame for entry and combo boxes
 
     upper = ttkframe(main, padding = c(5,5))
-    tkgrid(ttklabel(upper, text = "Name"), row = 0, column = 1, sticky = "w")
-    tkgrid(ttklabel(upper, text = "Type"), row = 0, column = 2, sticky = "w")
-    tkgrid(ttklabel(upper, text = "Use"),  row = 0, column = 3, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Use"),    row = 0, column = 1, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Name"),   row = 0, column = 2, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Type"),   row = 0, column = 3, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Center"), row = 0, column = 4, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Scale"),  row = 0, column = 5, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Log"),    row = 0, column = 6, sticky = "w")
+    # use checkbox
+    use.tvar = list()
+    use = list()
+    use_command_base = function(j){
+        state = if(tclvalue(use.tvar[[j]]) == "1") "normal" else "disabled"
+        tkconfigure(entry[[j]], state = state)
+        tkconfigure(combo[[j]], state = state)
+        tkconfigure(center[[j]], state = state)
+        tkconfigure(scale[[j]], state = state)
+        tkconfigure(log[[j]], state = state)
+    }
+    use_command = function(j){
+        eval(parse(text = paste0("function() use_command_base(", j, ")")))
+    }
+    # combobox
     combo.char = ifelse(sapply(x, is.numeric), "number", "category")
-    entry.char = colnames(x)
     combo.tvar = list()
-    entry.tvar = list()
-    check.tvar = list()
-    entry = list()
     combo = list()
-    check = list()
+    combo_command_base = function(j){
+        state = if(tclvalue(combo.tvar[[j]]) == "number") "normal" else "disabled"
+        tkconfigure(center[[j]], state = state)
+        tkconfigure(scale[[j]], state = state)
+        tkconfigure(log[[j]], state = state)
+    }
+    combo_command = function(j){
+        eval(parse(text = paste0("function() combo_command_base(", j, ")")))
+    }
+    # entrybox
+    entry.char = colnames(x)
+    entry.tvar = list()
+    entry = list()
+    # center checkbox
+    center.tvar = list()
+    center = list()
+    # scale checkbox
+    scale.tvar = list()
+    scale = list()
+    # log checkbox
+    log.tvar = list()
+    log = list()
+    # make and pack
     for(j in 1:ncol(x)){ # j=1
+        use.tvar[[j]] = tclVar(1)
+        use[[j]] = ttkcheckbutton(upper, variable = use.tvar[[j]],
+                             state = "normal", command = use_command(j))
+        tkgrid(use[[j]], row = j, column = 1)
         entry.tvar[[j]] = tclVar(entry.char[j])
         entry[[j]] = ttkentry(upper, textvariable = entry.tvar[[j]], width = 30,
                              state = "normal")
-        tkgrid(entry[[j]], row = j, column = 1)
+        tkgrid(entry[[j]], row = j, column = 2)
         combo.tvar[[j]] = tclVar(combo.char[j])
         combo[[j]] = ttkcombobox(upper, textvariable = combo.tvar[[j]], width = 10,
                              state = "normal", values = c("number", "category"))
-        tkgrid(combo[[j]], row = j, column = 2)
-        check.tvar[[j]] = tclVar(1)
-        check[[j]] = ttkcheckbutton(upper, variable = check.tvar[[j]],
-                             state = "normal")
-        tkgrid(check[[j]], row = j, column = 3)
+        tkbind(combo[[j]], "<<ComboboxSelected>>", combo_command(j))
+        tkgrid(combo[[j]], row = j, column = 3)
+        state = if(tclvalue(combo.tvar[[j]]) == "number") "normal" else "disabled"
+        center.tvar[[j]] = tclVar(0)
+        center[[j]] = ttkcheckbutton(upper, variable = center.tvar[[j]],
+                             state = state)
+        tkgrid(center[[j]], row = j, column = 4)
+        scale.tvar[[j]] = tclVar(0)
+        scale[[j]] = ttkcheckbutton(upper, variable = scale.tvar[[j]],
+                             state = state)
+        tkgrid(scale[[j]], row = j, column = 5)
+        log.tvar[[j]] = tclVar(0)
+        log[[j]] = ttkcheckbutton(upper, variable = log.tvar[[j]],
+                             state = state)
+        tkgrid(log[[j]], row = j, column = 6)
     }
 
     ##################################################
@@ -110,16 +165,24 @@ check_covariate_classes = function(x, padx = 1){
     # return clasess
 
     result = if(tclvalue(done) == 1){
-        list(
-            name  = sapply(entry.tvar, tclvalue),
-            class = sapply(combo.tvar, tclvalue),
-            use   = sapply(check.tvar, tclvalue) == "1"
+        data.frame(
+            use    = sapply(use.tvar,    tclvalue) == "1",
+            name   = sapply(entry.tvar,  tclvalue),
+            class  = sapply(combo.tvar,  tclvalue),
+            center = sapply(center.tvar, tclvalue) == "1",
+            scale  = sapply(scale.tvar,  tclvalue) == "1",
+            log    = sapply(log.tvar,    tclvalue) == "1",
+            stringsAsFactors = FALSE
         )
     }else{
-        list(
-            name  = entry.char,
-            class = combo.char,
-            use   = rep(TRUE, ncol(x))
+        data.frame(
+            use    = rep(TRUE, ncol(x)),
+            name   = entry.char,
+            class  = combo.char,
+            center = rep(TRUE, ncol(x)),
+            scale  = rep(TRUE, ncol(x)),
+            log    = rep(TRUE, ncol(x)),
+            stringsAsFactors = FALSE
         )
     }
 
@@ -130,6 +193,8 @@ check_covariate_classes = function(x, padx = 1){
 
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
+
+# popup window to allow choice of covariate values when making model predictions
 
 choose_newdata = function(fit, submodels = NULL, all = TRUE, padx = 1){
 
@@ -145,11 +210,12 @@ choose_newdata = function(fit, submodels = NULL, all = TRUE, padx = 1){
 
     tt = tktoplevel()
     tkwm.title(tt, "Choose prediction data")
-    w = 100
-    h = 100
-    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
-    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
-    tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+#     w = 100
+#     h = 100
+#     scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+#     scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+#     tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+    center_window(tt)
     tcl("wm", "attributes", tt, topmost = TRUE)
     tcl("wm", "attributes", tt, topmost = FALSE)
     tkwm.geometry(tt, "")
@@ -269,6 +335,9 @@ choose_newdata = function(fit, submodels = NULL, all = TRUE, padx = 1){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+# popup menu for choosing the array when plotting density surface or detection surface
+# need to replace this with an option to choose array-level covariates
+
 choose_array = function(x, padx = 1){
 
     if(inherits(x, "gibbonsecr_fit"))
@@ -278,11 +347,13 @@ choose_array = function(x, padx = 1){
 
     tt = tktoplevel()
     tkwm.title(tt)
-    w = 100
-    h = 100
-    scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
-    scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
-    tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+", round((scrh - h) / 2)))
+#     w = 100
+#     h = 100
+#     scrw = as.numeric(tclvalue(tkwinfo("screenwidth", tt)))
+#     scrh = as.numeric(tclvalue(tkwinfo("screenheight", tt)))
+#     tkwm.geometry(tt, paste0(w, "x", h, "+", round((scrw - w) / 2), "+",
+#                              round((scrh - h) / 2)))
+    center_window(tt)
     tcl("wm", "attributes", tt, topmost = TRUE)
     tcl("wm", "attributes", tt, topmost = FALSE)
     tkwm.geometry(tt, "")
@@ -293,7 +364,8 @@ choose_array = function(x, padx = 1){
     ## upper frame for entry and combo boxes
 
     upper = ttkframe(main, padding = c(5,5))
-    tkgrid(ttklabel(upper, text = "Choose array: "), row = 1, column = 1, sticky = "w")
+    tkgrid(ttklabel(upper, text = "Choose array: "), row = 1, column = 1,
+           sticky = "w")
     sessions = session(x)
     combo.tvar = tclVar(sessions[1])
     combo = ttkcombobox(upper, textvariable = combo.tvar, width = 10,
@@ -334,7 +406,7 @@ choose_array = function(x, padx = 1){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-# platform-specific appearance setting for tcltk widgets
+# appearance setting for tcltk widgets
 # .Tcl("ttk::style theme names")
 # sort(as.character(tkfont.families()))
 
@@ -372,7 +444,8 @@ gui_appearance_settings = function(){
                                                  slant = "roman", weight = "bold"),
             console.normal.font  = tkfont.create(size = 9,  family = "Lucida Console"),
             console.heading.font = tkfont.create(size = 10, family = "Lucida Console"),
-            console.bold.font    = tkfont.create(size = 9,  family = "Lucida Console", slant = "roman")
+            console.bold.font    = tkfont.create(size = 9,  family = "Lucida Console",
+                                                 slant = "roman")
             )
         .Tcl("ttk::style configure TButton       -padding {0 1}")
         .Tcl("ttk::style configure TCombobox     -padding {5 2}")
@@ -418,7 +491,8 @@ gui_appearance_settings = function(){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-# code adadpted from utils::sessionInfo
+# welcome message to appear on GUI console on startup
+# code adadpted from utils::sessionInfo to get os version (running)
 
 welcome_message = function(){
     if(.Platform$OS.type == "windows") {
@@ -452,15 +526,18 @@ welcome_message = function(){
         }, uname)
     }
     paste0("\n",
-          "Welcome to gibbonsecr version ", utils::packageVersion("gibbonsecr"), "\n",
+          "Welcome to gibbonsecr version ", utils::packageVersion("gibbonsecr"),
+          "\n\n",
+          R.Version()$version,
           "\n",
-          R.Version()$version, "\n",
-          running, "\n",
-          "\n",
-          "This software was developed in partnership with the IUCN SSC \nPrimate Specialist Group Section on Small Apes and the Centre \nfor Research into Ecological and Environmental Modelling at \nthe Univerisity of St Andrews, UK\n\n",
-          "For help on using the software go to Help > User manual\n\n",
-          "This is a pre-release version of the software. If you notice \nany bugs or have any general queries, please email Darren \nKidney at darrenkidney@yahoo.co.uk\n",
-          "\n"
+          running,
+          "\n\n",
+          stringr::str_wrap("This software was developed in partnership with the IUCN SSC Primate Specialist Group Section on Small Apes and the Centre for Research into Ecological and Environmental Modelling at the Univerisity of St Andrews, UK", 60),
+          "\n\n",
+          stringr::str_wrap("For help on using the software go to Help > User manual", 60),
+          "\n\n",
+          stringr::str_wrap("This is a pre-release version of the software. If you notice any bugs or have any general queries, please email Darren Kidney at darrenkidney@yahoo.co.uk", 60),
+          "\n\n"
     )
 }
 

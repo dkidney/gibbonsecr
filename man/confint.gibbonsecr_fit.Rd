@@ -26,7 +26,9 @@ Uses the delta method to obtain interval estimates on the link
   scale.
 }
 \examples{
-## Not run: 
+## Not run:
+
+library(gibbonsecr)
 
 data(N.annamensis)
 

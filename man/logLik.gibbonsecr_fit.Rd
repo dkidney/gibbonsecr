@@ -17,7 +17,9 @@ Extract the log-likelihood from a model fitted with
   \code{\link{gibbonsecr_fit}}.
 }
 \examples{
-## Not run: 
+## Not run:
+
+library(gibbonsecr)
 
 data(N.annamensis)
 

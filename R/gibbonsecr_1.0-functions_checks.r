@@ -436,6 +436,10 @@ check_mask = function(mask, capthist, mask.options = list()){
         }
     }
 
+    ##################################################
+    ## convert to tbl class
+    mask = mask_tbl(mask)
+
     return(mask)
 
 }

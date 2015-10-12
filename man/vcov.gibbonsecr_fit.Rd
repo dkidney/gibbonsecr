@@ -17,7 +17,9 @@ Compute the variance-covariance from a model fitted with
   \code{\link{gibbonsecr_fit}}.
 }
 \examples{
-## Not run: 
+## Not run:
+
+library(gibbonsecr)
 
 data(N.annamensis)
 

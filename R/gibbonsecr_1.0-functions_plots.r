@@ -355,7 +355,7 @@ plot_capthist = function(x, mask = NULL){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distances"), newdata = NULL, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = TRUE, true.distance = 500,  ...){
+plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distances"), newdata = NULL, CI = TRUE, alpha = 0.05, nx = 100, use.global.par.settings = TRUE, true.distance = 500, plot = TRUE, ...){
     which = match.arg(which)
     plotargs = list(...) # plotargs = list() ; which = "distances" ; session = "2" ; nx = 100
     # print(plotargs)
@@ -376,8 +376,6 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
                      newdata = newdata,
                      which   = which,
                      true.distance = true.distance)
-    # print(deltaargs)
-    # stop("2")
     if(CI){
         deltaargs$f = fitted_detectfn_auxiliary_values
         deltaargs$vcov = vcov(fit)
@@ -389,57 +387,62 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
     }else{
         delta = list(est = do.call(fitted_detectfn_auxiliary_values, deltaargs))
     }
-    # print(delta)
-    # stop("3")
-    plotargs$y = delta$est
-    if(which == "bearings") plotargs$x = plotargs$x * 180/pi
 
     ##################################################
     ## plot
 
-    # set up plotting area if add = NULL or FALSE
-    if(is.null(plotargs$add) || !plotargs$add){
-        plotargs$type = "n"
-        if(is.null(plotargs$main)) plotargs$main = switch(
-            which,
-            "detectfn"  = "Detection function",
-            "bearings"  = "Bearing error distribution",
-            "distances" = "Distance error distribution (truth = 500m)"
-        )
-        if(is.null(plotargs$xlab)) plotargs$xlab = switch(
-            which,
-            "detectfn"  = "Distance from detector (m)",
-            "bearings"  = "Bearing error (degrees)",
-            "distances" = "Distance estimate (m)"
-        )
-        if(is.null(plotargs$ylab)) plotargs$ylab = switch(
-            which,
-            "detectfn"  = "Detection probability",
-            "Probability density"
-        )
-        if(is.null(plotargs$xaxs)) plotargs$xaxs = "i"
-        if(is.null(plotargs$yaxs)) plotargs$yaxs = "i"
-        if(is.null(plotargs$bty))  plotargs$bty  = "n"
-        if(is.null(plotargs$ylim)) plotargs$ylim = switch(
-            which,
-            "detectfn"  = c(0,1),
-            c(0, max(sapply(delta,max)))
-        )
-        do.call(plot, plotargs)
-    }
-    # draw plot
-    plotargs[c("add","type","main","xlab","ylab","xaxs","yaxs","bty","xlim","ylim")] = NULL
-    plotargs$type = NULL
-    plotargs$lty = 1
-    do.call(lines, plotargs)
-    if(CI){
-        plotargs$lty = 2
-        for(interval in c("lower","upper")){
-            plotargs$y = delta[[interval]]
-            do.call(lines, plotargs)
+    if(plot){
+        plotargs$y = delta$est
+        if(which == "bearings") plotargs$x = plotargs$x * 180/pi
+
+        # set up plotting area if add = NULL or FALSE
+        if(is.null(plotargs$add) || !plotargs$add){
+            plotargs$type = "n"
+            if(is.null(plotargs$main)) plotargs$main = switch(
+                which,
+                "detectfn"  = "Detection function",
+                "bearings"  = "Bearing error distribution",
+                "distances" = "Distance error distribution (truth = 500m)"
+            )
+            if(is.null(plotargs$xlab)) plotargs$xlab = switch(
+                which,
+                "detectfn"  = "Distance from detector (m)",
+                "bearings"  = "Bearing error (degrees)",
+                "distances" = "Distance estimate (m)"
+            )
+            if(is.null(plotargs$ylab)) plotargs$ylab = switch(
+                which,
+                "detectfn"  = "Detection probability",
+                "Probability density"
+            )
+            if(is.null(plotargs$xaxs)) plotargs$xaxs = "i"
+            if(is.null(plotargs$yaxs)) plotargs$yaxs = "i"
+            if(is.null(plotargs$bty))  plotargs$bty  = "n"
+            if(is.null(plotargs$ylim)) plotargs$ylim = switch(
+                which,
+                "detectfn"  = c(0,1),
+                c(0, max(sapply(delta,max)))
+            )
+            do.call("plot", plotargs)
+        }
+        # draw plot
+        plotargs[c("add","type","main","xlab","ylab","xaxs","yaxs","bty","xlim","ylim")] = NULL
+        plotargs$type = NULL
+        plotargs$lty = 1
+        do.call("lines", plotargs)
+        if(CI){
+            plotargs$lty = 2
+            for(interval in c("lower","upper")){
+                plotargs$y = delta[[interval]]
+                do.call(lines, plotargs)
+            }
         }
     }
-    invisible()
+
+    ##################################################
+    ## return fitted values
+
+    invisible(delta)
 }
 
 ## -------------------------------------------------------------------------- ##
@@ -457,7 +460,8 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
 #' @method plot gibbonsecr_fit
 #' @export
 
-plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distances","density"), session = 1, newdata = NULL, use.global.par.settings = TRUE, ...){
+# plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distances","density"), session = 1, newdata = NULL, use.global.par.settings = TRUE, mask = NULL, traps = NULL, CI = TRUE, alpha = 0.05, plot = TRUE, ...){
+plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distances","density"), ...){
     which = match.arg(which)
     # print(list(...))
     # stop()
@@ -465,23 +469,25 @@ plot.gibbonsecr_fit = function(x, which = c("detectfn","pdot","bearings","distan
     # if(!ms(x$capthist)) stop("only works for multi-session data")
     if(which %in% c("bearings","distances"))
         if(x$model.options[[which]] == 0) stop("no ", which, " model")
-    if(is.numeric(session))
-        session = session(x$capthist)[session]
     # if(!use.global.par.settings) pop = par(no.readonly = TRUE)
     if(which %in% c("detectfn","bearings","distances")){
         # if(!use.global.par.settings)
-            # pop = par(mfrow = c(1,1), oma = c(0,0,0,0), mar = c(4,4,2,2))
-        plot_detectfn_auxiliary(x, which = which, newdata = newdata, ...)
+        # pop = par(mfrow = c(1,1), oma = c(0,0,0,0), mar = c(4,4,2,2))
+        # invisible(plot_detectfn_auxiliary(x, which = which, newdata = newdata,
+                                          # CI = CI, alpha = alpha, plot = plot, ...))
+        invisible(plot_detectfn_auxiliary(x, which = which, ...))
     }else{
         # if(!use.global.par.settings)
-            # par(mfrow = c(1,1), oma = c(0,0,0,0), mar = c(4,4,2,6))
-        plot_surface(x, which = which, session = session, ...)
+        # par(mfrow = c(1,1), oma = c(0,0,0,0), mar = c(4,4,2,6))
+        # invisible(plot_surface(x, which = which, session = session, mask = mask,
+                               # traps = traps, CI = CI, alpha = alpha, plot = plot, ...))
+        invisible(plot_surface(x, which = which, ...))
     }
     # usr = par()$usr
     # mfg = par()$mfg
     # if(!use.global.par.settings) par(pop)
     # par(usr = usr, mfg = mfg)
-    invisible()
+    # invisible()
 }
 
 ## -------------------------------------------------------------------------- ##
@@ -505,10 +511,10 @@ plot.gibbonsecr_sim = function(x, CI = TRUE, exp = FALSE, use.global.par.setting
     ## par settings
 
     # if(!use.global.par.settings){
-        # pop = par(no.readonly = TRUE)
-        # on.exit(par(pop))
-        # npars = ncol(x$gibbonsecr_fit)
-        # par(mfrow = n2mfrow(npars), mar = c(2,2,2,2), oma = c(0,0,2,0))
+    # pop = par(no.readonly = TRUE)
+    # on.exit(par(pop))
+    # npars = ncol(x$gibbonsecr_fit)
+    # par(mfrow = n2mfrow(npars), mar = c(2,2,2,2), oma = c(0,0,2,0))
     # }
 
     ##################################################
@@ -622,6 +628,8 @@ plot.gibbonsecr_sim = function(x, CI = TRUE, exp = FALSE, use.global.par.setting
 # @export
 plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = NULL, pch = 15, bty = "n", axes = TRUE, xlab = "", ylab = "", main = "", add.legend = TRUE, xaxs = "r", yaxs = "r", type = "p"){
     # session = NULL; add = FALSE; col = NULL; pch = 15; bty = "n"; axes = FALSE; xlab = ""; ylab = ""; main = ""; legend = TRUE; xaxs = "r"; yaxs = "r"; type = "p"
+    if(inherits(mask, "gibbonsecr_fit"))
+        mask = fit$mask
     if(!inherits(mask, "mask"))
         stop("requires a mask object", call. = FALSE)
     if(ms(mask) && !is.null(session))
@@ -724,16 +732,16 @@ plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = N
             if(number){
                 add_number_legend(zlim, col)
             }else{
-#                 strip.legend('right', levels(var), col = col, "other", inset = 0.05,
-#                              height = 0.04 * length(levels(var)),
-#                              width = 0.075, title = covariate)
+                #                 strip.legend('right', levels(var), col = col, "other", inset = 0.05,
+                #                              height = 0.04 * length(levels(var)),
+                #                              width = 0.075, title = covariate)
                 x = shp@bbox[1,"max"] + 0.05 * diff(range(shp@bbox[1,]))
                 y = mean(shp@bbox[2,])
                 add_category_legend(x = x, y = y, legend = levels(var), col = col, bty = "n")
             }
         }
     }
-# add axes
+    # add axes
     if(axes){
         axis(1)
         axis(2)
@@ -750,7 +758,11 @@ plot_shp = function(shp, covariate = NULL, palette = NULL, ncol = NULL, zlim = N
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
-plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = TRUE, legend = TRUE, centered = FALSE, session, ...){
+# mask allows the use of a prediction mask
+# centered determines whether or not the axes on the plot should be centered
+# ... is for additional arguments to pass to image
+
+plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = TRUE, legend = TRUE, centered = FALSE, session = 1, mask = NULL, traps = NULL, plot = TRUE, alpha = 0.05, ...){
     which = match.arg(which)
     # which = "pdot"; session = "2"; CI = FALSE; contour = TRUE; centered = TRUE
 
@@ -759,19 +771,21 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
 
     if(which == "density"){
         # use regiontraps and regular regionmask
-        traps = make_regiontraps(traps(fit$capthist))
-        mask  = make_regular_regionmask(fit$mask, fit$capthist)
+        if(is.null(traps))
+            traps = make_regiontraps(traps(fit$capthist))
+        if(is.null(mask))
+            mask = make_regular_regionmask(fit$mask, fit$capthist)
     }
     if(which == "pdot"){
         # use sessiontraps and sessionmask
         traps = traps(fit$capthist)[[session]]
         mask  = fit$mask[[session]]
     }
-    buffer = mask_buffer(mask, traps)
+    if(is.numeric(session))
+        session = session(fit$capthist)[session]
     traps = MS(traps)
     mask  = MS(mask)
     session(traps) = session(mask) = session
-
 
     ##################################################
     ## delta method
@@ -786,78 +800,94 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
         deltaargs$f    = fitted_surface_values
         deltaargs$vcov = vcov(fit)
         delta = do.call(delta_method, deltaargs)
+        z = qnorm(1 - alpha / 2)
+        delta$lower = delta$est - z * delta$se
+        delta$upper = delta$est + z * delta$se
+        delta$se = NULL
     }else{
         # delta = list(est = do.call(fitted_pdot_values, deltaargs))
-        delta = list(est = do.call(fitted_surface_values, deltaargs))
+        delta = list(estimate = do.call(fitted_surface_values, deltaargs))
     }
 
     ##################################################
     ## plot
 
-    plotargs = list(...) # plotargs = list()
-    plotargs = c(mask_image(mask[[session]], delta$est, plot = FALSE), plotargs)
-    # legend.mar = plotargs$legend.mar
-    # plotargs$legend.mar = NULL
-    plotargs = plotargs[!sapply(plotargs, is.null)]
-    if(is.null(plotargs$add) || !plotargs$add){
-        if(is.null(plotargs$main)) plotargs$main = switch(
-            which,
-            "pdot"    = "Detection surface",
-            "density" = "Density surface"
-        )
-        if(is.null(plotargs$xlab)) plotargs$xlab = ""
-        if(is.null(plotargs$ylab)) plotargs$ylab = ""
-        if(is.null(plotargs$axes)) plotargs$axes = TRUE
-        if(is.null(plotargs$xaxs)) plotargs$xaxs = "r"
-        if(is.null(plotargs$yaxs)) plotargs$yaxs = "r"
-        if(is.null(plotargs$asp))  plotargs$asp  = 1
-        if(is.null(plotargs$bty))  plotargs$bty  = "n"
-    }
-    if(is.null(plotargs$nlevel)) plotargs$nlevel = 25
-    if(is.null(plotargs$col))
-        plotargs$col    = number_palette(plotargs$nlevel)
-    if(is.null(plotargs$ylim))   plotargs$zlim   = switch(
-        which,
-        "pdot"    = c(0,1),
-        "density" = range(delta)
-    )
-    # nlevel = plotargs$nlevel
-    plotargs$nlevel = NULL
-    axes = plotargs$axes
-    if(centered && plotargs$axes) plotargs$axes = FALSE
-    # image
-    do.call(image, plotargs)
-    if(centered && axes){
-        tick.length = diff(axTicks(1)[1:2])
-        for(i in 1:2){ # i=1
-            cent = mean(traps[[1]][,i])
-            at = sort(unique(c(
-                seq(cent, cent - buffer, by = -tick.length),
-                seq(cent, cent + buffer, by =  tick.length)
-            )))
-            axis(i, at, as.character(at - cent))
+    if(plot){
+        plot.range = if(CI) c("estimate", "upper", "lower") else "estimate"
+        for(i in plot.range){ # i = "estimate"
+            plotargs = list(...) # plotargs = list()
+            # plotargs = c(mask_image(mask[[session]], delta$est, plot = FALSE), plotargs)
+            plotargs = c(mask_image(mask[[session]], delta[[i]], plot = FALSE), plotargs)
+            # legend.mar = plotargs$legend.mar
+            # plotargs$legend.mar = NULL
+            plotargs = plotargs[!sapply(plotargs, is.null)]
+            if(is.null(plotargs$add) || !plotargs$add){
+                if(is.null(plotargs$main)) plotargs$main = switch(
+                    which,
+                    "pdot"    = paste0("Detection surface (", i, ")"),
+                    "density" = paste0("Density surface (", i, ")")
+                )
+                if(is.null(plotargs$xlab)) plotargs$xlab = ""
+                if(is.null(plotargs$ylab)) plotargs$ylab = ""
+                if(is.null(plotargs$axes)) plotargs$axes = TRUE
+                if(is.null(plotargs$xaxs)) plotargs$xaxs = "r"
+                if(is.null(plotargs$yaxs)) plotargs$yaxs = "r"
+                if(is.null(plotargs$asp))  plotargs$asp  = 1
+                if(is.null(plotargs$bty))  plotargs$bty  = "n"
+            }
+            if(is.null(plotargs$nlevel)) plotargs$nlevel = 25
+            if(is.null(plotargs$col))
+                plotargs$col = number_palette(plotargs$nlevel)
+            if(is.null(plotargs$ylim))   plotargs$zlim   = switch(
+                which,
+                "pdot"    = c(0,1),
+                "density" = range(delta)
+            )
+            # nlevel = plotargs$nlevel
+            plotargs$nlevel = NULL
+            axes = plotargs$axes
+            if(centered && plotargs$axes) plotargs$axes = FALSE
+            # image
+            do.call(image, plotargs)
+            if(centered && axes){
+                # redo this bit so you use trap mean instead of don't use buffer
+                buffer = mask_buffer(mask[[session]], traps[[session]])
+                tick.length = diff(axTicks(1)[1:2])
+                for(i in 1:2){ # i=1
+                    cent = mean(traps[[1]][,i])
+                    at = sort(unique(c(
+                        seq(cent, cent - buffer, by = -tick.length),
+                        seq(cent, cent + buffer, by =  tick.length)
+                    )))
+                    axis(i, at, as.character(at - cent))
+                }
+            }
+            # save usr and mfg (image.plot changes them)
+            # usr = par()$usr
+            # mfg = par()$mfg
+            # traps
+            plot_traps(traps, add = TRUE, cex = 1)
+            # contour and legend
+            if(abs(diff(range(plotargs$zlim))) > 0){
+                # contour
+                if(contour) contour(plotargs$x, plotargs$y, plotargs$z, add = TRUE)
+                # legend
+                if(legend) add_number_legend(zlim = plotargs$zlim, col = plotargs$col)
+                #         plotargs$nlevel = nlevel
+                #         plotargs$graphics.reset = TRUE
+                #         plotargs$legend.only = TRUE
+                #         plotargs$legend.mar = legend.mar
+                #         plotargs$breaks = seq(plotargs$zlim[1], plotargs$zlim[2], length = nlevel + 1)
+                #         do.call(fields::image.plot, plotargs)
+            }
         }
     }
-    # save usr and mfg (image.plot changes them)
-    # usr = par()$usr
-    # mfg = par()$mfg
-    # traps
-    plot_traps(traps, add = TRUE, cex = 1)
-    # contour and legend
-    if(abs(diff(range(plotargs$zlim))) > 0){
-        # contour
-        if(contour) contour(plotargs$x, plotargs$y, plotargs$z, add = TRUE)
-        # legend
-        if(legend) add_number_legend(zlim = plotargs$zlim, col = plotargs$col)
-#         plotargs$nlevel = nlevel
-#         plotargs$graphics.reset = TRUE
-#         plotargs$legend.only = TRUE
-#         plotargs$legend.mar = legend.mar
-#         plotargs$breaks = seq(plotargs$zlim[1], plotargs$zlim[2], length = nlevel + 1)
-#         do.call(fields::image.plot, plotargs)
-    }
     # par(usr = usr, mfg = mfg)
-    invisible()
+
+    ##################################################
+    ## return fitted values
+
+    invisible(delta)
 }
 
 ## -------------------------------------------------------------------------- ##
@@ -875,6 +905,8 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
 # @export
 plot_traps = function(x, session = NULL, buffer = 1000, ...){
     # x = traps(capthist); session = NULL
+    if(inherits(x, "gibbonsecr_fit"))
+        x = traps(x$capthist)
     if(!inherits(x, c("capthist", "traps")))
         stop("requires a capthist or traps object", call. = FALSE)
     if(inherits(x, "capthist"))
