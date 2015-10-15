@@ -2,7 +2,7 @@
 // -------------------------------------------------------------------------- //
 
 // [[Rcpp::depends(RcppArmadillo)]]
-#include <RcppArmadillo.h> 
+#include <RcppArmadillo.h>
 using namespace Rcpp ;
 
 // -------------------------------------------------------------------------- //
@@ -12,17 +12,17 @@ using namespace Rcpp ;
 NumericMatrix calc_distances_rcpp(const NumericMatrix& A, const NumericMatrix& Z){
 
     NumericMatrix distances(Z.nrow(), A.nrow()) ;
-    
+
     for (int k = 0 ; k < A.nrow() ; k++) {
-    
+
         for (int m = 0 ; m < Z.nrow() ; m++) {
-    
+
             distances(m,k) = pow(pow(A(k,0) - Z(m,0),2) + pow(A(k,1) - Z(m,1), 2), 0.5) ;
-    
+
         }
-    
+
     }
-    
+
     return distances ;
 }
 

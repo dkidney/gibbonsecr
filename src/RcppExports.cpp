@@ -30,6 +30,18 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// nearest_rcpp
+NumericVector nearest_rcpp(const NumericMatrix& A, const NumericMatrix& B);
+RcppExport SEXP gibbonsecr_nearest_rcpp(SEXP ASEXP, SEXP BSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type B(BSEXP);
+    __result = Rcpp::wrap(nearest_rcpp(A, B));
+    return __result;
+END_RCPP
+}
 // negloglik_rcpp
 double negloglik_rcpp(const List& data, const List& mask, const List& pars, const IntegerMatrix& detected, const IntegerMatrix& usage, int n, int S, int K, int M, double a, int detectfn_code, int bearings_pdf_code, int distances_pdf_code);
 RcppExport SEXP gibbonsecr_negloglik_rcpp(SEXP dataSEXP, SEXP maskSEXP, SEXP parsSEXP, SEXP detectedSEXP, SEXP usageSEXP, SEXP nSEXP, SEXP SSEXP, SEXP KSEXP, SEXP MSEXP, SEXP aSEXP, SEXP detectfn_codeSEXP, SEXP bearings_pdf_codeSEXP, SEXP distances_pdf_codeSEXP) {

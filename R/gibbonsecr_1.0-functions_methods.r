@@ -60,8 +60,9 @@ add_shp_covariates = function(x, shp){
         if(inherits(shp, "SpatialPointsDataFrame")){
             # secr::addCovariates doen't work for spatial points
             # use nearest point method for assigning covariates to mask
-            distances = calc_distances_rcpp(as.matrix(x), as.matrix(shp@coords))
-            i = apply(distances, 2, which.min)
+            # distances = calc_distances_rcpp(as.matrix(x), as.matrix(shp@coords))
+            # i = apply(distances, 2, which.min)
+            i = nearest_rcpp(as.matrix(x), as.matrix(shp@coords))
             if(is.null(covariates(x))){
                 covariates(x) = shp@data[i,]
                 rownames(covariates(x)) = rownames(x)
