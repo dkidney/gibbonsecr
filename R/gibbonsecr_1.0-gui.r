@@ -798,18 +798,18 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             if(!is.null(preds$lower)){
                 print_to_console("Lower 95% CL:")
                 print_to_console(utils::capture.output(
-                    print(preds$lower, row.names = row.names)))
+                    print(as.data.frame(preds$lower), row.names = row.names)))
                 print_to_console("\n")
             }
             if(!is.null(preds$upper)){
                 print_to_console("Upper 95% CL:")
                 print_to_console(utils::capture.output(
-                    print(preds$upper, row.names = row.names)))
+                    print(as.data.frame(preds$upper), row.names = row.names)))
                 print_to_console("\n")
             }
             print_to_console("Point estimates:")
             print_to_console(utils::capture.output(
-                print(preds$est, row.names = row.names)))
+                print(as.data.frame(preds$est), row.names = row.names)))
             print_dashes()
         }
     }
@@ -1185,7 +1185,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 if(file != 'region'){
                     print_to_console('- checking covariate classes...')
                     out = check_covariate_classes(poly@data)
-                    poly@data = poly@data[,out$use]
+                    poly@data = poly@data[, out$use, drop = FALSE]
                     out = out[out$use,,drop = FALSE]
                     colnames(poly@data) = out$name
                     for(j in 1:ncol(poly@data)){ # j=2
