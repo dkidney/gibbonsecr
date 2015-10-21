@@ -18,11 +18,11 @@ gibbonsecr
 
 ## 1. Installation
 
-To download and install the necessary software to run the `gibbonsecr` package follow the instructions below.
+This section provides some instructions For downloading and installing the necessary software to run the `gibbonsecr` package.
 
 ### Install R
 
-Make sure you have the latest version of **R** installed. 
+Firstly, make sure you have the latest version of **R** installed. 
 
 [Download R for Windows](https://cran.r-project.org/bin/windows/base/)
 
@@ -40,9 +40,9 @@ Mac users using more recent versions of the OS may need to install **XQuartz**. 
 
 [Download XQuartz](http://xquartz.macosforge.org/landing/)
 
-### Install prerequisite packages
+### Install prerequisite R packages
 
-The `gibbonsecr` package uses some other R packages that don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R console.
+The `gibbonsecr` package uses some other R packages that don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R (or RStudio) console.
 
 ```{r}
 install.packages(c("CircStats", "dplyr", "MASS", "secr", "tcltk2"), 
@@ -51,20 +51,22 @@ install.packages(c("CircStats", "dplyr", "MASS", "secr", "tcltk2"),
 
 ### Install the gibbonsecr package
 
-Once the prequisite packages are installed you can install the `gibbonsecr` package by running the R code below.
+Once the prequisite R packages are installed you can install the `gibbonsecr` package by running the R code below.
 
-**Windows users:**
+**Windows:**
 ```{r}
 install.packages("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibbonsecr_1.0.zip", 
                  repos = NULL, type = "win.binary")
 ```
 
-**Mac users:**
+**Mac:**
 ```{r}
 install.packages("devtools", dependencies = TRUE)
 devtools::install_url("https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibbonsecr_1.0.tgz")
 
 ```
+
+You only have to install the packages once (i.e. you wont need to run the code above every time you use the `giboonsecr` package). 
 
 <br>
 
@@ -80,6 +82,8 @@ Once everything has been successfully installed, open R (or RStudio) and type th
 library(gibbonsecr)
 gibbonsecr_gui()
 ```
+
+The user interface should magically appear.
 
 You can open the manual for the user interface from the *Help* menu in the interface itself, or by running the following code in R:
 
