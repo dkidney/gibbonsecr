@@ -72,6 +72,8 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     gui = environment()
 
+    gibbonsecr_workspace = NULL
+
     ##################################################
     ## Platform-specific appearance settings
 

@@ -14,10 +14,6 @@
 \item{which}{TODO}
 
 \item{...}{additional arguments (not used)}
-
-\item{session}{TODO}
-
-\item{use.global.par.settings}{TODO}
 }
 \description{
 TODO

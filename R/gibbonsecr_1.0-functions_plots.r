@@ -452,8 +452,6 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
 #' @description TODO
 #' @inheritParams print.gibbonsecr_fit
 #' @param which TODO
-#' @param session TODO
-#' @param use.global.par.settings TODO
 #' @details TODO
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @seealso \link{gibbonsecr_fit}
@@ -629,7 +627,7 @@ plot.gibbonsecr_sim = function(x, CI = TRUE, exp = FALSE, use.global.par.setting
 plot_mask = function(mask, covariate = NULL, session = NULL, add = FALSE, col = NULL, pch = 15, bty = "n", axes = TRUE, xlab = "", ylab = "", main = "", add.legend = TRUE, xaxs = "r", yaxs = "r", type = "p"){
     # session = NULL; add = FALSE; col = NULL; pch = 15; bty = "n"; axes = FALSE; xlab = ""; ylab = ""; main = ""; legend = TRUE; xaxs = "r"; yaxs = "r"; type = "p"
     if(inherits(mask, "gibbonsecr_fit"))
-        mask = fit$mask
+        mask = mask$mask
     if(!inherits(mask, "mask"))
         stop("requires a mask object", call. = FALSE)
     if(ms(mask) && !is.null(session))

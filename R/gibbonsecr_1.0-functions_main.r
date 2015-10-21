@@ -661,8 +661,8 @@ gibbonsecr_fit = function(capthist, model = list(), mask = NULL, fixed = list(),
     smooth.setup = make_smooth_setup(model, model.frames)
 
     if(0){
-        names(smooth_setup)
-        names(smooth_setup[[1]])
+        names(smooth.setup)
+        names(smooth.setup[[1]])
     }
 
     design.matrices = get_design_matrices(smooth.setup, model.frames)

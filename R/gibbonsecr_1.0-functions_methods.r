@@ -499,7 +499,7 @@ fitted_detectfn_auxiliary_values = function(beta, fit, newdata, x, which = "dete
         newdata = make_newdata(fit, submodels)
     }else{
         if(nrow(newdata) != 1)
-            error("newdata should only have one row")
+            stop("newdata should only have one row")
     }
 
     ##################################################
