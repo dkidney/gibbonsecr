@@ -45,7 +45,7 @@ Mac users using more recent versions of the OS may need to install **XQuartz**. 
 The `gibbonsecr` package uses some other R packages that don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R console.
 
 ```{r}
-install.packages(c("CircStats", "dplyr", fields", "MASS", "nlme", "secr", "tcltk2"), 
+install.packages(c("CircStats", "dplyr", "fields", "MASS", "nlme", "secr", "tcltk2"), 
                  dependencies = TRUE)
 ```
 
