@@ -532,7 +532,7 @@ welcome_message = function(){
           "\n",
           running,
           "\n\n",
-          stringr::str_wrap("This software was developed in partnership with the IUCN SSC Primate Specialist Group Section on Small Apes and the Centre for Research into Ecological and Environmental Modelling at the Univerisity of St Andrews, UK", 60),
+          stringr::str_wrap("This software was developed in partnership with the IUCN SSC Primate Specialist Group Section on Small Apes and the Centre for Research into Ecological and Environmental Modelling at the University of St Andrews, UK", 60),
           "\n\n",
           stringr::str_wrap("For help on using the software go to Help > User manual", 60),
           "\n\n",

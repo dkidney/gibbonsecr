@@ -237,7 +237,7 @@ Optionally you can also install something called **RStudio** which acts as an in
 The `gibbonsecr` package uses some other R packages that don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R console.
 
 ```{r eval=FALSE}
-install.packages(c("CircStats", "fields", "MASS", "nlme", "secr", "tcltk2"),
+install.packages(c("CircStats", "dplyr", "MASS", "secr", "tcltk2"),
                  dependencies = TRUE)
 ```
 
@@ -448,7 +448,7 @@ To illustrate this issue, the figure below shows a series of detection surfaces 
 <img src="figures/mask_buffer_10000.jpeg" width="30%" style="border-style: none"/>
 <img src="figures/mask_buffer_5000.jpeg" width="30%" style="border-style: none"/>
 
-The buffer plot 1 looks to be too small, since the detection probability at the buffer distance is much greater than zero. In this case it is extremely likely that the true locations of some of the detected groups were actually outside the buffer zone. In plot 2 the buffer has been increased to 10000m. The detection probability at the buffer distance looks to be at zero so we would expect the density estimate to be unbiased. The density estimate in plot 2 is about 75% lower than the estimate in plot 1, which suggests that the estimate in plot 1 is a big overestimate. The buffer distance plot 3 is intermediate between the other two. The detection probability is still zero at the buffer distance, but the estimated density is very similar to plot 2, so it doesn't look to be biased. In this case the mask in plot 3 would be preferred since (for a given resolution) it will be much quicker to fit models than the mask in plot 2 whilst still giving reliable results.
+The buffer in plot 1 looks to be too small, since the detection probability at the buffer distance is much greater than zero. In this case it is extremely likely that the true locations of some of the detected groups were actually outside the buffer zone. In plot 2 the buffer has been increased to 10000m. The detection probability at the buffer distance looks to be at zero so we would expect the density estimate to be unbiased. The density estimate in plot 2 is about 75% lower than the estimate in plot 1, which suggests that the estimate in plot 1 is a big overestimate. The buffer distance plot 3 is intermediate between the other two. The detection probability is still zero at the buffer distance, but the estimated density is very similar to plot 2, so it doesn't look to be biased. In this case the mask in plot 3 would be preferred since (for a given resolution) it will be much quicker to fit models than the mask in plot 2 whilst still giving reliable results.
 
 <a href="#mask">(Back to top of section)</a>  
 <a href="#contents">(Back to contents)</a>

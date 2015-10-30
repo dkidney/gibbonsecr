@@ -68,7 +68,7 @@ gibbonsecr_gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 #             library(tcltk2)
 #             library(gibbonsecr)
 
-    flush.console()
+    utils::flush.console()
 
     gui = environment()
 

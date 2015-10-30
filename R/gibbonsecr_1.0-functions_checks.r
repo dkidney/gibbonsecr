@@ -369,6 +369,11 @@ check_mask = function(mask, capthist, mask.options = list()){
                          buffer  = mask.options$buffer,
                          spacing = mask.options$spacing,
                          type    = "trapbuffer")
+        # coerce to MS and add buffer attribute
+        mask = MS(mask)
+        for(i in 1:length(mask)){
+            attr(mask[[i]], "buffer") = mask.options$buffer
+        }
     }
 
     ##################################################
@@ -376,7 +381,7 @@ check_mask = function(mask, capthist, mask.options = list()){
 
     if(!inherits(mask, "mask"))
         stop("requires 'mask' object", call. = FALSE)
-    # mask = MS(mask)
+    mask = MS(mask, session.names = session(capthist))
     # if more than one session then check that session names agree with capthist
     if(length(mask) > 1){
         # delete mask sessions that don't appear in capthist
@@ -435,6 +440,10 @@ check_mask = function(mask, capthist, mask.options = list()){
             )
         }
     }
+
+    ##################################################
+    ## guess buffer if not already an attibute
+
 
     ##################################################
     ## convert to tbl class

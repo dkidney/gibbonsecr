@@ -906,18 +906,13 @@ mask_bbox = function(mask){
     return(bbox)
 }
 
-mask_buffer = function(mask, traps){
-    if(!inherits(mask, "mask")) stop("mask object required")
-    if(inherits(traps, "capthist")) traps = traps(traps)
-    if(!inherits(traps, "traps")) stop("traps object required")
-    mask = MS(mask)
-    traps = MS(traps)
-    if(length(mask) != length(traps))
-        stop("mask and traps have different number of sessions")
-    buffer = setNames(sapply(1:length(mask), function(i){
-        min(traps[[i]]$x) - min(attr(mask[[i]], "boundingbox")$x)
-    }), names(mask))
-    if(all(buffer == buffer[1])) buffer = unname(buffer[1])
+mask_buffer = function(mask){
+    if(ms(mask)){
+        buffer = sapply(mask, mask_buffer)
+    }else{
+        buffer = attr(mask, "buffer")
+        if(is.null(buffer)) buffer = NA
+    }
     return(buffer)
 }
 
@@ -982,8 +977,9 @@ make_regionmask = function(mask){
     }
     # mask attributes
     class(regionmask) = c("mask", "data.frame")
-    attr(regionmask, "meanSD") = mask_meanSD(regionmask)
+    attr(regionmask, "meanSD")      = mask_meanSD(regionmask)
     attr(regionmask, "boundingbox") = mask_bbox(regionmask)
+    attr(regionmask, "polygon")     = attr(mask[[1]], "polygon")
     return(regionmask)
 }
 
@@ -1989,7 +1985,7 @@ summary_mask = function(mask, traps = NULL){
 
     cat("Summary stats:\n")
     if(!is.null(traps)){
-        cat(" buffer    ", max(mask_buffer(mask, traps)), "m\n")
+        cat(" buffer    ", max(mask_buffer(mask)), "m\n")
     }
     cat(" spacing   ", mask_spacing(mask), "m\n")
     cat(" npoints   ", round(mean(mask_npoints(mask))), "(average per array)\n")

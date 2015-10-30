@@ -254,8 +254,11 @@ plot_capthist = function(x, mask = NULL){
         points(traps, col = i, pch = 15)
         if(!is.null(mask)){
             # points(as.data.frame(mask[[i]]), col = i, pch = 15)
-            buffer.contour(traps, mask_buffer(mask[[i]], traps), col = i,
-                           lty = ceiling(i / 10), add = TRUE)
+            buffer = mask_buffer(mask[[i]])
+            if(!is.na(buffer)){
+                buffer.contour(traps, mask_buffer(mask[[i]]), col = i,
+                               lty = ceiling(i / 10), add = TRUE)
+            }
         }
     }
     title("Listening post locations")
@@ -362,7 +365,7 @@ plot_detectfn_auxiliary = function(fit, which = c("detectfn","bearings","distanc
     # stop("1")
     plotargs$x = switch(
         which,
-        "detectfn"  = seq(0, mask_buffer(fit$mask, fit$capthist), length = nx),
+        "detectfn"  = seq(0, max(mask_buffer(fit$mask)), length = nx),
         "bearings"  = seq(-pi/2, pi/2, length = nx),
         "distances" = seq(0, 2000, length = nx)
     )
@@ -849,15 +852,17 @@ plot_surface = function(fit, which = c("pdot","density"), CI = FALSE, contour = 
             do.call(image, plotargs)
             if(centered && axes){
                 # redo this bit so you use trap mean instead of don't use buffer
-                buffer = mask_buffer(mask[[session]], traps[[session]])
-                tick.length = diff(axTicks(1)[1:2])
-                for(i in 1:2){ # i=1
-                    cent = mean(traps[[1]][,i])
-                    at = sort(unique(c(
-                        seq(cent, cent - buffer, by = -tick.length),
-                        seq(cent, cent + buffer, by =  tick.length)
-                    )))
-                    axis(i, at, as.character(at - cent))
+                buffer = mask_buffer(mask[[session]])
+                if(!is.na(buffer)){
+                    tick.length = diff(axTicks(1)[1:2])
+                    for(i in 1:2){ # i=1
+                        cent = mean(traps[[1]][,i])
+                        at = sort(unique(c(
+                            seq(cent, cent - buffer, by = -tick.length),
+                            seq(cent, cent + buffer, by =  tick.length)
+                        )))
+                        axis(i, at, as.character(at - cent))
+                    }
                 }
             }
             # save usr and mfg (image.plot changes them)

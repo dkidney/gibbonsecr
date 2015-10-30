@@ -1759,18 +1759,19 @@ make_parlist = function(beta, parindx, fixed){
 make_regular_regionmask = function(mask, traps){ # mask=fit$mask; traps=fit$capthist
     if(!inherits(mask, "mask") || !ms(mask))
         stop("requires a multi-session mask object")
-    if(!inherits(traps, c("traps","capthist")) || !ms(traps))
-        stop("requires a multi-session traps or capthist object")
     if(inherits(traps, "capthist"))
         traps = traps(traps)
+    if(!inherits(traps, c("traps","capthist")) || !ms(traps))
+        stop("requires a multi-session traps or capthist object")
     if(!all(session(mask) == session(traps)))
         stop("!all(session(mask) == session(traps))")
     regionmask = make_regionmask(mask)
     regiontraps = make_regiontraps(traps)
     regularmask = make.mask(regiontraps,
-                     buffer  = mask_buffer(regionmask, regiontraps),
-                     spacing = mask_spacing(regionmask),
-                     type    = mask_type(regionmask))
+                     buffer  = mask_buffer(regionmask),
+                     spacing = attr(regionmask, "spacing"),
+                     type    = attr(regionmask, "type"),
+                     poly    = attr(regionmask, "polygon"))
     if(!is.null(covariates(regionmask))){
         regularmask = addCovariates(regularmask, regionmask)
     }
