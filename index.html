@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Gibbonsecr by dkidney</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Gibbonsecr</h1>
+        <h2>SECR analysis for acoustic gibbon surveys</h2>
+        <a href="https://github.com/dkidney/gibbonsecr" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a id="gibbonsecr" class="anchor" href="#gibbonsecr" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>gibbonsecr</h1>
+
+<h3>
+<a id="contents" class="anchor" href="#contents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contents</h3>
+
+<p><a href="#installation"><strong>1. Installation</strong></a></p>
+
+<p><a href="#launch"><strong>2. Launch the user interface</strong></a></p>
+
+<p><a href="#problems"><strong>3. Report problems</strong></a></p>
+
+<p><br></p>
+
+<hr>
+
+<p><a name="installation"></a></p>
+
+<h2>
+<a id="1-installation" class="anchor" href="#1-installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>1. Installation</h2>
+
+<p>This section provides some instructions For downloading and installing the necessary software to run the <code>gibbonsecr</code> package.</p>
+
+<h3>
+<a id="install-r" class="anchor" href="#install-r" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install R</h3>
+
+<p>Firstly, make sure you have the latest version of <strong>R</strong> installed. </p>
+
+<p><a href="https://cran.r-project.org/bin/windows/base/">Download R for Windows</a></p>
+
+<p><a href="https://cran.r-project.org/bin/macosx/">Download R for Mac</a></p>
+
+<p>Optionally, you can also install <strong>RStudio</strong> which is a non-essential but more user-friendly interface for running R.</p>
+
+<p><a href="https://www.rstudio.com/products/rstudio/download/">Download RStudio</a></p>
+
+<p><a name="windows%20setup"></a></p>
+
+<h3>
+<a id="mac-setup" class="anchor" href="#mac-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Mac setup</h3>
+
+<p>Mac users using more recent versions of the OS may need to install <strong>XQuartz</strong>. Users of OS X 10.5 (Leopard), 10.6 (Snow Leopard) and 10.7 (Lion) should already have this installed by default (to check, look for the <code>X11.app</code> application in your applications folder). Users of OS X 10.8 (Mountain Lion), 10.9 (Mavericks) and 10.10 (Yosemite) will need to install it manually:</p>
+
+<p><a href="http://xquartz.macosforge.org/landing/">Download XQuartz</a></p>
+
+<h3>
+<a id="install-prerequisite-r-packages" class="anchor" href="#install-prerequisite-r-packages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install prerequisite R packages</h3>
+
+<p>The <code>gibbonsecr</code> package uses some other R packages that don't come with the default version of R, so you'll need to install them manually by typing (or cutting and pasting) the code below into the R (or RStudio) console.</p>
+
+<div class="highlight highlight-source-r"><pre>install.packages(c(<span class="pl-s"><span class="pl-pds">"</span>CircStats<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>dplyr<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>MASS<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>secr<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>tcltk2<span class="pl-pds">"</span></span>), 
+                 <span class="pl-v">dependencies</span> <span class="pl-k">=</span> <span class="pl-c1">TRUE</span>)</pre></div>
+
+<h3>
+<a id="install-the-gibbonsecr-package" class="anchor" href="#install-the-gibbonsecr-package" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install the gibbonsecr package</h3>
+
+<p>Once the prequisite R packages are installed you can install the <code>gibbonsecr</code> package by running the R code below.</p>
+
+<p><strong>Windows:</strong></p>
+
+<div class="highlight highlight-source-r"><pre>install.packages(<span class="pl-s"><span class="pl-pds">"</span>https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibbonsecr_1.0.zip<span class="pl-pds">"</span></span>, 
+                 <span class="pl-v">repos</span> <span class="pl-k">=</span> <span class="pl-c1">NULL</span>, <span class="pl-v">type</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>win.binary<span class="pl-pds">"</span></span>)</pre></div>
+
+<p><strong>Mac:</strong></p>
+
+<div class="highlight highlight-source-r"><pre>install.packages(<span class="pl-s"><span class="pl-pds">"</span>devtools<span class="pl-pds">"</span></span>, <span class="pl-v">dependencies</span> <span class="pl-k">=</span> <span class="pl-c1">TRUE</span>)
+<span class="pl-e">devtools</span><span class="pl-k">::</span>install_url(<span class="pl-s"><span class="pl-pds">"</span>https://github.com/dkidney/gibbonsecr/raw/master/binaries/gibbonsecr_1.0.tgz<span class="pl-pds">"</span></span>)
+</pre></div>
+
+<p>You only have to install the packages once (i.e. you wont need to run the code above every time you use the <code>giboonsecr</code> package). </p>
+
+<p><br></p>
+
+<hr>
+
+<p><a name="launch"></a></p>
+
+<h2>
+<a id="2-launch-the-user-interface" class="anchor" href="#2-launch-the-user-interface" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>2. Launch the user interface</h2>
+
+<p>Once everything has been successfully installed, open R (or RStudio) and type the following commands into the console:</p>
+
+<div class="highlight highlight-source-r"><pre>library(<span class="pl-smi">gibbonsecr</span>)
+gibbonsecr_gui()</pre></div>
+
+<p>The user interface should magically appear.</p>
+
+<p>You can open the manual for the user interface from the <em>Help</em> menu in the interface itself, or by running the following code in R:</p>
+
+<div class="highlight highlight-source-r"><pre>vignette(<span class="pl-s"><span class="pl-pds">"</span>gui<span class="pl-pds">"</span></span>, <span class="pl-v">package</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>gibbonsecr<span class="pl-pds">"</span></span>)</pre></div>
+
+<p><br></p>
+
+<hr>
+
+<p><a name="problems"></a></p>
+
+<h2>
+<a id="3-report-problems" class="anchor" href="#3-report-problems" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>3. Report problems</h2>
+
+<p>If you experience any problems with the installation process please email me at <a href="mailto:darrenkidney@yahoo.co.uk">darrenkidney@yahoo.co.uk</a> (please let me know what operating system you are using and the version numbers for your installations of R, RStudio and XQuartz).  </p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/dkidney/gibbonsecr/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/dkidney/gibbonsecr/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/dkidney/gibbonsecr"></a> is maintained by <a href="https://github.com/dkidney">dkidney</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
