@@ -13,7 +13,7 @@ nearest_rcpp <- function(A, B) {
     .Call('gibbonsecr_nearest_rcpp', PACKAGE = 'gibbonsecr', A, B)
 }
 
-negloglik_rcpp <- function(data, mask, pars, detected, usage, n, S, K, M, a, detectfn_code, bearings_pdf_code, distances_pdf_code) {
-    .Call('gibbonsecr_negloglik_rcpp', PACKAGE = 'gibbonsecr', data, mask, pars, detected, usage, n, S, K, M, a, detectfn_code, bearings_pdf_code, distances_pdf_code)
+negloglik_rcpp <- function(data, mask, pars, detected, usage, n, S, K, M, a, detfunc_code, bearings_pdf_code, distances_pdf_code) {
+    .Call('gibbonsecr_negloglik_rcpp', PACKAGE = 'gibbonsecr', data, mask, pars, detected, usage, n, S, K, M, a, detfunc_code, bearings_pdf_code, distances_pdf_code)
 }
 

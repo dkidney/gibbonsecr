@@ -2,16 +2,27 @@ Package: gibbonsecr
 Type: Package
 Title: SECR Analysis For Acoustic Gibbon Surveys
 Version: 1.0
-Date: 2015-06-10
-Authors@R: as.person(c(
-    "Darren Kidney <darrenkidney@googlemail.com> [aut, cre]",
-    "David Borchers <dlb@st-andrews.ac.uk> [ctb]"
-  ))
-Description: An implementation of Spatially Explicit Capture-Recapture (SECR) for the analyis of acoustic population surveys of gibbons.
+Date: 2016-03-04
+Authors@R: c(
+    person("Darren", "Kidney", , "darrenkidney@googlemail.com", c("aut", "cre")),
+    person("David", "Borchers", , "dlb@st-andrews.ac.uk", "ctb")
+    )
+Description: An implementation of Spatially Explicit Capture-Recapture (SECR)
+    for the analysis of acoustic population surveys of gibbons.
 License: GPL (>= 2)
 LazyData: TRUE
 VignetteBuilder: knitr
-Depends: R (>= 3.0.0)
-LinkingTo: Rcpp, RcppArmadillo
-Imports: CircStats, dplyr, MASS, methods, mgcv, parallel, raster, Rcpp, sp, secr, stats, stringr, tcltk, tcltk2, tools, utils
-Suggests: knitr, testthat
+Depends:
+    R (>= 3.2.4),
+    maptools
+LinkingTo:
+    Rcpp, RcppArmadillo
+Imports:
+    CircStats, dplyr, ggplot2, MASS, methods, mgcv, raster, Rcpp,
+    scales, secr, sp, stats, stringr, tcltk, tcltk2, tools, utils
+Suggests:
+    knitr
+RoxygenNote: 5.0.1
+Author: Darren Kidney [aut, cre],
+    David Borchers [ctb]
+Maintainer: Darren Kidney <darrenkidney@googlemail.com>

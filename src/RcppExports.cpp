@@ -43,8 +43,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // negloglik_rcpp
-double negloglik_rcpp(const List& data, const List& mask, const List& pars, const IntegerMatrix& detected, const IntegerMatrix& usage, int n, int S, int K, int M, double a, int detectfn_code, int bearings_pdf_code, int distances_pdf_code);
-RcppExport SEXP gibbonsecr_negloglik_rcpp(SEXP dataSEXP, SEXP maskSEXP, SEXP parsSEXP, SEXP detectedSEXP, SEXP usageSEXP, SEXP nSEXP, SEXP SSEXP, SEXP KSEXP, SEXP MSEXP, SEXP aSEXP, SEXP detectfn_codeSEXP, SEXP bearings_pdf_codeSEXP, SEXP distances_pdf_codeSEXP) {
+double negloglik_rcpp(const List& data, const List& mask, const List& pars, const IntegerMatrix& detected, const IntegerMatrix& usage, int n, int S, int K, int M, double a, int detfunc_code, int bearings_pdf_code, int distances_pdf_code);
+RcppExport SEXP gibbonsecr_negloglik_rcpp(SEXP dataSEXP, SEXP maskSEXP, SEXP parsSEXP, SEXP detectedSEXP, SEXP usageSEXP, SEXP nSEXP, SEXP SSEXP, SEXP KSEXP, SEXP MSEXP, SEXP aSEXP, SEXP detfunc_codeSEXP, SEXP bearings_pdf_codeSEXP, SEXP distances_pdf_codeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -58,10 +58,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< int >::type detectfn_code(detectfn_codeSEXP);
+    Rcpp::traits::input_parameter< int >::type detfunc_code(detfunc_codeSEXP);
     Rcpp::traits::input_parameter< int >::type bearings_pdf_code(bearings_pdf_codeSEXP);
     Rcpp::traits::input_parameter< int >::type distances_pdf_code(distances_pdf_codeSEXP);
-    __result = Rcpp::wrap(negloglik_rcpp(data, mask, pars, detected, usage, n, S, K, M, a, detectfn_code, bearings_pdf_code, distances_pdf_code));
+    __result = Rcpp::wrap(negloglik_rcpp(data, mask, pars, detected, usage, n, S, K, M, a, detfunc_code, bearings_pdf_code, distances_pdf_code));
     return __result;
 END_RCPP
 }

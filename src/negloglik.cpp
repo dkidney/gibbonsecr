@@ -9,19 +9,17 @@ using namespace Rcpp ;
 // -------------------------------------------------------------------------- //
 // -------------------------------------------------------------------------- //
 
-// @title
-// Evaluate the negative likelihood for data from a single array
-//
-// @description
-// This function is written using Rcpp function as is called by a wrapper function (\code{gibbonsecr_negloglik_wrapper}
-// (which is called by \code{gibbonsecr_fit} when \code{locations = FALSE}).
-//
-// @details
-// All inputs should be for a single array.
-//
-// @param data survey data
-// @param mask mask object
-// @param pars list of paramter values
+// @title Evaluate the negative likelihood for data from a single array
+// @description This function is written using Rcpp function as is called by a
+//   wrapper function (\code{negloglik_wrapper} (which is called by
+//   \link[gibbonsecr]{gfit} when \code{locations = FALSE}).
+// @details All inputs should be for a single array.
+// @param data a list of survey data with elements "capthist", "bearings" and
+//   "distanaces"
+// @param mask a list of mask information with elements "distances" and
+//   "bearings"
+// @param pars list of paramter values with elements "D", "g0", "sigma", "z",
+//   "pcall", "bearings", "distances"
 // @param detected TODO
 // @param usage TODO
 // @param n number of detected groups
@@ -29,7 +27,7 @@ using namespace Rcpp ;
 // @param K number of traps
 // @param M number of mask points
 // @param a area of each mask point
-// @param detectfn_code TODO
+// @param detfunc_code TODO
 // @param bear_code TODO
 // @param distances_pdf_code TODO
 // @author Darren Kidney \email{darrenkidney@@googlemail.com}
@@ -45,10 +43,9 @@ double negloglik_rcpp(
     int n,
     int S,
     int K,
-
     int M,
     double a,
-    int detectfn_code,
+    int detfunc_code,
     int bearings_pdf_code,
     int distances_pdf_code){
 
@@ -57,13 +54,13 @@ double negloglik_rcpp(
     // ---------------------------------------------------------------------- //
 
     // process generic inputs
-    IntegerVector capthist_       = data["capthist"]  ;
+    IntegerVector capthist_  = data["capthist"]  ;
     NumericVector dist_mask_ = mask["distances"] ;
-    NumericVector D_              = pars["D"]         ;
-    NumericVector g0_             = pars["g0"]        ;
-    NumericVector sigma_          = pars["sigma"]     ;
-    NumericVector pcall_          = pars["pcall"]    ;
-    NumericVector z_ ; switch(detectfn_code){
+    NumericVector D_         = pars["D"]         ;
+    NumericVector g0_        = pars["g0"]        ;
+    NumericVector sigma_     = pars["sigma"]     ;
+    NumericVector pcall_     = pars["pcall"]     ;
+    NumericVector z_ ; switch(detfunc_code){
         case 0: z_ = NA_REAL   ; break ; // set to NA if half normal
         case 1: z_ = pars["z"] ; break ; // set to z if hazard rate
     }
@@ -87,23 +84,24 @@ double negloglik_rcpp(
     // ---------------------------------------------------------------------- //
 
     // detetction probabilities for each maskpoint-occasion-trap combination
-    detectfn_pointer detectfn = get_detectfn(detectfn_code) ;
+    detfunc_pointer detfunc = get_detfunc(detfunc_code) ;
     arma::cube detprob = arma::zeros<arma::cube>(M,S,K) ;
     for (int k=0 ; k<K ; k++) {
         for (int s=0 ; s<S ; s++) {
             if (usage(k,s) == 1) {
-                switch(detectfn_code){
+                switch(detfunc_code){
                     case 0: constant = -0.5 * pow(sigma(s,k), -2) ; break ;
                     case 1: constant = -pow(sigma(s,k), z(s,k)) ; break ;
                 } ;
                 for (int m=0 ; m<M ; m++) {
-                    detprob(m,s,k) = detectfn(dist_mask(m,k), g0(s,k), sigma(s,k), z(s,k), constant) ;
+                    detprob(m,s,k) = detfunc(dist_mask(m,k), g0(s,k), sigma(s,k), z(s,k), constant) ;
                 }
             }
         }
     }
 
-    // arma::cube detprob = calc_detprob_rcpp(g0, sigma, z, dist_mask, usage, M, S, K, detectfn_code) ;
+    // arma::cube detprob = calc_detprob_rcpp(g0, sigma, z, dist_mask, usage, M,
+    // S, K, detfunc_code) ;
 
     // ---------------------------------------------------------------------- //
     //                                  pdot                                  //

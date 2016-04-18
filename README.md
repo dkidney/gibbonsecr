@@ -2,6 +2,10 @@
 gibbonsecr
 ===========
 
+Click [**here**](http://dkidney.github.io/gibbonsecr/docs/index.pdf) to download the PDF manual.
+
+Click [**here**](http://dkidney.github.io/gibbonsecr/index.html) view the online manual
+
 ### Contents
 
 <a href="#installation">**1. Installation**</a>
@@ -99,7 +103,7 @@ vignette("gui", package = "gibbonsecr")
 
 ## 3. Report problems
 
-If you experience any problems with the installation process please email me at darrenkidney@yahoo.co.uk (please let me know what operating system you are using and the version numbers for your installations of R, RStudio and XQuartz).  
+If you experience any problems with the installation process please email me at darrenkidney@googlemail.com (please let me know what operating system you are using and the version numbers for your installations of R, RStudio and XQuartz).  
 
 
 

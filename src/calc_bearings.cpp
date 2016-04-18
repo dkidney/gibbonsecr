@@ -14,7 +14,7 @@ NumericMatrix calc_bearings_rcpp(const NumericMatrix& A, const NumericMatrix& Z)
 
     NumericMatrix bearings(Z.nrow(), A.nrow()) ;
 
-    double opp, adj ;
+    double opp, adj  ;
 
     for (int k = 0 ; k < A.nrow() ; k++) {
 

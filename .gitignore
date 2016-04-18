@@ -10,11 +10,14 @@ debugging
 development
 inst/extdata/N.siki
 notes
+simulations
 src/*.dll
 src/*.o
 src/*.so
 src-i386
 src-x64
 temp
+testing
 TODO.docx
 vignettes_prep
+packrat/lib*/
