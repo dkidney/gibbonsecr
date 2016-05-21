@@ -7,12 +7,12 @@
 gui(prompt.save.on.exit = FALSE)
 }
 \arguments{
-\item{prompt.save.on.exit}{if \code{TRUE}, a message box is shown when the
-GUI window is closed, asking if the user wishes to save the workspace.}
+\item{prompt.save.on.exit}{if \code{TRUE}, a message box is shown when the GUI window
+is closed, asking if the user wishes to save the workspace.}
 }
 \description{
-A graphical user interface for the \pkg{gibbonsecr} package,
-  built using \pkg{\link[tcltk]{tcltk}}.
+A graphical user interface for the \pkg{gibbonsecr} package, built using
+  \pkg{\link[tcltk]{tcltk}}.
 
 See the online manual for more details
 \url{http://dkidney.github.io/gibbonsecr}.

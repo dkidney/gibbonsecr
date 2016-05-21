@@ -1,15 +1,15 @@
 
 #' @title Launch the graphical user interface
-#' @description A graphical user interface for the \pkg{gibbonsecr} package,
-#'   built using \pkg{\link[tcltk]{tcltk}}.
+#' @description A graphical user interface for the \pkg{gibbonsecr} package, built using
+#'   \pkg{\link[tcltk]{tcltk}}.
 #'
 #' See the online manual for more details
 #' \url{http://dkidney.github.io/gibbonsecr}.
-#' @param prompt.save.on.exit if \code{TRUE}, a message box is shown when the
-#'   GUI window is closed, asking if the user wishes to save the workspace.
-# @param quit.r.on.exit if \code{TRUE}, the background R process is closed when
-#   the GUI window is closed (keep this to \code{FALSE} unless \strong{R} is
-#   launched as a background process).
+#' @param prompt.save.on.exit if \code{TRUE}, a message box is shown when the GUI window
+#'   is closed, asking if the user wishes to save the workspace.
+# @param quit.r.on.exit if \code{TRUE}, the background R process is closed when the GUI
+#   window is closed (keep this to \code{FALSE} unless \strong{R} is launched as a
+#   background process).
 #' @examples
 #' \dontrun{
 #'
@@ -888,6 +888,11 @@ gui = function(prompt.save.on.exit = FALSE){
                 plot = base_plot +
                     geom_mask(robj$mask, covariate = j) +
                     geom_capthist(robj$capthist, "arrays")
+                if(!inherits(secr::covariates(robj$mask[[1]])[[j]],
+                             c("character", "factor"))){
+                    plot = plot +
+                        scale_fill_distiller(palette = "Spectral")
+                }
                 if(!is.null(robj$region))
                     plot = plot + geom_shp(robj$region)
                 print(plot)
@@ -1360,30 +1365,6 @@ gui = function(prompt.save.on.exit = FALSE){
         workspace_load_base(filename)
     }
 
-    # load_N_siki = function(){
-    #     folder = "~/Dropbox/projects/gibbons/N.siki/data"
-    #     tclvalue(tvar$detections.path) = file.path(folder, "detections.csv")
-    #     tclvalue(tvar$posts.path)      = file.path(folder, "posts.csv")
-    #     tclvalue(tvar$covariates.path) = file.path(folder, "covariates.csv")
-    #     tclvalue(tvar$bearings.units)  = "degrees"
-    #     tclvalue(tvar$distances.units) = "m"
-    #     tclvalue(tvar$buffer)          = "5000"
-    #     tclvalue(tvar$spacing)         = "250"
-    #     tclvalue(tvar$region.path)     = ""
-    #     tclvalue(tvar$habitat1.path)   = ""
-    #     tclvalue(tvar$habitat2.path) = ""
-    #     tclvalue(tvar$region.use)     = ""
-    #     tclvalue(tvar$habitat1.use)    = ""
-    #     tclvalue(tvar$habitat2.use)  = ""
-    #     robj$region    = NULL
-    #     robj$habitat1   = NULL
-    #     robj$habitat2 = NULL
-    #     robj$mask           = NULL
-    #     robj$fit            = NULL
-    #     data_import()
-    #     refresh()
-    # }
-
     # this should be disabled/removed/amended prior to release
     load_peafowl_data = function(){
         folder = "~/Dropbox/projects/greenpeafowl/data/dataframes"
@@ -1409,7 +1390,6 @@ gui = function(prompt.save.on.exit = FALSE){
         robj$habitat2 = NULL
         robj$mask     = NULL
         robj$fit      = NULL
-        # data_import()
         refresh()
     }
 
@@ -1908,8 +1888,8 @@ gui = function(prompt.save.on.exit = FALSE){
     # example data
     tkadd(menu$help, "command", label = "Example data - N.annamensis",
           command = load_N_annamensis_data)
-    tkadd(menu$help, "command", label = "Example data - peafowl",
-          command = load_peafowl_data)
+    # tkadd(menu$help, "command", label = "Example data - peafowl",
+    #       command = load_peafowl_data)
     # manual
     tkadd(menu$help, "separator")
     tkadd(menu$help, "command", label = "Online manual (html)",
@@ -1931,11 +1911,11 @@ gui = function(prompt.save.on.exit = FALSE){
     tkadd(menu$workspace, "command", label = "Clear workspace",
           command = workspace_clear)
     # example workspaces
-    tkadd(menu$workspace, "separator")
-    tkadd(menu$workspace, "command", label = "Example workspace - N.annamensis",
-          command = load_N_annamensis_workspace)
-    tkadd(menu$workspace, "command", label = "Example workspace - peafowl",
-          command = load_peafowl_workspace)
+    # tkadd(menu$workspace, "separator")
+    # tkadd(menu$workspace, "command", label = "Example workspace - N.annamensis",
+    #       command = load_N_annamensis_workspace)
+    # tkadd(menu$workspace, "command", label = "Example workspace - peafowl",
+    #       command = load_peafowl_workspace)
     # woking directory
     tkadd(menu$workspace, "separator")
     tkadd(menu$workspace, "command", label = "Set working directory",
