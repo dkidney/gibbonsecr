@@ -4,12 +4,11 @@ language: R
 sudo: false
 cache: packages
 
-warnings_are_errors: false
+r_check_args: --as-cran
+warnings_are_errors: true
 
 env:
-- _R_CHECK_FORCE_SUGGESTS_=false
-
-r_check_args: --as-cran
+  - _R_CHECK_FORCE_SUGGESTS_=false
 
 os:
   - osx
