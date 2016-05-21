@@ -32,6 +32,7 @@
 
 # assumes that f is a function of beta vector
 # makes a new function g which is the same as f but uses separate beta arguments
+#' @importFrom stats setNames
 delta_method = function(f, beta, vcov, ...){
     # checks ----------------------------------------------------------------- #
     if(!"beta" %in% names(formals(f)))

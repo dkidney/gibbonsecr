@@ -142,6 +142,7 @@ draw_bearings = function(x, distance = 500, legend = TRUE, groups = NULL, ...){
 
 # draw bearing arrows
 # - called by draw_bearings
+#' @importFrom graphics arrows
 arrows_bearings = function(bearing = 0, distance = 1000, trap = c(0,0), length = 0.1, ...){
     ne = bearing >= (0.0 * pi) & bearing < (0.5 * pi)
     se = bearing >= (0.5 * pi) & bearing < (1.0 * pi)
@@ -196,6 +197,7 @@ plot.gmask = function(x, covariate = NULL, sessions = NULL, ...){
 # @rdname plot_mask
 # @name image.gmask
 #' @method image gmask
+#' @importFrom graphics image
 # @export
 image.gmask = function(x, zvar = NULL, session = 1, ...){
     image(image_mask(x = x, zvar = zvar, session = session), ...)
@@ -204,6 +206,7 @@ image.gmask = function(x, zvar = NULL, session = 1, ...){
 # @rdname plot_mask
 # @name contour.gmask
 #' @method contour gmask
+#' @importFrom graphics contour
 # @export
 contour.gmask = function(x, zvar = NULL, session = 1, ...){
     contour(image_mask(x = x, zvar = zvar, session = session), ...)

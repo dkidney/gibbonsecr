@@ -18,8 +18,11 @@
 #' }
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @import tcltk
-#' @importFrom tcltk2 tk2tip
 #' @importFrom ggplot2 ggplot coord_fixed labs
+#' @importFrom grDevices dev.copy dev.list dev.off dev.set dev.size
+#' @importFrom stats as.formula confint predict vcov
+#' @importFrom tcltk2 tk2tip
+#' @importFrom utils browseURL
 #' @export
 
 gui = function(prompt.save.on.exit = FALSE){

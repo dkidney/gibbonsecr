@@ -537,6 +537,7 @@ check_mask = function(mask, capthist, mask.options = list()){
 ## -------------------------------------------------------------------------- ##
 ## -------------------------------------------------------------------------- ##
 
+#' @importFrom  stats as.formula
 check_model = function(model, fixed, model.options, capthist, mask, locations = FALSE){
     message("- checking model...")
     ##################################################
@@ -741,6 +742,7 @@ check_shp = function(poly, capthist){
 # this needs some work
 # allow some start values to be fixed
 
+#' @importFrom stats setNames
 check_start_values = function(start, capthist, mask, model.options, fixed, S, K, M, a, usage, design.matrices, par.labels, parindx, inv.link, mask.info, CV = 0.3){
     message("- checking start values...")
 

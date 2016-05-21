@@ -84,6 +84,7 @@ add_scaled_xy = function(x, meanSD){
 # general methods ==============================================================
 
 #' @method AIC gsecr
+#' @importFrom stats logLik coef
 #' @export
 AIC.gsecr = function(object, ..., k = 2){
     - 2 * logLik(object) + k * length(coef(object))
@@ -96,6 +97,7 @@ coef.gsecr = function(object, ...){
 }
 
 #' @method confint gsecr
+#' @importFrom stats confint.default
 #' @export
 confint.gsecr = function(object, parm, level = 0.95, ...){
     confint.default(object, parm, level, ...)
@@ -150,6 +152,7 @@ calc_bearings.default = function(x, y, ...){
     calc_bearings_rcpp(as.matrix(x), as.matrix(y))
 }
 
+#' @importFrom stats setNames
 calc_bearings.traps = function(x, y, ...){
     if(!inherits(y, "mask"))
         stop("y must be a 'mask' object")
@@ -217,6 +220,7 @@ calc_distances.default = function(x, y, ...){
     calc_distances_rcpp(x, y)
 }
 
+#' @importFrom stats setNames
 calc_distances.traps = function(x, y, ...){
     if(!inherits(y, "mask"))
         stop("y must be a 'mask' object")
@@ -262,6 +266,7 @@ get_distances = function(capthist){
 
 # predict methods ==============================================================
 
+#' @importFrom stats setNames
 predict_submodel = function(fit, beta = NULL, submodel = "D", newdata = NULL){
     # check inputs ----------------------------------------------------------- #
     if(is.null(beta)) beta = coef(fit)
@@ -337,6 +342,7 @@ predict_1D_point = function(fit, x, which = "detfunc", beta = NULL, newdata = NU
 
 # get interval estimates for 1D submodels
 #' @importFrom MASS mvrnorm
+#' @importFrom stats quantile vcov
 predict_1D_interval = function(fit, x, which = "detfunc", level = 0.95, method = "delta", nboot = 999, newdata = NULL, true.distance = 500, ...){
 
     # check inputs ----------------------------------------------------------- #
@@ -469,6 +475,7 @@ predict_2D_point = function(fit, mask, traps, which = "detsurf", session = 1, be
 }
 
 # get interval estimates for 2D submodels
+#' @importFrom stats qnorm vcov
 predict_2D_interval = function(fit, x, which = "detfunc", level = 0.95, method = "delta", nboot = 999, newdata = NULL, true.distance = 500, ...){
     # delta method ----------------------------------------------------------- #
     if(method == "delta"){
@@ -491,6 +498,7 @@ predict_2D_interval = function(fit, x, which = "detfunc", level = 0.95, method =
 }
 
 #' @method predict gsecr
+#' @importFrom stats vcov
 #' @export
 predict.gsecr = function(object, newdata = NULL, submodels = NULL, type = c("response", "link"), se.fit = TRUE, level = 0.95, method = "delta", nboot = 999, ...){
     type = match.arg(type)
@@ -806,6 +814,7 @@ summary.gcapthist = function(object, ...){
 # @example inst/examples/examples-N.annamensis-analysis.r
 # @seealso \link[gibbonsecr]{gsecr}
 #' @method summary gsecr
+#' @importFrom stats AIC vcov
 #' @export
 
 summary.gsecr = function(object, ...){

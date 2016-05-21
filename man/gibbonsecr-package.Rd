@@ -10,23 +10,23 @@ An implementation of Spatially Explicit Capture-Recapture (SECR) for
 estimating the density of gibbon groups from acoustic surveys.
 
 This package also contains a user interface which can be accessed using the
-\code{\link[gibbonsecr]{gui}} function. See the online manual for more
-details \url{http://dkidney.github.io/gibbonsecr}.
+\code{\link[gibbonsecr]{gui}} function. See the online manual for more details
+\url{http://dkidney.github.io/gibbonsecr}.
 
-\pkg{gibbonsecr} relies on several functions from the \pkg{\link[secr]{secr}}
-package and uses an analagous system of objects. Model fitting is performed
-in a similar way using a fine grid of points called a mask to approximate the
-spatial integration component of the SECR likelihood. The defintion of 'trap'
-and 'session' are also consistent with \pkg{secr}. However \pkg{gibbonsecr}
-differs from \pkg{secr} in the following respects:
+\pkg{gibbonsecr} relies on several functions from the \pkg{\link[secr]{secr}} package
+and uses an analagous system of objects. Model fitting is performed in a similar way
+using a fine grid of points called a mask to approximate the spatial integration
+component of the SECR likelihood. The defintion of 'trap' and 'session' are also
+consistent with \pkg{secr}. However \pkg{gibbonsecr} differs from \pkg{secr} in the
+following respects:
 \enumerate{
  \item Supplementary information on detected animals in the form of estimated
- bearings and estimated distances can be incorporated in addition to the
- recapture data to improve precision in the density estimate.
+ bearings and estimated distances can be incorporated in addition to the recapture
+ data to improve precision in the density estimate.
  \item Stochastic availability of animals can be modelled using the parameter
- \code{pcall}. In general, this represents the proportion of animals being
- availablity for detection on each survey occasion. For gibbons, it can be
- interpreted as the proportion of groups that call on a given survey day.
+ \code{pcall}. In general, this represents the proportion of animals being availablity
+ for detection on each survey occasion. For gibbons, it can be interpreted as the
+ proportion of groups that call on a given survey day.
  \item Trap data objects associated with capture history objects are always
  of \code{type} \code{\link[secr]{proximity}}.
  \item \strong{no group cov}.
@@ -34,32 +34,27 @@ differs from \pkg{secr} in the following respects:
 }
 The main functions in \pkg{gibbonsecr} are:
 \tabular{ll}{
- \code{\link[gibbonsecr]{import_data}} \tab importing survey data, listening
- post locations and non-spatial covariates \cr
- \code{\link[gibbonsecr]{import_shp}}  \tab importing GIS shapefiles
- (\code{.shp}) \cr
+ \code{\link[gibbonsecr]{import_data}} \tab importing survey data, listening post
+ locations and non-spatial covariates \cr
+ \code{\link[gibbonsecr]{import_shp}}  \tab importing GIS shapefiles (\code{.shp}) \cr
  \code{\link[gibbonsecr]{make_mask}}   \tab constructing mask objects \cr
  \code{\link[gibbonsecr]{gfit}}        \tab fitting models \cr
 }
-See \code{\link[gibbonsecr]{N.annamensis}} for an example data set from a
-survey of \emph{Nomascus annamensis} in northwestern Cambodia.
-}
-\section{Acknowledgements}{
- sdfasdfafd
+See \code{\link[gibbonsecr]{N.annamensis}} for an example data set from a survey of
+\emph{Nomascus annamensis} in northwestern Cambodia.
 }
 \author{
 Darren Kidney \email{darrenkidney@googlemail.com}
 }
 \references{
-Kidney, D., Rawson, B., Borchers, D. L., Stevenson, B. C.,
-  Marques, T. A. & Thomas, L.  An efficient acoustic density estimation
-  method with human detectors applied to gibbons in Cambodia. Submitted to
-  \emph{PlosOne}.
+Kidney D., Rawson B.M., Borchers D.L., Stevenson B.C., Marques T.A., & Thomas L.
+  2016. An Efficient Acoustic Density Estimation Method with Human Detectors Applied
+  to Gibbons in Cambodia. \emph{PLoS ONE} 11(5): e0155066.
 
-  Borchers, D. L., Stevenson, B. C., Kidney, D., Thomas, L., & Marques, T. A.
-  (2015). A unifying model for capture-recapture and distance sampling
-  surveys of wildlife populations. \emph{Journal of the American Statistical
-  Association}, 110(509), 195-204.
+  Borchers, D. L., Stevenson, B. C., Kidney, D., Thomas, L., & Marques, T. A. 2015. A
+  Unifying Model for Capture-Recapture and Distance Sampling Surveys of Wildlife
+  Populations. \emph{Journal of the American Statistical Association}, 110(509),
+  195-204.
 }
 \seealso{
 \link[gibbonsecr]{N.annamensis}, \link[gibbonsecr]{import_data},

@@ -96,6 +96,7 @@
 #' @seealso \link[gibbonsecr]{plot.gcapthist}, \link[gibbonsecr]{import_shp}
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @example inst/examples/example-import_data.r
+#' @importFrom utils read.csv
 #' @export
 
 import_data = function(detections, posts, covariates = NULL, details = list()){

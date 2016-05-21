@@ -84,6 +84,7 @@
 #' @author Darren Kidney \email{darrenkidney@@googlemail.com}
 #' @seealso \link[gibbonsecr]{plot.gsecr}
 #' @example inst/examples/example-gfit.r
+#' @importFrom stats nlm
 #' @export
 
 gfit = function(capthist, model = list(), mask = NULL, fixed = list(), model.options = list(), mask.options = list(), fitting.options = list(), start = NULL, trace = FALSE){
@@ -547,6 +548,7 @@ make_design_matrices = function(model, model.frames, smooth.setup, sessions = NU
 # if smooth.setup is provided then this is used to pursuade mgcv::predict.gam to
 # provide a design matrix using an existing gam model and new covariate data
 
+#' @importFrom stats model.matrix
 make_model_matrix = function(data, smooth.setup){
     formula = smooth.setup$formula
     response = all.vars(formula)[1]
