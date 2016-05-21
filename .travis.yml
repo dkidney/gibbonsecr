@@ -10,3 +10,6 @@ env:
 - _R_CHECK_FORCE_SUGGESTS_=false
 
 r_check_args: --as-cran
+
+os:
+  - osx
