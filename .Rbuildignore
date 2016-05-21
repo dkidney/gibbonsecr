@@ -1,2 +1,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+binaries
+data_prep
+NEWS.md
+testing
+^packrat/
+^\.Rprofile$
+^\.travis\.yml$
