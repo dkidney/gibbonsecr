@@ -1,3 +1,4 @@
+![](https://travis-ci.org/dkidney/gibbonsecr.svg?branch=master)
 
 gibbonsecr
 ===========
