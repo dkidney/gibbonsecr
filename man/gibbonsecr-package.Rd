@@ -47,53 +47,6 @@ survey of \emph{Nomascus annamensis} in northwestern Cambodia.
 \section{Acknowledgements}{
  sdfasdfafd
 }
-
-\section{Issues to resolve}{
-
-\strong{PRIORITY}
- \itemize{
-  \item \strong{predict - how to deal with centred covariates}
-  \item \strong{predict - check bounds of newdata}
-  \item \strong{example-N.annamensis}
-  \item \strong{documentation - gcapthist list attributes}
-  \item \strong{gui - tk2tips - use stringr::str_wrap}
-  \item \strong{gui - update screenshots}
-  \item \strong{gui - add region to plots}
-  \item \strong{testing - susan cheynes data}
-  \item \strong{print.summary.gcapthist}
-  \item \strong{print.summary.gfit}
- }
-\strong{general}
- \itemize{
-  \item gfit - calculate ESA so it isn't done every time in summary()
-  \item summary should invisible return a list and have gmask_summary class
-  and print.gmask_summary
-  \item make MS a generic function?
-  \item print.mask to print using tbl_df
-  \item clean up delta method function(s) - see r bloggers article: "Delta
-  Method Confidence Bands for Gaussian Density"
-  \item try using packrat
- }
-\strong{plotting}
- \itemize{
-  \item if density model covariates are all character then consider allowing
-  ggplot method to use density = factor. Alternatively, have a 'factor =
-  TRUE' argument to force density to be a factor.
- }
-\strong{documentation}
- \itemize{
-  \item add more detail to classes help page
-  \item update plosone reference if/when it's accepted
-}
-\strong{Future developments}
- \itemize{
-  \item simulate functions
-  \item interval estimates for bearings and distances
-  \item function to convert multi-occasion survey data to independent occasions
-  \item plots for GAM models
-  \item option to use known locations
-}
-}
 \author{
 Darren Kidney \email{darrenkidney@googlemail.com}
 }
