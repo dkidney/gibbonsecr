@@ -238,16 +238,8 @@ calc_distances.traps = function(x, y, ...){
         x = if(ms(x)) x[[i]] else x
         y = if(ms(y)) y[[i]] else y
         dists = calc_distances_rcpp(as.matrix(x), as.matrix(y))
-        # dists = calc_distances_rcpp(
-        #     as.matrix(if(ms(x)) x[[i]] else x),
-        #     as.matrix(if(ms(y)) y[[i]] else y)
-        # )
         dimnames(dists) = list(rownames(y), rownames(x))
         return(dists)
-        #         x = calc_distances_rcpp(
-        #             as.matrix(if(ms(x)) x[[i]] else x),
-        #             as.matrix(if(ms(y)) y[[i]] else y)
-        #         )
     }), session.names)
     if(!ms(x) && !ms(y)) distances = distances[[1]]
     return(distances)
@@ -267,61 +259,6 @@ get_distances = function(capthist){
     return(distances)
 }
 
-
-# fitted methods ===============================================================
-
-fitted_submodel = function(fit, submodel = "D", se.fit = TRUE){
-    predict_submodel(fit, beta = NULL, submodel = submodel, newdata = NULL)
-}
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
-
-# internal function used for obtaining predicted detection or density surface
-# mask and traps need to be supplied separately to allow the use of
-# regionmask and regiontraps when plotting density surfaces
-# the beta argument is also supplied separately so that the function can be
-# passed into delta_method
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
-
-# fitted_pdot_values = function(beta, fit, session = 1){ # beta = coef(fit)
-#
-#     submodels = switch(fit$model.options$detfunc + 1,
-#                        c("g0","sigma","pcall"),
-#                        c("g0","sigma","z","pcall"))
-#
-#     S = n_occasions(fit$capthist)[session]
-#     K = n_traps(fit$capthist)[session]
-#     M = size(fit$mask)[session]
-#     # M = mask_npoints(fit$mask)[session]
-#
-#     submodel.arrays = make_submodel_arrays(
-#         beta            = beta,
-#         parindx         = fit$parindx,
-#         fixed           = fit$fixed,
-#         design.matrices = fit$design.matrices[session],
-#         inv.link        = fit$inv.link,
-#         S               = S,
-#         K               = K,
-#         submodels       = submodels
-#     )[[session]]
-#
-#     calc_pdot(
-#         detfunc  = fit$model.options$detfunc,
-#         g0        = submodel.arrays[["g0"]],
-#         sigma     = submodel.arrays[["sigma"]],
-#         z         = submodel.arrays[["z"]],
-#         pcall     = submodel.arrays[["pcall"]],
-#         distances = fit$mask.info[[session]][["distances"]],
-#         usage     = usage(traps(fit$capthist[[session]])),
-#         M         = M,
-#         S         = S,
-#         K         = K
-#     )
-#
-# }
 
 # predict methods ==============================================================
 
@@ -598,7 +535,7 @@ predict.gsecr = function(object, newdata = NULL, submodels = NULL, type = c("res
 
     # boot method ------------------------------------------------------------ #
     if(se.fit && method == "boot"){
-        boot = mvrnorm(nboot, coef(fit), vcov(fit))
+        boot = mvrnorm(nboot, coef(object), vcov(object))
         values = sapply(submodels, function(submodel){ # submodel = "D"
             args$submodel = submodel
             values = do.call(cbind, sapply(1:nboot, function(i){
@@ -624,102 +561,8 @@ predict.gsecr = function(object, newdata = NULL, submodels = NULL, type = c("res
         }, simplify = FALSE)
     }
 
-    # reshape ---------------------------------------------------------------- #
-    # index = if(se.fit) c("estimate","lower","upper") else "estimate"
-    # values = sapply(index, function(i){
-    #     do.call(data.frame, sapply(values, function(x) x[[i]], simplify = FALSE))
-    # }, simplify = FALSE)
-    # values = lapply(values, function(x) do.call(cbind, x))
     return(values)
 }
-
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
-
-# predict_1D_point_old = function(beta, fit, session, x, which = "detfunc", true.distance = 500){
-#
-#     if(!which %in% c("detfunc","bearings","distances"))
-#         stop("which must be one of: 'detfunc', 'bearings', 'distances'")
-#
-#     ##################################################
-#     ## submodels
-#
-#     submodels = if(which == "detfunc"){
-#         switch(fit$model.options$detfunc + 1, c("g0","sigma"), c("g0","sigma","z"))
-#     }else which
-#     # check model exists
-#     for(submodel in submodels){
-#         if(fit$model[[submodel]] == 0) stop("no ", submodel, " model to plot")
-#     }
-#
-#     ##################################################
-#     ## function to generate values
-#
-#     FUN = switch(
-#         which,
-#         "detfunc"  = list(hn, hr)[[fit$model.options$detfunc + 1]],
-#         "bearings"  = list(dvm, dwrpcauchy)[[fit$model.options$bearings]],
-#         "distances" = list(dgamma, dlnorm)[[fit$model.options$distances]]
-#     )
-#     EX = switch(which, "bearings" = 0, "distances" = true.distance, NULL)
-#
-#     ##################################################
-#     ## design matrices
-#
-#     design.matrices = sapply(submodels, function(submodel){ # submodel = "sigma"
-#         covs = all.vars(fit$model[[submodel]]) # covs
-#         if(length(covs) == 0){
-#             model.frame = data.frame(matrix(0, nrow = 1, ncol = 0))
-#         }else{
-#             # all covariates (from all sessions)
-#             model.frame = do.call(rbind, lapply(fit$model.frames, function(x){
-#                 x[[submodel]]
-#             })) # head(model.frame)
-#             # extract reference level (factors) or mean (numeric) for each cov
-#             model.frame = do.call(cbind, sapply(covs, function(cov){
-#                 # cov = covs[1] ; cov
-#                 out = list()
-#                 out[[cov]] = if(inherits(model.frame[[cov]], "factor")){
-#                     levs = levels(model.frame[[cov]])
-#                     factor(levs[1], levels = levs)
-#                 }else{
-#                     mean(model.frame[,cov])
-#                 }
-#                 as.data.frame(out)
-#             }, simplify = FALSE)) # str(model.frame)
-#         }
-#         make_model_matrix_old(fit$model[[submodel]],
-#                           model.frame,
-#                           fit$smooth.setup[[submodel]])
-#     }, simplify = FALSE)
-#     # get submodel arrays - each array will be a 1 by 1 matrix
-#     design.matrices = list("1" = design.matrices)
-#
-#     ##################################################
-#     ## convert to submodel arrays and return function values
-#
-#     submodel.arrays = make_submodel_arrays(
-#         beta            = beta,
-#         parindx         = fit$parindx,
-#         fixed           = fit$fixed,
-#         design.matrices = design.matrices,
-#         inv.link        = fit$inv.link,
-#         S               = c("1" = 1),
-#         K               = c("1" = 1),
-#         submodels       = submodels,
-#         sessions        = "1")[["1"]]
-#     par = as.numeric(submodel.arrays)
-#     FUN(x, par, EX)
-#
-# }
-#
-# ## -------------------------------------------------------------------------- ##
-# ## -------------------------------------------------------------------------- ##
-
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
 
 
 # print methods ================================================================
@@ -909,10 +752,6 @@ summary.gcapthist = function(object, ...){
         cat("\nCovariates:\n")
         covlevels = covlevels(object)
         covtable = do.call(rbind, sapply(names(covlevels), function(covlevel){
-            # covlevel = "sessioncov"
-            # covlevel = "trapcov"
-            # covlevels = c("sessioncov", "trapcov", "timecov", "timevaryingcov")
-            #         covtable = do.call(rbind, sapply(covlevels, function(covlevel){
             # covariate level
             level = switch(covlevel,
                            "sessioncov"     = "array",
@@ -952,8 +791,6 @@ summary.gcapthist = function(object, ...){
             return(covtable)
         }, simplify = FALSE))
         print(as.data.frame(covtable), quote = FALSE, row.names = FALSE, right = FALSE)
-        # rownames(covtable) = ""
-        # print(covtable, quote = FALSE, row.names = FALSE, right = FALSE)
     }
 
     invisible()
@@ -974,9 +811,11 @@ summary.gcapthist = function(object, ...){
 summary.gsecr = function(object, ...){
 
     if(object$nlm$code >= 3){
-        warning(paste0("Fitting algorithm did not converge (nlm code: ", object$nlm$code, ")"))
+        warning(paste0("Fitting algorithm did not converge (nlm code: ",
+                       object$nlm$code, ")"))
     }else if(object$nlm$iterations == 0){
-        warning(paste0("Fitting algorithm did not converge (n iterations: ", object$nlm$iterations, ")"))
+        warning(paste0("Fitting algorithm did not converge (n iterations: ",
+                       object$nlm$iterations, ")"))
     }else{
 
         ## model ------------------------------------------------------------ ##
@@ -1085,7 +924,6 @@ summary.gsecr = function(object, ...){
         cat("\nTime taken: ", round(object$run.time,1), " ",
             attr(object$run.time, "units"), " (", object$nlm$iterations,
             " iterations)\n", sep = "")
-        # cat("\n")
 
     }
 
@@ -1216,9 +1054,6 @@ timecov = function(x){
         # if value is NULL then set value to list of NULLs
         if(is.null(value))
             value = sapply(session(x), function(i) NULL, simplify = FALSE)
-        # if(!inherits(value, "list") || inherits(value, "data.frame")){
-        # stop("expecting a list")
-        # }else{
         if(length(value) != length(x)){
             stop("length(timecov) should equal nsessions")
         }
@@ -1226,7 +1061,6 @@ timecov = function(x){
             timecov(x[[i]]) <- value[[i]]
         }
         x
-        # }
     }else{
         if(!is.null(value)){
             if(!inherits(value, "data.frame")){
@@ -1322,7 +1156,6 @@ traps_meanSD = function(capthist){
     secr::getMeanSD(traps)
 }
 
-## -------------------------------------------------------------------------- ##
 # bespoke methods ==============================================================
 
 covlevels = function(x){
@@ -1359,9 +1192,6 @@ covlevels = function(x){
     return(covlevels)
 }
 
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
-
 covtable = function(data, w = 50){
     covtable = do.call(rbind, lapply(colnames(data), function(i){
         factor = inherits(data[[i]], "factor")
@@ -1386,9 +1216,6 @@ covtable = function(data, w = 50){
     }))
     return(covtable)
 }
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
 
 # @rdname get_bearings_captures_distances
 # @name get_captures
@@ -1422,9 +1249,6 @@ get_captures = function(capthist, summarise = NULL){
     return(captures)
 }
 
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
-
 get_esa = function(fit){
     if(!inherits(fit, "gsecr"))
         stop("expecting a gsecr object")
@@ -1450,17 +1274,12 @@ get_esa = function(fit){
             K               = n_traps(fit$capthist),
             M               = size(fit$mask),
             a               = area(fit$mask)
-            # M               = mask_npoints(fit$mask),
-            # a               = mask_area(fit$mask)
         )
 
     }
 
     return(esa)
 }
-
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
 
 # constructs default newdata
 # extracts the design matrix (or matrices) for the submodels supplied
@@ -1496,16 +1315,10 @@ default_newdata = function(fit, submodels = NULL){
 }
 
 
-## -------------------------------------------------------------------------- ##
-## -------------------------------------------------------------------------- ##
-
 # convert a list of capthists, traps or mask to a multi-session object
-
 MS = function(x, session.names = NULL){
 
-    ##################################################
-    ## checks
-
+    # checks inputs ---------------------------------------------------------- #
     if(!inherits(x, "list"))
         x = list(x)
     # check all elements have the same class
@@ -1516,16 +1329,12 @@ MS = function(x, session.names = NULL){
     if(!any(classesOK))
         stop("requires 'capthist', 'traps' or 'mask' objects")
 
-    ##################################################
-    ## convert to multi-session
-
+    # convert to multi-session ----------------------------------------------- #
     class = classes[classesOK]
     if(!(inherits(x, "list") && inherits(x, class)))
         class(x) = c("list", class)
 
-    ##################################################
-    ## check session names
-
+    # check session names ---------------------------------------------------- #
     if(is.null(session.names))
         session.names = session(x)
     if(length(session.names) == 0)
@@ -1537,7 +1346,6 @@ MS = function(x, session.names = NULL){
        anyNA(session.names))
         session.names = names(x)
     if(is.null(session.names)){
-        # message("- using default session.names")
         session.names = as.character(1:length(x))
     }
     # check session names are unique and have correct length
@@ -1568,33 +1376,3 @@ make_regiontraps = function(x, ms = TRUE){
     if(ms) regiontraps = MS(regiontraps)
     return(regiontraps)
 }
-
-# make_regiontraps = function(x){
-#     if(inherits(x, "gsecr"))
-#         x = traps(x$capthist)
-#     if(inherits(x, "capthist"))
-#         x = traps(x)
-#     if(!inherits(x, "traps"))
-#         stop("expecting a traps object")
-#     if(!ms(x)){
-#         message("can't rbind single-session traps")
-#         return(x)
-#     }
-#     # trap attributes
-#     # attrs = lapply(x, attributes)
-#     # check detector types
-#     # types = sapply(attrs, function(x) x$detector)
-#     # if(!all(types == types[1]))
-#         # stop("can't rbind traps with different detector types")
-#     # combine coordinates
-#     regiontraps = do.call(rbind, lapply(x, as.data.frame))
-#     # add attributes
-#     class(regiontraps) = c("traps","data.frame")
-#     covariates(regiontraps) = do.call(rbind, lapply(x, covariates))
-#     # usage(regiontraps) = do.call(rbind, lapply(x, usage))
-#     attr(regiontraps, "spacex") = NA
-#     attr(regiontraps, "spacey") = NA
-#     attr(regiontraps, "spacing") = NA
-#     return(regiontraps)
-# }
-

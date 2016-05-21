@@ -4,15 +4,11 @@
 \alias{gui}
 \title{Launch the graphical user interface}
 \usage{
-gui(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE)
+gui(prompt.save.on.exit = FALSE)
 }
 \arguments{
 \item{prompt.save.on.exit}{if \code{TRUE}, a message box is shown when the
 GUI window is closed, asking if the user wishes to save the workspace.}
-
-\item{quit.r.on.exit}{if \code{TRUE}, the background R process is closed when
-the GUI window is closed (keep this to \code{FALSE} unless \strong{R} is
-launched as a background process).}
 }
 \description{
 A graphical user interface for the \pkg{gibbonsecr} package,

@@ -1,8 +1,8 @@
 Package: gibbonsecr
 Type: Package
-Title: SECR Analysis For Acoustic Gibbon Surveys
+Title: SECR Analysis for Acoustic Gibbon Surveys
 Version: 1.0
-Date: 2016-03-04
+Date: 2016-04-24
 Authors@R: c(
     person("Darren", "Kidney", , "darrenkidney@googlemail.com", c("aut", "cre")),
     person("David", "Borchers", , "dlb@st-andrews.ac.uk", "ctb")
@@ -11,7 +11,6 @@ Description: An implementation of Spatially Explicit Capture-Recapture (SECR)
     for the analysis of acoustic population surveys of gibbons.
 License: GPL (>= 2)
 LazyData: TRUE
-VignetteBuilder: knitr
 Depends:
     R (>= 3.2.4),
     maptools

@@ -625,13 +625,13 @@ check_model = function(model, fixed, model.options, capthist, mask, locations = 
 
     covlevels = c(covlevels(capthist), covlevels(mask))
     for(submodel in names(model)){ # submodel = "D"
-        # check for as.numeric and as.factor
-        terms = attr(terms(model[[submodel]]), "term.labels")
-        notallowed = grepl("^as.numeric\\(", terms) |
-            grepl("^as.factor\\(", terms) |
-            grepl("^as.character\\(", terms)
-        if(any(notallowed))
-            stop("formulas containing 'as.numeric', 'as.factor', etc. not currently implemented", call. = FALSE)
+        # # check for as.numeric and as.factor
+        # terms = attr(terms(model[[submodel]]), "term.labels")
+        # notallowed = grepl("^as.numeric\\(", terms) |
+        #     grepl("^as.factor\\(", terms) |
+        #     grepl("^as.character\\(", terms)
+        # if(any(notallowed))
+        #     stop("formulas containing 'as.numeric', 'as.factor', etc. not currently implemented", call. = FALSE)
         # check for covs that don't exists
         covs = all.vars(model[[submodel]])
         allcovs = unique(unname(unlist(covlevels)))

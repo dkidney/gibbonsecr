@@ -111,7 +111,7 @@ gfit = function(capthist, model = list(), mask = NULL, fixed = list(), model.opt
         model, traps(capthist), mask, n_occasions(capthist),
         sessioncov(capthist), timecov(capthist))
     smooth.setup = make_smooth_setup(model, model.frames)
-    design.matrices = get_design_matrices(smooth.setup, model.frames)
+    design.matrices = make_design_matrices(model, model.frames, smooth.setup)
     par.labels = make_par_labels(design.matrices, fixed)
     parindx = make_parindx(par.labels[,"unique"])
     inv.link = get_inv_link(model, fixed, model.options)
@@ -183,7 +183,6 @@ gfit = function(capthist, model = list(), mask = NULL, fixed = list(), model.opt
     class(fit) = c("gsecr", class(fit))
     return(fit)
 }
-
 
 # nlm input function ===========================================================
 
@@ -294,37 +293,6 @@ calc_pdot = function(detfunc, g0, sigma, z, pcall, distances, usage, M, S, K){
 
 #==============================================================================#
 
-# check to see if a formula contains gam smooth terms
-# contains_smooth_terms = function(formula){
-#     if(!inherits(formula, "formula")) stop("expecting a formula")
-#     length(smooth_terms(formula)) > 0
-# }
-#
-# # extract smooth terms from gam formula
-# smooth_terms = function(formula){
-#     if(!inherits(formula, "formula")) stop("expecting a formula")
-#     terms = attr(terms(formula), "term.labels")
-#     i = grepl("s\\(", terms) |
-#         grepl("te\\(", terms) |
-#         grepl("ti\\(", terms) |
-#         grepl("t2\\(", terms)
-#     return(terms[i])
-# }
-#
-# # extract variables used in smooth terms in gam formula
-# smooth_vars = function(formula){
-#     if(!inherits(formula, "formula")) stop("expecting a formula")
-#     if(contains_smooth_terms(formula)){
-#         unique(do.call(c, lapply(smooth_terms(formula), function(x){
-#             all.vars(as.formula(paste("~", x)))
-#         })))
-#     }else{
-#         character(0)
-#     }
-# }
-
-#==============================================================================#
-
 # gamma par is the shape parameter
 # lnorm par is sigma
 
@@ -336,23 +304,6 @@ cv_to_pdfpar = function(cv = 0.3, which = c("vm","gamma","lnorm")){
         "lnorm" = sqrt(log(1 + cv^2))
     )
 }
-
-#==============================================================================#
-
-# uses the lognormal method to get estimates and intervals for density
-
-# density_intervals = function(EX, VarX, alpha = 0.05){
-#     # E[exp(X)]
-#     est = exp(EX + VarX/2)
-#     # sqrt(Var[exp(X)])
-#     se  = sqrt((exp(VarX) - 1) * exp(2 * EX + VarX))
-#     out = cbind(
-#         est   = est,
-#         lower = est + qnorm(alpha / 2) * se,
-#         upper = est - qnorm(alpha / 2) * se
-#     )
-#     return(out)
-# }
 
 # distances distributions ======================================================
 
@@ -391,311 +342,39 @@ dwrpcauchy = function(x, par, EX){
     CircStats::dwrpcauchy(theta = x, mu = EX, rho = par)
 }
 
-#==============================================================================#
+# design matrices etc. =========================================================
 
-# extract the design matrix component from the smooth.setup object
-# need to identify which rows of X correspond to which session
+# return a 'smooth.setup' object (i.e 'G') for all models
+# smooth.setup used inside make_model_matrix (which is inside make_design_matrices)
 
-get_design_matrices = function(smooth.setup, model.frames){
-    # count the number of rows per session for each submodel model frame
-    rows = sapply(names(smooth.setup), function(submodel){
-        # get number of rows per model frame
-        nrows = sapply(model.frames, function(x){
-            nrow(x[[submodel]])
-        })
-        # convert to row numbers in smooth.setup X
-        rows = sapply(nrows, function(i) 1:i, simplify = FALSE)
-        if(length(rows) > 1)
-            for(i in 2:length(rows)) rows[[i]] = rows[[i]] + max(rows[[i-1]])
-        return(rows)
-    }, simplify = FALSE)
-    # extract the rows of X's from the submodel smooth.setup object
-    # corresponding to each session
-    sapply(names(model.frames), function(session){
-        sapply(names(smooth.setup), function(submodel){
-            i = rows[[submodel]][[session]]
-            X = smooth.setup[[submodel]][["X"]][i, , drop = FALSE]
-            colnames(X) = smooth.setup[[submodel]][["term.names"]]
-            return(X)
-        }, simplify = FALSE)
-    }, simplify = FALSE)
-}
+# function to make smooth setup for all models
+# allows use of more complex formula syntax (e.g. as.numeric(x))
 
-#==============================================================================#
-
-get_inv_link = function(model, fixed, model.options){
-    inv.link = list(
-        "D"         = exp,
-        "g0"        = invlogit,
-        "sigma"     = exp,
-        "z"         = exp,
-        "pcall"     = invlogit,
-        "bearings"  = if(model.options$bearings == 1) exp else invlogit,
-        #"distances" = if(model.options$distances == 1) exp else invlogit
-        "distances" = exp
-    )
-    for(i in names(inv.link)){
-        if(!i %in% names(model))
-            inv.link[[i]] = NULL
-    }
-    # fixed pars have identity link
-    if(length(fixed) > 0){
-        for(par in names(fixed)){
-            inv.link[[par]] = function(x) x
+#' @importFrom dplyr bind_rows
+make_smooth_setup = function(model, model.frames){
+    sapply(names(model), function(submodel){ # submodel = names(model)[4] ; submodel
+        # combine covariates for all sessions
+        data = as.data.frame(do.call(
+            "bind_rows",
+            sapply(names(model.frames), function(session){
+                model.frames[[session]][[submodel]]
+            }, simplify = FALSE)
+        ))
+        # add dummy respobse variable to left hand side to formula
+        # use the submodel name since this is unlikely to the name of a covariate
+        formula = model[[submodel]]
+        eval(parse(text = paste0("formula = update.formula(formula,",
+                                 submodel, " ~ .)")))
+        # add dummy column to the data
+        data[[submodel]] = 1
+        # get the 'G' object from the gam
+        if(nrow(data) == 1){
+            # gam throws an error if nrow = 1
+            list(formula = formula)
+        }else{
+            mgcv::gam(formula, data = data, fit = FALSE)
         }
-    }
-    return(inv.link)
-}
-
-#==============================================================================#
-
-# gfit_old = function(capthist, model = list(), mask = NULL, fixed = list(), model.options = list(), mask.options = list(), fitting.options = list(), start = NULL, trace = FALSE, debug = TRUE){
-#
-#     start.time = Sys.time()
-#
-#     ##################################################
-#     ## check inputs
-#
-#     # original.capthist = capthist
-#     capthist      = check_capthist(capthist)
-#     mask          = check_mask(mask, capthist, mask.options)
-#     model.options = check_model_options(model.options, capthist)
-#     fixed         = check_fixed(fixed, model.options, capthist)
-#     model         = check_model(model, fixed, model.options, capthist, mask)
-#
-#     ##################################################
-#     ## capthist and mask stats
-#
-#     R = n_arrays(capthist)
-#     n = n_groups(capthist)
-#     S = n_occasions(capthist)
-#     K = n_traps(capthist)
-#     a = mask_area(mask)
-#     M = mask_npoints(mask)
-#
-#     ##################################################
-#     ## fitting function arguments
-#
-#     model.frames = make_model_frames(
-#         model         = model,
-#         traps         = traps(capthist),
-#         mask          = mask,
-#         n_occasions   = n_occasions(capthist),
-#         sessioncov    = sessioncov(capthist),
-#         timecov       = timecov(capthist),
-#         debug         = debug
-#     )
-#
-#     ##################################################
-#     ## in development: use gam to get model frame, model matrix and smooth setup
-#
-#     if(0){
-#         make_G = function(formula, data){
-#             # if no response variable then add dummy response to lhs of formula
-#             if(attr(terms(formula), "response") == 0){
-#                 i = "dummy"
-#                 continue = TRUE
-#                 while(continue){
-#                     if(!i %in% colnames(data)) continue = FALSE
-#                     i = paste0(i, "_1")
-#                 }
-#                 eval(parse(text = paste0("formula = update.formula(formula,", i, " ~ .)")))
-#             }
-#             # add response variable to data
-#             data[[all.vars(formula)[1]]] = rep(1, nrow(data))
-#             mgcv::gam(formula, data = data, fit = FALSE)
-#         }
-#
-#         # G = lapply(names(model.frames), function(session){ # session = names(model.frames)[1] ; session
-#             # lapply(names(model), function(submodel){ # submodel = names(model)[1] ; submodel
-#         for(session in names(model.frames)){ # session = names(model.frames)[1] ; session
-#             for(submodel in names(model)){ # session = names(model.frames)[1] ; session
-#                 make_G(formula = model[[submodel]],
-#                        data    = model.frames[[session]][[submodel]])
-#             }
-#         }
-#             # })
-#         # })
-#
-#
-#
-#     }
-#
-#     # traps = traps(capthist) ; n_occasions = n_occasions(capthist) ; sessioncov = sessioncov(capthist) ; timecov = timecov(capthist) ; sessions = NULL ; submodels = NULL
-#
-#     smooth.setup = make_smooth_setup(model, model.frames)
-#     design.matrices = make_design_matrices(model, model.frames, smooth.setup, debug = debug)
-#    # model.frames = model.frames ; smooth.setup = NULL ; sessions = NULL ; submodels = NULL
-#
-#     par.labels = make_par_labels(design.matrices, fixed)
-#     parindx    = make_parindx(par.labels[,"unique"])
-#     inv.link   = get_inv_link(model, fixed, model.options)
-#     detected   = get_captures(capthist, summarise = "occasions")
-#     data       = prepare_data(capthist, model.options)
-#     mask.info  = prepare_mask_info(mask, capthist, model.options)
-#     usage      = usage(traps(capthist))
-#     start      = check_start_values(start, capthist, mask, model.options, fixed, S, K, M, a, usage, design.matrices, par.labels, parindx, inv.link, mask.info)
-#     # use default fitting options if not supplied
-#     default.fitting.options = list(hessian = TRUE, iterlim = 1000, LLonly = FALSE)
-#     fitting.options = replace(default.fitting.options, names(fitting.options), fitting.options)
-#
-#     ##################################################
-#     # choose fitting function
-#     nll.function = negloglik_wrapper
-#     nll.args = list(
-#         beta            = start,
-#         data            = data,
-#         mask.info       = mask.info,
-#         design.matrices = design.matrices,
-#         parindx         = parindx,
-#         fixed           = fixed,
-#         inv.link        = inv.link,
-#         model.options   = model.options,
-#         usage           = usage,
-#         detected        = detected,
-#         R               = R,
-#         n               = n,
-#         S               = S,
-#         K               = K,
-#         M               = M,
-#         a               = a,
-#         trace           = trace
-#     )
-#
-#     # debugging
-#     if(0){
-#         for(i in names(nll.args))
-#             eval(parse(text = paste(i, "= nll.args[[i]]")), envir = globalenv())
-#     }
-#
-#     ##################################################
-#     ## LLonly
-#     if(fitting.options$LLonly){
-#         nll = try(do.call(nll.function, nll.args))
-#         if(inherits(nll,"try-error")){
-#             stop("Unable to evaluate loglikelihood using start values")
-#         }else{
-#             return(-nll)
-#         }
-#     }
-#
-#     ##################################################
-#     ## fit model using nlm
-#     nll.args$beta = NULL
-#     nll.args = c(nll.args, list(
-#         f               = nll.function,
-#         p               = start,
-#         hessian         = fitting.options$hessian,
-#         iterlim         = fitting.options$iterlim
-#     ))
-#     nlm.results = try(do.call(nlm, nll.args))
-#
-# #     nlm.args = list(
-# #         f               = nll.function,
-# #         p               = start,
-# #         data            = data,
-# #         mask.info       = mask.info,
-# #         design.matrices = design.matrices,
-# #         par.labels      = par.labels,
-# #         fixed           = fixed,
-# #         inv.link        = inv.link,
-# #         model.options   = model.options,
-# #         usage           = usage,
-# #         detected        = detected,
-# #         R               = R,
-# #         n               = n,
-# #         S               = S,
-# #         K               = K,
-# #         M               = M,
-# #         a               = a,
-# #         trace           = trace,
-# #         hessian         = fitting.options$hessian,
-# #         iterlim         = fitting.options$iterlim)
-#
-#     # #     negloglik = if(locations){
-#     # #         negloglik_locations_known_wrapper
-#     # #     }else{
-#     # #         negloglik_locations_unknown_wrapper
-#     # #     }
-#
-#     #     #     if(!locations){
-#     #     #         nlm.args$detected = detected
-#     #     #         nlm.args$S = S
-#     #     #     }
-#     #
-#
-#     # fit model
-#     # nlm.results = try(do.call(nlm, nlm.args))
-#
-#     ##################################################
-#     ## process nlm results
-#
-#     if(nlm.results$code > 2) warning("nlm code = ", nlm.results$code)
-#     if(nlm.results$iterations <= 1)  warning("nlm iterations = ", nlm.results$iterations)
-#     names(nlm.results$estimate) = par.labels[,"unique"]
-#     if(!is.null(nlm.results$hessian))
-#         rownames(nlm.results$hessian) = colnames(nlm.results$hessian) = par.labels[,"unique"]
-#
-#     ##################################################
-#     ## return gsecr object
-#
-#     fit = list(
-#         capthist        = capthist,
-#         # capthist        = original.capthist,
-#         mask            = mask,
-#         model           = model,
-#         model.options   = model.options,
-#         fixed           = fixed,
-#         model.frames    = model.frames,
-#         design.matrices = design.matrices,
-#         inv.link        = inv.link,
-#         start           = start,
-#         smooth.setup    = smooth.setup,
-#         mask.info       = mask.info,
-#         # locations       = locations,
-#         nlm             = nlm.results,
-#         parindx         = parindx,
-#         par.labels      = par.labels,
-#         run.time        = difftime(Sys.time(), start.time)
-#     )
-#     class(fit) = c("gsecr", class(fit))
-#
-#     return(fit)
-#
-# }
-
-
-# detection functions ==========================================================
-
-# half normal
-hn = function(x, theta, ...){
-    theta[1] * exp(-0.5 * x * x / theta[2] / theta[2])
-}
-
-# hazard rate
-hr = function(x, theta, ...){
-    theta[1] * ( 1 - exp(-(x / theta[2])^(-theta[3])) )
-}
-
-#==============================================================================#
-
-make_design_matrices = function(model, model.frames, smooth.setup, sessions = NULL, submodels = NULL){
-    if(is.null(sessions)) sessions = names(model.frames)
-    if(is.null(submodels)) submodels = names(model.frames[[1]])
-    design.matrices = sapply(sessions, function(session){
-        sapply(submodels, function(submodel){
-            #             make_model_matrix(
-            #                 formula      = model[[submodel]],
-            #                 data         = model.frames[[session]][[submodel]],
-            #                 smooth.setup = smooth.setup[[submodel]]
-            #             )
-            make_model_matrix(
-                data         = model.frames[[session]][[submodel]],
-                smooth.setup = smooth.setup[[submodel]]
-            )
-        }, simplify = FALSE)
     }, simplify = FALSE)
-    return(design.matrices)
 }
 
 #==============================================================================#
@@ -814,29 +493,52 @@ make_model_frames = function(model, traps, mask, n_occasions, sessioncov = NULL,
 
 #==============================================================================#
 
-# # used inside make_design_matrices
-# # if no smooth.setup then uses model.matrix
-# # if smooth.setup is provided then this is used to pursuade mgcv::predict.gam to
-# # provide a design matrix using an existing gam model and new covariate data
-#
-# make_model_matrix_old = function(formula, data, smooth.setup){
-#     if(is.null(smooth.setup)){
-#         # if no gam model then use conventional method
-#         X = model.matrix(formula, data)
-#     }else{
-#         # add dummy response to lhs of formula
-#         formula = update.formula(formula, dummy ~ .)
-#         # make sure left hand side variable is present in data
-#         response = all.vars(formula)[1]
-#         if(is.null(data[[response]])) data[[response]] = 1
-#         # get design matrix from predict.gam
-#         class(smooth.setup) = "gam"
-#         smooth.setup$coefficients = rep(NA, ncol(smooth.setup$X))
-#         X = mgcv::predict.gam(smooth.setup, newdata = data, type = 'lpmatrix')
-#         colnames(X) = smooth.setup$term.names
-#     }
-#     return(X)
-# }
+# extract the design matrix component from the smooth.setup object
+# need to identify which rows of X correspond to which session
+
+make_design_matrices_old = function(smooth.setup, model.frames){
+    # count the number of rows per session for each submodel model frame
+    rows = sapply(names(smooth.setup), function(submodel){
+        # get number of rows per model frame
+        nrows = sapply(model.frames, function(x) nrow(x[[submodel]]))
+        # convert to row numbers in smooth.setup X
+        rows = sapply(nrows, function(i) 1:i, simplify = FALSE)
+        if(length(rows) > 1)
+            for(i in 2:length(rows)) rows[[i]] = rows[[i]] + max(rows[[i-1]])
+        return(rows)
+    }, simplify = FALSE)
+    # extract the rows of X's from the submodel smooth.setup object
+    # corresponding to each session
+    sapply(names(model.frames), function(session){
+        sapply(names(smooth.setup), function(submodel){
+            i = rows[[submodel]][[session]]
+            X = smooth.setup[[submodel]][["X"]][i, , drop = FALSE]
+            colnames(X) = smooth.setup[[submodel]][["term.names"]]
+            return(X)
+        }, simplify = FALSE)
+    }, simplify = FALSE)
+}
+
+#==============================================================================#
+
+make_design_matrices = function(model, model.frames, smooth.setup, sessions = NULL, submodels = NULL){
+    if(is.null(sessions)) sessions = names(model.frames)
+    if(is.null(submodels)) submodels = names(model.frames[[1]])
+    design.matrices = sapply(sessions, function(session){
+        sapply(submodels, function(submodel){
+            #             make_model_matrix(
+            #                 formula      = model[[submodel]],
+            #                 data         = model.frames[[session]][[submodel]],
+            #                 smooth.setup = smooth.setup[[submodel]]
+            #             )
+            make_model_matrix(
+                data         = model.frames[[session]][[submodel]],
+                smooth.setup = smooth.setup[[submodel]]
+            )
+        }, simplify = FALSE)
+    }, simplify = FALSE)
+    return(design.matrices)
+}
 
 #==============================================================================#
 
@@ -850,12 +552,55 @@ make_model_matrix = function(data, smooth.setup){
     response = all.vars(formula)[1]
     # add response variable to data
     if(is.null(data[[response]])) data[[response]] = 1
-    # get design matrix from predict.gam
-    class(smooth.setup) = "gam"
-    smooth.setup$coefficients = rep(NA, ncol(smooth.setup$X))
-    X = mgcv::predict.gam(smooth.setup, newdata = data, type = 'lpmatrix')
-    colnames(X) = smooth.setup$term.names
+    if(is.null(smooth.setup$terms)){
+        X = model.matrix(formula, data)
+        colnames(X) = "(Intercept)"
+    }else{
+        # get design matrix from predict.gam
+        class(smooth.setup) = "gam"
+        smooth.setup$coefficients = rep(NA, ncol(smooth.setup$X))
+        X = mgcv::predict.gam(smooth.setup, newdata = data, type = 'lpmatrix')
+        colnames(X) = smooth.setup$term.names
+    }
     return(X)
+}
+
+#==============================================================================#
+
+get_inv_link = function(model, fixed, model.options){
+    inv.link = list(
+        "D"         = exp,
+        "g0"        = invlogit,
+        "sigma"     = exp,
+        "z"         = exp,
+        "pcall"     = invlogit,
+        "bearings"  = if(model.options$bearings == 1) exp else invlogit,
+        #"distances" = if(model.options$distances == 1) exp else invlogit
+        "distances" = exp
+    )
+    for(i in names(inv.link)){
+        if(!i %in% names(model))
+            inv.link[[i]] = NULL
+    }
+    # fixed pars have identity link
+    if(length(fixed) > 0){
+        for(par in names(fixed)){
+            inv.link[[par]] = function(x) x
+        }
+    }
+    return(inv.link)
+}
+
+# detection functions ==========================================================
+
+# half normal
+hn = function(x, theta, ...){
+    theta[1] * exp(-0.5 * x * x / theta[2] / theta[2])
+}
+
+# hazard rate
+hr = function(x, theta, ...){
+    theta[1] * ( 1 - exp(-(x / theta[2])^(-theta[3])) )
 }
 
 #==============================================================================#
@@ -890,8 +635,6 @@ make_par_labels = function(design.matrices, fixed){
     )
 }
 
-#==============================================================================#
-
 make_parindx = function(beta.names){
     submodel.names = c("D", "g0", "sigma", "z", "pcall", "bearings", "distances")
     parindx = sapply(submodel.names, function(submodel){
@@ -902,81 +645,10 @@ make_parindx = function(beta.names){
     return(parindx)
 }
 
-#==============================================================================#
-
-# works inside the make_submodel_arrays function
-# makes a list of all parameter values - both fixed and current estimated parameter values in fitting process
-# each element represents a different submodel
-
-# make_par_list = function(beta, par.labels, fixed){
-#     submodel.names = unique(par.labels[,"submodel"])
-#     parlist = sapply(submodel.names, function(submodel){ # submodel = submodel.names[1] ; submodel
-#         i = par.labels[,"submodel"] == submodel
-#         temp = beta[i]
-#         names(temp) = par.labels[i,"unique"]
-#         return(temp)
-#     }, simplify = FALSE)
-#     parlist = c(parlist, fixed)
-#     return(parlist)
-# }
-
 make_parlist = function(beta, parindx, fixed){
     c(lapply(parindx, function(x){
         beta[x]
     }), fixed)
-}
-
-#==============================================================================#
-
-# if no smooth terms then return null
-# otherwise trik mgcv::gam into providing
-# smooth.setup used inside make_model_matrix (which is inside make_design_matrices)
-
-# make_smooth_setup_old = function(model, model.frames){
-#     sapply(names(model), function(submodel){
-#         if(!contains_smooth_terms(model[[submodel]]))
-#             return(NULL)
-#         # combine covariates from all sessions
-#         data = do.call(rbind, sapply(names(model.frames), function(session){
-#                 model.frames[[session]][[submodel]]
-#             }, simplify = FALSE)
-#         )
-#         # add a dummy response variable since gam requires a two-sided formula
-#         data$dummy = 1
-#         formula = update.formula(model[[submodel]], dummy ~ .)
-#         # get smooth details using gam
-#         mgcv::gam(formula, data = data, fit = FALSE)
-#     })
-# }
-
-#==============================================================================#
-
-# return a 'smooth.setup' object (i.e 'G') for all models
-# smooth.setup used inside make_model_matrix (which is inside make_design_matrices)
-
-# function to make smooth setup for all models
-# allows use of more complex formula syntax (e.g. as.numeric(x))
-
-#' @importFrom dplyr bind_rows
-make_smooth_setup = function(model, model.frames){
-    sapply(names(model), function(submodel){ # submodel = "D"
-        # combine covariates for all sessions
-        data = as.data.frame(do.call(
-            "bind_rows",
-            sapply(names(model.frames), function(session){
-                model.frames[[session]][[submodel]]
-            }, simplify = FALSE)
-        ))
-        # add dummy respobse variable to left hand side to formula
-        # use the submodel name since this is unlikely to the name of a covariate
-        formula = model[[submodel]]
-        eval(parse(text = paste0("formula = update.formula(formula,",
-                                 submodel, " ~ .)")))
-        # add dummy column to the data
-        data[[submodel]] = 1
-        # get the 'G' object from the gam
-        mgcv::gam(formula, data = data, fit = FALSE)
-    }, simplify = FALSE)
 }
 
 #==============================================================================#
@@ -1012,84 +684,6 @@ make_submodel_arrays = function(beta, parindx, fixed, design.matrices, inv.link,
 
 #==============================================================================#
 
-# works inside the gibbons_negloglik_wrapper function
-# creates lists of arrays of submodel values from the design matrices and
-# current parameter values in the fitting procedure
-# submodel values need to be stored in arrays since values can change with
-# spatial location, occasion, post, etc.
-
-# make_submodel_arrays2 = function(beta, parindx, fixed, design.matrices, inv.link, S, K){
-#     # beta = start
-#     parlist = make_parlist(beta, parindx, fixed)
-#     sapply(names(design.matrices), function(session){
-#         # session = names(design.matrices)[1] ; session
-#         sapply(names(design.matrices[[session]]), function(submodel){
-#             # submodel = "g0"
-#             response.scale = inv.link[[submodel]](as.numeric(design.matrices[[session]][[submodel]] %*% parlist[[submodel]]))
-#             if(submodel %in% c("D","pcall")){
-#                 # density uses a M by 1 matrix
-#                 # pcall uses a S by 1 matrix
-#                 matrix(response.scale, ncol = 1)
-#             }else{
-#                 # the rest use S by K matrices
-#                 # fill by row, since design matrices are ordered by S then K
-#                 matrix(response.scale, nrow = S[session], ncol = K[session], byrow = TRUE)
-#             }
-#         }, simplify = FALSE)
-#     }, simplify = FALSE)
-# }
-
-#==============================================================================#
-# #==============================================================================#
-# #==============================================================================#
-#
-# # evaluates the log-likelihood values separately for data from each array
-# # returns the sum of the loglik values
-#
-# negloglik_wrapper2 = function(beta, parindx, fixed, design.matrices, inv.link,
-#                               data, mask.info, model.options, usage, detected,
-#                               R, n, S, K, M, a, trace = FALSE){
-#     # beta = start
-#     submodel.arrays = make_submodel_arrays(beta, parindx, fixed,
-#                                            design.matrices, inv.link, S, K)
-#     # lapply(submodel.arrays[[1]], head) ; lapply(submodel.arrays[[1]], dim)
-#     nll = sum(sapply(1:R, function(i){ # i=1
-#         negloglik_rcpp(
-#             data               = data[[i]],
-#             mask               = mask.info[[i]],
-#             pars               = submodel.arrays[[i]],
-#             detfunc_code      = model.options[["detfunc"]],
-#             bearings_pdf_code  = model.options[["bearings"]],
-#             distances_pdf_code = model.options[["distances"]],
-#             detected           = detected[[i]],
-#             usage              = usage[[i]],
-#             n                  = n[i],
-#             S                  = S[i],
-#             K                  = K[i],
-#             M                  = M[i],
-#             a                  = a[i]
-#         )
-#     }))
-#     if(!is.finite(nll)) nll = 1e10
-#     if(trace){
-#         cat("loglik =", -nll)
-#         for(i in 1:length(beta)) cat(", beta", i, " = ", round(beta[i], 2), sep="")
-#         cat("\n")
-#     }
-#     return(nll)
-# }
-
-# #==============================================================================#
-# #==============================================================================#
-#
-# num2col = function(values, palette = rainbow, ncol = 12){
-#     levels = cut(values, breaks = ncol)
-#     # levels = cut(values, breaks = seq(min(values), max(values), length = ncol + 1))
-#     palette(ncol)[levels]
-# }
-
-#==============================================================================#
-
 # prepare data into a format that can be read by the negloglik wrapper function
 
 prepare_data = function(capthist, model.options, locations = FALSE){
@@ -1118,18 +712,3 @@ prepare_mask_info = function(mask, capthist, model.options){
     return(mask.info)
 }
 
-
-# #==============================================================================#
-# #==============================================================================#
-#
-# print_loop_progress = function(loop, nloops, width = 50){
-#     ndashes = round(width * loop / nloops)
-#     slashb = rep('\b', width + 8)
-#     lines = rep("-", ndashes)
-#     spaces = rep(" ", width - ndashes)
-#     cat(paste(c(slashb, "|", lines, spaces, "|"), collapse = ""), round(100 * loop / nloops), "%")
-#     invisible()
-# }
-
-#==============================================================================#
-#==============================================================================#

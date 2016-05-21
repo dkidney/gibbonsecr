@@ -1,17 +1,2 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-binaries
-checking
-data/N.siki.rda
-data_prep
-debugging
-development
-NEWS.md
-notes
-simulations
-temp
-testing
-TODO.docx
-vignettes_prep
-^packrat/
-^\.Rprofile$

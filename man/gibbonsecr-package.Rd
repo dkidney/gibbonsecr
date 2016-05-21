@@ -16,8 +16,9 @@ details \url{http://dkidney.github.io/gibbonsecr}.
 \pkg{gibbonsecr} relies on several functions from the \pkg{\link[secr]{secr}}
 package and uses an analagous system of objects. Model fitting is performed
 in a similar way using a fine grid of points called a mask to approximate the
-spatial integration component of the SECR likelihood. However
-\pkg{gibbonsecr} differs from \pkg{secr} in the following respects:
+spatial integration component of the SECR likelihood. The defintion of 'trap'
+and 'session' are also consistent with \pkg{secr}. However \pkg{gibbonsecr}
+differs from \pkg{secr} in the following respects:
 \enumerate{
  \item Supplementary information on detected animals in the form of estimated
  bearings and estimated distances can be incorporated in addition to the
@@ -43,6 +44,10 @@ The main functions in \pkg{gibbonsecr} are:
 See \code{\link[gibbonsecr]{N.annamensis}} for an example data set from a
 survey of \emph{Nomascus annamensis} in northwestern Cambodia.
 }
+\section{Acknowledgements}{
+ sdfasdfafd
+}
+
 \section{Issues to resolve}{
 
 \strong{PRIORITY}
@@ -102,5 +107,9 @@ Kidney, D., Rawson, B., Borchers, D. L., Stevenson, B. C.,
   (2015). A unifying model for capture-recapture and distance sampling
   surveys of wildlife populations. \emph{Journal of the American Statistical
   Association}, 110(509), 195-204.
+}
+\seealso{
+\link[gibbonsecr]{N.annamensis}, \link[gibbonsecr]{import_data},
+  \link[gibbonsecr]{gfit}
 }
 

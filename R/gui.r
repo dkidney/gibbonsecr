@@ -7,9 +7,9 @@
 #' \url{http://dkidney.github.io/gibbonsecr}.
 #' @param prompt.save.on.exit if \code{TRUE}, a message box is shown when the
 #'   GUI window is closed, asking if the user wishes to save the workspace.
-#' @param quit.r.on.exit if \code{TRUE}, the background R process is closed when
-#'   the GUI window is closed (keep this to \code{FALSE} unless \strong{R} is
-#'   launched as a background process).
+# @param quit.r.on.exit if \code{TRUE}, the background R process is closed when
+#   the GUI window is closed (keep this to \code{FALSE} unless \strong{R} is
+#   launched as a background process).
 #' @examples
 #' \dontrun{
 #'
@@ -22,12 +22,12 @@
 #' @importFrom ggplot2 ggplot coord_fixed labs
 #' @export
 
-gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
+gui = function(prompt.save.on.exit = FALSE){
 
     # # only uncomment these lines if sourcing
     # # rm(list = ls())
     # prompt.save.on.exit = FALSE
-    # quit.r.on.exit = FALSE
+    # # quit.r.on.exit = FALSE
     # library(secr)
     # library(ggplot2)
     # library(tcltk)
@@ -268,7 +268,7 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     view_base = function(file){
         path = path.expand(tclvalue(tvar[[paste0(file, ".path")]]))
         if(file.exists(path)){
-            system(paste('open', path))
+            system(paste0("open '", path, "'"))
         }else{
             print_error(paste0("cant find ", file, " file:\n'", path, "'"))
         }
@@ -421,7 +421,11 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 robj$capthist = import_data(
                     detections = tclvalue(tvar$detections.path),
                     posts      = tclvalue(tvar$posts.path),
-                    covariates = tclvalue(tvar$covariates.path),
+                    covariates = if(tclvalue(tvar$covariates.path) == ""){
+                        NULL
+                    }else{
+                        tclvalue(tvar$covariates.path)
+                    },
                     details = list(
                         bearings  = list(
                             units = tclvalue(tvar$bearings.units),
@@ -488,7 +492,7 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         }
         close_plots()
         tkdestroy(main.window)
-        if(quit.r.on.exit) q()
+        # if(quit.r.on.exit) q()
     }
 
     fixed_radio_command = function(submodel){
@@ -639,9 +643,7 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             }
         }
 
-        ##################################################
-        ## formulas and fixed
-
+        # formulas and fixed ------------------------------------------------- #
         # convert formula entrys to actual formulas
         # if blank then use intercept-only model
         formulas = sapply(submodels, function(i){
@@ -661,18 +663,14 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             }
         }
 
-        ##################################################
-        ## g0 warning
-
+        # g0 warning --------------------------------------------------------- #
         if(all(n_occasions(robj$capthist) == 1)){
             if(tclvalue(tvar$g0.radio) == "fixed" && tclvalue(tvar$g0.fixed) != "1"){
                 print_warning("g0 normally fixed at 1 for single-occasion surveys")
             }
         }
 
-        ##################################################
-        ## fit model
-
+        # fit model ---------------------------------------------------------- #
         result = try({
             utils::capture.output({
                 robj$fit = gfit(
@@ -738,9 +736,7 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             debug = TRUE
         }
 
-        ##################################################
-        ## report results
-
+        # report results ----------------------------------------------------- #
         if(inherits(result, "try-error")){
             print_error(result)
         }else{
@@ -1005,8 +1001,6 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
 
     plot_densurf = function(){
         session = tclvalue(tvar$densurf.array)
-        # session = choose_array(robj$fit, padx = os$grid.padx)
-        # if(!is.na(session)){
         device_popup()
         title = "Detection surface"
         subtitle = paste0("(using array-level covariates from array ", session, ")")
@@ -1016,12 +1010,12 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
             geom_capthist(robj$fit$capthist, "array") +
             labs(x = "Longitude", y = "Latitude",
                  title = bquote(atop(.(title), atop(italic(.(subtitle))))))
-        if(tclvalue(tvar$densurf.contour) == "1"){
+        if(tclvalue(tvar$densurf.contour) == "1")
             plot = plot +
                 geom_fit(robj$fit, "densurf", session = session, contour = TRUE)
-        }
+        if(!is.null(robj$region))
+            plot = plot + geom_shp(robj$region)
         print(plot)
-        # }
     }
 
     save_plots = function(){
@@ -1231,28 +1225,6 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         }))
     }
 
-    #     update_robj = function(){
-    #         for(i in names(robjects)){
-    #             robj[[i]] = robjects[[i]]
-    #         }
-    #     }
-
-    # update_tclvalues = function(){
-    # for(i in names(tvar)){
-    # tclvalues[[i]] = tclvalue(tvar[[i]])
-    # }
-    # }
-
-    # update_tvar = function(){
-    # for(i in names(tclvalues)){
-    # if(is.null(tvar[[i]])){
-    # tvar[[i]] = tclVar(tclvalues[[i]])
-    # }else{
-    # tclvalue(tvar[[i]]) = tclvalues[[i]]
-    # }
-    # }
-    # }
-
     # > working directory ------------------------------------------------------
 
     wd_set = function(){
@@ -1290,12 +1262,12 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
                 value = if(i %in% c("g0", "pcall")) "1" else ""
                 tclvalue(tvar[[paste0(i, ".fixed")]]) = value
             }
-            robj$capthist       = NULL
-            robj$mask           = NULL
-            robj$region    = NULL
-            robj$habitat1   = NULL
+            robj$capthist = NULL
+            robj$mask     = NULL
+            robj$region   = NULL
+            robj$habitat1 = NULL
             robj$habitat2 = NULL
-            robj$fit            = NULL
+            robj$fit      = NULL
             refresh()
         }
     }
@@ -1328,8 +1300,6 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
         ))
         if(filename != ""){
             workspace_load_base(filename)
-            # print_to_console(paste("Workspace loaded:\n", filename),
-            # dashes = TRUE)
         }
     }
 
@@ -2001,22 +1971,22 @@ gui = function(prompt.save.on.exit = FALSE, quit.r.on.exit = FALSE){
     # TOOLTIPS =================================================================
 
     # mask tab
-    tk2tip(label.buffer, "The radius of a buffer region around each array of listening posts.\n This defines an area beyond which the detection probability can be assumed to be zero.")
-    tk2tip(label.spacing, "The spacing between neighbouring grid points in the mask.")
-    tk2tip(tobj$mask[["region.label"]], "Polygon .shp file defining survey boundary")
-    tk2tip(tobj$mask[["habitat1.label"]], "Polygon or point .shp file containing spatial covariates")
-    tk2tip(tobj$mask[["habitat2.label"]], "Polygon or point .shp file containing spatial covariates")
+    tk2tip(label.buffer, stringr::str_wrap("The radius of a buffer region around each array of listening posts.\n This defines an area beyond which the detection probability can be assumed to be zero."))
+    tk2tip(label.spacing, stringr::str_wrap("The spacing between neighbouring grid points in the mask."))
+    tk2tip(tobj$mask[["region.label"]], stringr::str_wrap("Polygon .shp file defining survey boundary"))
+    tk2tip(tobj$mask[["habitat1.label"]], stringr::str_wrap("Polygon or point .shp file containing spatial covariates"))
+    tk2tip(tobj$mask[["habitat2.label"]], stringr::str_wrap("Polygon or point .shp file containing spatial covariates"))
 
     # model tab
-    tk2tip(label.detfunc, "A curve that describes the relationship between detection probability (of a calling group) and distance from lisening post.")
-    tk2tip(label.bearings.dist,  "The distribution for the estimated bearings.")
-    tk2tip(label.distances.dist, "The distribution for the estimated distances.")
-    tk2tip(label.D, "The number of groups per square kilometre.")
-    tk2tip(label.g0, "The detection function intercept parameter.\nThis gives the probability of hearing a calling group whose activity centre is zero distance from the listening post.")
-    tk2tip(label.sigma, "The detection function scale parameter.\nThis defines the width of the detection function (larger values = wider detection functions).")
-    tk2tip(label.bearings, "The parameter of the distribution for the estimated bearings.\nThis defines the spread of the distribution (larger values = narrower distributions = more accurate estimates)")
-    tk2tip(label.distances, "The parameter of the distribution for the estimated distances.\nThis defines the spread of the distribution (XXX values = XXX distributions = more accurate estimates) .")
-    tk2tip(label.pcall, "The probability of a group calling on a given day.\nAlternatively, the proportion of groups which call on a given day.")
+    tk2tip(label.detfunc, stringr::str_wrap("A curve that describes the relationship between detection probability (of a calling group) and distance from listening post."))
+    tk2tip(label.bearings.dist,  stringr::str_wrap("The distribution for the estimated bearings."))
+    tk2tip(label.distances.dist, stringr::str_wrap("The distribution for the estimated distances."))
+    tk2tip(label.D, stringr::str_wrap("The number of groups per square kilometre."))
+    tk2tip(label.g0, stringr::str_wrap("The detection function intercept parameter. This gives the probability of hearing a calling group whose activity centre is zero distance from the listening post."))
+    tk2tip(label.sigma, stringr::str_wrap("The detection function scale parameter. This defines the width of the detection function (larger values = wider detection functions)."))
+    tk2tip(label.bearings, stringr::str_wrap("The parameter of the distribution for the estimated bearings. This defines the spread of the distribution (larger values = narrower distributions = more accurate estimates)"))
+    tk2tip(label.distances, stringr::str_wrap("The parameter of the distribution for the estimated distances. This defines the spread of the distribution (XXX values = XXX distributions = more accurate estimates) ."))
+    tk2tip(label.pcall, stringr::str_wrap("The probability of a group calling on a given day. Alternatively, the proportion of groups which call on a given day."))
 
 
     # PACKING  =================================================================
