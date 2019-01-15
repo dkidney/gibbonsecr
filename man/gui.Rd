@@ -12,7 +12,7 @@ is closed, asking if the user wishes to save the workspace.}
 }
 \description{
 A graphical user interface for the \pkg{gibbonsecr} package, built using
-  \pkg{\link[tcltk]{tcltk}}.
+\pkg{\link[tcltk]{tcltk}}.
 
 See the online manual for more details
 \url{http://dkidney.github.io/gibbonsecr}.
@@ -27,4 +27,3 @@ gui()
 \author{
 Darren Kidney \email{darrenkidney@googlemail.com}
 }
-

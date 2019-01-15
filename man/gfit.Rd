@@ -5,8 +5,8 @@
 \title{Fit an SECR model to survey data}
 \usage{
 gfit(capthist, model = list(), mask = NULL, fixed = list(),
-  model.options = list(), mask.options = list(), fitting.options = list(),
-  start = NULL, trace = FALSE)
+  model.options = list(), mask.options = list(),
+  fitting.options = list(), start = NULL, trace = FALSE)
 }
 \arguments{
 \item{capthist}{\link[gibbonsecr]{gcapthist} object (or a
@@ -34,71 +34,71 @@ procedure is printed to the console}
 }
 \description{
 Fit a Spatially Explicit Capture-Recapture (SECR) model to
-  survey data collected from arrays of proximity detectors.
+survey data collected from arrays of proximity detectors.
 }
 \details{
 Parameter estimates are obtained via numerical optimization using
-  the \code{\link[stats]{nlm}} function.
+the \code{\link[stats]{nlm}} function.
 \describe{
- \item{\strong{\code{model}}}{
-  Should contain a list of formulae for the following paramters:
-  \tabular{ll}{
-   \code{D}         \tab density (number of animals/groups per square
-   kilometre) \cr
-   \code{g0}        \tab detection function intercept \cr
-   \code{sigma}     \tab detection function scale (metres) \cr
-   \code{z}         \tab detection function shape \cr
-   \code{bearings}  \tab estimated bearings distribution scale \cr
-   \code{distances} \tab estimated distances distribution shape \cr
-   \code{pcall}     \tab availability (proportion) \cr
-  }
-  If no model is specified then intercept-only formulae are used.
+\item{\strong{\code{model}}}{
+Should contain a list of formulae for the following paramters:
+\tabular{ll}{
+\code{D}         \tab density (number of animals/groups per square
+kilometre) \cr
+\code{g0}        \tab detection function intercept \cr
+\code{sigma}     \tab detection function scale (metres) \cr
+\code{z}         \tab detection function shape \cr
+\code{bearings}  \tab estimated bearings distribution scale \cr
+\code{distances} \tab estimated distances distribution shape \cr
+\code{pcall}     \tab availability (proportion) \cr
+}
+If no model is specified then intercept-only formulae are used.
 
-  Model formulae can be specified using any of the the available covrariates
-  (see \link[gibbonsecr]{gibbonsecr-covariates} for advice on model
-  covariates).
+Model formulae can be specified using any of the the available covrariates
+(see \link[gibbonsecr]{gibbonsecr-covariates} for advice on model
+covariates).
 
-  Smooth terms from the \pkg{\link[mgcv]{mgcv}} package -- including
-  \code{\link[mgcv]{s}}, \code{\link[mgcv]{te}} and \code{\link[mgcv]{ti}} --
-  can also be used. However, only the un-penalised components of the smooth
-  terms are used (the design matrix is obtained from \code{\link[mgcv]{gam}}
-  using \code{fit = FALSE}) and no smoothing penalties are estimated (i.e.
-  models are fitted as un-penalised regression splines).
- }
- \item{\strong{\code{model.options}}}{
-  Should be a list of three elements, named \code{detfunc},
-  \code{bearings} and \code{distances}, with integer values. The table below
-  shows the available settings (defaults in italics):
-  \tabular{llll}{
-   \code{detfunc} \tab 0 = \emph{half normal} \tab 1 = hazard rate \tab \cr
-   \code{bearings} \tab 0 = no model \tab 1 = \emph{von Mises} \tab 2 =
-   wrapped Cauchy \cr
-   \code{distances} \tab 0 = \emph{no model} \tab 1 = gamma \tab 2 =
-   lognormal \cr
-  }
-  If any of the elements are left blank then the default values are used.
- }
- \item{\strong{\code{mask.options}}}{
-  Ignored unless the \code{mask} argument is \code{NULL}, in which case it
-  should be a list of two elements named \code{buffer} and \code{spacing}
-  giving the buffer and spacing to be used when constructing a default mask.
-  If the mask and arguments are both \code{NULL} the should be a list of
-  three elements, named \code{detfunc},
- }
- \item{\strong{\code{fitting.options}}}{
-  Should be a list of the following elements:
-  \tabular{ll}{
-   \code{hessian} \tab if \code{TRUE}, the estimated
-   hessian matrix is returned (default = TRUE) \cr
-   \code{iterlim} \tab maximum number of fitting iterations (default = 1000)
-   \cr
-   \code{LLonly} \tab if \code{TRUE}, then the log-likelihood using the
-   starting values is returned (default = FALSE) \cr
-   \code{fit} \tab if \code{FALSE}, the arguments passed to
-   \code{\link[stats]{nlm}} are returned (default = TRUE) \cr
-  }
-  If any of the elements are left blank then the default values are used.
- }
+Smooth terms from the \pkg{\link[mgcv]{mgcv}} package -- including
+\code{\link[mgcv]{s}}, \code{\link[mgcv]{te}} and \code{\link[mgcv]{ti}} --
+can also be used. However, only the un-penalised components of the smooth
+terms are used (the design matrix is obtained from \code{\link[mgcv]{gam}}
+using \code{fit = FALSE}) and no smoothing penalties are estimated (i.e.
+models are fitted as un-penalised regression splines).
+}
+\item{\strong{\code{model.options}}}{
+Should be a list of three elements, named \code{detfunc},
+\code{bearings} and \code{distances}, with integer values. The table below
+shows the available settings (defaults in italics):
+\tabular{llll}{
+\code{detfunc} \tab 0 = \emph{half normal} \tab 1 = hazard rate \tab \cr
+\code{bearings} \tab 0 = no model \tab 1 = \emph{von Mises} \tab 2 =
+wrapped Cauchy \cr
+\code{distances} \tab 0 = \emph{no model} \tab 1 = gamma \tab 2 =
+lognormal \cr
+}
+If any of the elements are left blank then the default values are used.
+}
+\item{\strong{\code{mask.options}}}{
+Ignored unless the \code{mask} argument is \code{NULL}, in which case it
+should be a list of two elements named \code{buffer} and \code{spacing}
+giving the buffer and spacing to be used when constructing a default mask.
+If the mask and arguments are both \code{NULL} the should be a list of
+three elements, named \code{detfunc},
+}
+\item{\strong{\code{fitting.options}}}{
+Should be a list of the following elements:
+\tabular{ll}{
+\code{hessian} \tab if \code{TRUE}, the estimated
+hessian matrix is returned (default = TRUE) \cr
+\code{iterlim} \tab maximum number of fitting iterations (default = 1000)
+\cr
+\code{LLonly} \tab if \code{TRUE}, then the log-likelihood using the
+starting values is returned (default = FALSE) \cr
+\code{fit} \tab if \code{FALSE}, the arguments passed to
+\code{\link[stats]{nlm}} are returned (default = TRUE) \cr
+}
+If any of the elements are left blank then the default values are used.
+}
 }
 }
 \examples{
@@ -189,10 +189,9 @@ predict(fit, submodels = "D", newdata = newdata)
 }
 
 }
-\author{
-Darren Kidney \email{darrenkidney@googlemail.com}
-}
 \seealso{
 \link[gibbonsecr]{plot.gsecr}
 }
-
+\author{
+Darren Kidney \email{darrenkidney@googlemail.com}
+}

@@ -12,48 +12,47 @@ be modelled with certain types of covariates.
 Covariates can be divided into the following types, according to the level at
 which they vary:
 \describe{
- \item{\strong{array-level}}{These are consistent within arrays. All
- listening posts and sampling occasions for a given array will have the same
- value for an array-level covariate, but values vary between arrays. For
- example, \emph{season} is likely to be an array-level covariate, since it is
- highly unlikely that consecutive sampling occasions at a given array will
- overlap with more than one season.}
- \item{\strong{trap-level}}{These are consistent within listening posts for a
- given array. All sampling occasions for a given listening post will have the
- same value for a trap-level covariate. For example, \emph{habitat} and
- \emph{elevation} are likely to be trap-level covariates since they may vary
- between listening posts but will be consistent across occasions.)}
- \item{\strong{occasion-level}}{These are consistent within sampling
- occasions for a given array. All listening posts in an array will have the
- same value for an occasion-level covariate. For example, \emph{weather} is
- likely to be an occasion-level covariate since it will probably be the same
- for all listening posts for a given occasion at a given array but may
- vary between occasions.}
- \item{\strong{trap-occasion-level}}{These can vary between listening posts
- and between sampling occasions. For example, \emph{observer} might be
- a trap-occasion-level covariate since observers will (always) vary between
- listening posts for a given occasion at a given array, and they may also
- vary between occasions for a given listening post at a given array.}
- \item{\strong{mask-level}}{These are spatial covariates and can vary across
- mask points. Mask-level covariates from GIS polygon and point files can be
- imported and attached to mask objects using the
- \link[gibbonsecr]{import_shp} and \link[gibbonsecr]{add_covariates}
- functions.}
+\item{\strong{array-level}}{These are consistent within arrays. All
+listening posts and sampling occasions for a given array will have the same
+value for an array-level covariate, but values vary between arrays. For
+example, \emph{season} is likely to be an array-level covariate, since it is
+highly unlikely that consecutive sampling occasions at a given array will
+overlap with more than one season.}
+\item{\strong{trap-level}}{These are consistent within listening posts for a
+given array. All sampling occasions for a given listening post will have the
+same value for a trap-level covariate. For example, \emph{habitat} and
+\emph{elevation} are likely to be trap-level covariates since they may vary
+between listening posts but will be consistent across occasions.)}
+\item{\strong{occasion-level}}{These are consistent within sampling
+occasions for a given array. All listening posts in an array will have the
+same value for an occasion-level covariate. For example, \emph{weather} is
+likely to be an occasion-level covariate since it will probably be the same
+for all listening posts for a given occasion at a given array but may
+vary between occasions.}
+\item{\strong{trap-occasion-level}}{These can vary between listening posts
+and between sampling occasions. For example, \emph{observer} might be
+a trap-occasion-level covariate since observers will (always) vary between
+listening posts for a given occasion at a given array, and they may also
+vary between occasions for a given listening post at a given array.}
+\item{\strong{mask-level}}{These are spatial covariates and can vary across
+mask points. Mask-level covariates from GIS polygon and point files can be
+imported and attached to mask objects using the
+\link[gibbonsecr]{import_shp} and \link[gibbonsecr]{add_covariates}
+functions.}
 }
 The table below shows which covariates can be used to model which parameters.
 \tabular{ll}{
- \strong{Parameter} \tab \strong{Covariate level} \cr
- \code{D}           \tab array, mask \cr
- \code{g0}          \tab array, trap, occasion, trap-occasion \cr
- \code{sigma}       \tab array, trap, occasion, trap-occasion \cr
- \code{z}           \tab array, trap, occasion, trap-occasion \cr
- \code{bearings}    \tab array, trap, occasion, trap-occasion \cr
- \code{distances}   \tab array, trap, occasion, trap-occasion \cr
- \code{pcall}       \tab array, occasion \cr
+\strong{Parameter} \tab \strong{Covariate level} \cr
+\code{D}           \tab array, mask \cr
+\code{g0}          \tab array, trap, occasion, trap-occasion \cr
+\code{sigma}       \tab array, trap, occasion, trap-occasion \cr
+\code{z}           \tab array, trap, occasion, trap-occasion \cr
+\code{bearings}    \tab array, trap, occasion, trap-occasion \cr
+\code{distances}   \tab array, trap, occasion, trap-occasion \cr
+\code{pcall}       \tab array, occasion \cr
 }
 }
 \seealso{
 \link[gibbonsecr]{gfit},  \link[gibbonsecr]{import_data},
-  \link[gibbonsecr]{import_shp}
+\link[gibbonsecr]{import_shp}
 }
-

@@ -14,7 +14,7 @@ add_covariates(x, data)
 }
 \description{
 Based on the \link[secr]{addCovariates} function from \pkg{secr}
-  but which also accommodates \link[sp]{SpatialPointsDataFrame} data objects.
+but which also accommodates \link[sp]{SpatialPointsDataFrame} data objects.
 }
 \examples{
 \dontrun{
@@ -46,4 +46,3 @@ ggplot() + coord_fixed() +
 \author{
 Darren Kidney \email{darrenkidney@googlemail.com}
 }
-

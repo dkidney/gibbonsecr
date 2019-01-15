@@ -24,13 +24,12 @@ documentation for \link[secr]{make.mask})}
 }
 \description{
 A wrapper function for \link[secr]{make.mask} (from the
-  \pkg{\link[secr]{secr}} package) which returns a
-  \link[gibbonsecr]{gmask} object.
-}
-\author{
-Darren Kidney \email{darrenkidney@googlemail.com}
+\pkg{\link[secr]{secr}} package) which returns a
+\link[gibbonsecr]{gmask} object.
 }
 \seealso{
 \link[gibbonsecr]{add_covariates}, \link[gibbonsecr]{plot.gmask}
 }
-
+\author{
+Darren Kidney \email{darrenkidney@googlemail.com}
+}

@@ -4,21 +4,21 @@
 \name{N.annamensis}
 \alias{N.annamensis}
 \alias{N.annamensis.capthist}
-\alias{N.annamensis.fit}
-\alias{N.annamensis.habitat}
 \alias{N.annamensis.mask}
+\alias{N.annamensis.fit}
 \alias{N.annamensis.region}
+\alias{N.annamensis.habitat}
 \title{Example survey data}
 \source{
 Survey data were provided by Dr Ben Rawson, IUCN SSC Primate Specialist Group,
-  Southeast Asia/Indochina.
+Southeast Asia/Indochina.
 }
 \usage{
 data(N.annamensis)
 }
 \description{
 Data from 2010 survey of \emph{Nomascus annamensis}, Veun Sai Reserve, NW
-  Cambodia.
+Cambodia.
 }
 \details{
 The following objects are provided:
@@ -35,11 +35,10 @@ The following objects are provided:
 }
 \references{
 Thinh, V.N., Mootnick, A.R., Thanh, V.N., & Roos, C. 2010. A new species of crested
-  gibbon, from the central Annamite mountain range. \emph{Vietnamese Journal of
-  Primatology}, 1(4):112.
+gibbon, from the central Annamite mountain range. \emph{Vietnamese Journal of
+Primatology}, 1(4):112.
 
-  Kidney D., Rawson B.M., Borchers D.L., Stevenson B.C., Marques T.A., & Thomas L.
-  2016. An Efficient Acoustic Density Estimation Method with Human Detectors Applied to
-  Gibbons in Cambodia. \emph{PLoS ONE} 11(5): e0155066.
+Kidney D., Rawson B.M., Borchers D.L., Stevenson B.C., Marques T.A., & Thomas L.
+2016. An Efficient Acoustic Density Estimation Method with Human Detectors Applied to
+Gibbons in Cambodia. \emph{PLoS ONE} 11(5): e0155066.
 }
-

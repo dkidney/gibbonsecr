@@ -18,18 +18,18 @@ will be returned (see Details)}
 }
 \description{
 This is a wrapper for the \link[raster]{shapefile} function
-  (from the \pkg{raster} package). It performs additonal checks on data
-  covariates (converting all logical and character variables to factors) and
-  prepares a 'fortified' version of \link[sp]{SpatialPolygons} objects data
-  to allow \pkg{ggplot}-style plotting.
+(from the \pkg{raster} package). It performs additonal checks on data
+covariates (converting all logical and character variables to factors) and
+prepares a 'fortified' version of \link[sp]{SpatialPolygons} objects data
+to allow \pkg{ggplot}-style plotting.
 }
 \details{
 A list with two elements:
 \tabular{ll}{
-  \code{sp} \tab an object of class \link[sp]{SpatialPolygons} or
-  \link[sp]{SpatialPoints} \cr
-  \code{fortified} \tab for polygon shapefiles, this will be the result of
-  applying the \link[ggplot2]{fortify} function to the \code{sp} element \cr
+\code{sp} \tab an object of class \link[sp]{SpatialPolygons} or
+\link[sp]{SpatialPoints} \cr
+\code{fortified} \tab for polygon shapefiles, this will be the result of
+applying the \link[ggplot2]{fortify} function to the \code{sp} element \cr
 }
 }
 \examples{
@@ -40,10 +40,9 @@ region = import_shp(file.path(folder, "region.shp"))
 habitat = import_shp(file.path(folder, "habitat.shp"))
 }
 }
-\author{
-Darren Kidney \email{darrenkidney@googlemail.com}
-}
 \seealso{
 \link[gibbonsecr]{plot.gshp}, \link[gibbonsecr]{import_data}
 }
-
+\author{
+Darren Kidney \email{darrenkidney@googlemail.com}
+}
