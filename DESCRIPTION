@@ -1,6 +1,6 @@
 Package: gibbonsecr
 Title: SECR Analysis for Acoustic Gibbon Surveys
-Version: 1.0.1
+Version: 1.0.1.9000
 Authors@R: 
     c(person(given = "Darren",
              family = "Kidney",
