@@ -1,3 +1,7 @@
 # gibbonsecr 1.0.1
 
-# gibbonsecr NEWS
+* Fixed bug in DESCRIPTION file that prevented install
+
+# gibbonsecr 1.0.0
+
+* First stable release
