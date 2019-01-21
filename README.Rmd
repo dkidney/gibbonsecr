@@ -1,7 +1,20 @@
+---
+output: github_document
+editor_options: 
+  chunk_output_type: console
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-gibbonsecr
-==========
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+# gibbonsecr
 
 ![](https://travis-ci.org/dkidney/gibbonsecr.svg?branch=master)
 
@@ -11,8 +24,7 @@ Click [**here**](http://dkidney.github.io/gibbonsecr/index.html) view the online
 
 Click [**here**](http://dkidney.github.io/gibbonsecr/docs/index.pdf) to download the PDF manual.
 
-Installation
-------------
+## Installation
 
 gibbonsecr is not available on CRAN and needs to be installed directly from Github.
 
@@ -20,29 +32,29 @@ gibbonsecr is not available on CRAN and needs to be installed directly from Gith
 
 **Mac:**
 
-Install XQuartz: <https://www.xquartz.org/>
+Install XQuartz: https://www.xquartz.org/
 
-Install Xcode: <https://developer.apple.com/xcode/>
+Install Xcode: https://developer.apple.com/xcode/
 
 **Windows:**
 
-Install Rtools: <https://cran.r-project.org/bin/windows/Rtools/>
+Install Rtools: https://cran.r-project.org/bin/windows/Rtools/
 
 ### Install R
 
 **Mac:**
 
-<https://cran.r-project.org/bin/macosx/>
+https://cran.r-project.org/bin/macosx/
 
 **Windows:**
 
-<https://cran.r-project.org/bin/windows/base/>
+https://cran.r-project.org/bin/windows/base/
 
 ### Install devtools
 
 From the R console:
 
-``` r
+```{r, eval=FALSE}
 install.packages("devtools")
 ```
 
@@ -50,7 +62,7 @@ install.packages("devtools")
 
 From the R console:
 
-``` r
+```{r, eval=FALSE}
 # release version
 devtools::install_github("dkidney/oddments")
 
@@ -58,29 +70,26 @@ devtools::install_github("dkidney/oddments")
 devtools::install_github("dkidney/oddments", ref = "develop")
 ```
 
-Launch
-------
+## Launch
 
-``` r
+```{r, eval=FALSE}
 library(gibbonsecr)
 gui()
 ```
 
-Bug reports
------------
+## Bug reports
 
 Please report any bugs on the issues page:
 
-<https://github.com/dkidney/gibbonsecr/issues>
+https://github.com/dkidney/gibbonsecr/issues
 
-Future developments
--------------------
+## Future developments
 
-gibbonsecr is only being minimally maintained, but efforts will be made to fix bugs and maintain the existing funtionalilty.
+gibbonsecr is only being minimally maintained, but efforts will be made to fix bugs and maintain the existing funtionalilty. 
 
 For access to more general SECR methods for acoustic data, please see the following:
 
--   The `ascr` graphical user interface: <https://github.com/cmjt/ascr_shiny>
--   The `ascr` R package: <https://github.com/b-steve/ascr>
+* The `ascr` graphical user interface: https://github.com/cmjt/ascr_shiny
+* The `ascr` R package: https://github.com/b-steve/ascr
 
 The `asec` package is being actively maintained and offers a broader range of tools for analysing acoustic spatial capture-recapture data.

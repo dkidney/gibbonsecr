@@ -39,6 +39,8 @@ Suggests:
 LinkingTo:
     Rcpp (>= 1.0.0),
     RcppArmadillo (>= 0.9.200.5.0)
+VignetteBuilder: 
+    knitr
 Encoding: UTF-8
 Language: en-GB
 LazyData: TRUE
