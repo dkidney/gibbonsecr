@@ -52,10 +52,10 @@ From the R console:
 
 ``` r
 # release version
-devtools::install_github("dkidney/oddments")
+devtools::install_github("dkidney/gibbonsecr")
 
 # development version
-devtools::install_github("dkidney/oddments", ref = "develop")
+devtools::install_github("dkidney/gibbonsecr", ref = "develop")
 ```
 
 Launch
