@@ -274,7 +274,7 @@ check_capthist = function(capthist){
     # class and detector type
     if(!inherits(capthist, "capthist"))
         stop("expecting a 'capthist' object", call. = FALSE)
-    if(detector(traps(capthist)) != "proximity")
+    if(!all(unique(unlist(detector(traps(capthist)))) %in% "proximity"))
         stop("only works for 'proximity' detectors", call. = FALSE)
     # convert to multi-session
     # timecov = timecov(capthist)

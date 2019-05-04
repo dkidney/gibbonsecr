@@ -23,7 +23,7 @@ make_mask = function(traps, buffer = 6000, spacing = 250, regular = TRUE, poly =
         traps = traps(traps)
     if(!inherits(traps, "traps"))
         stop("'traps' object required")
-    if(detector(traps) != "proximity")
+    if(!all(unique(unlist(detector(traps))) %in% "proximity"))
         stop("'traps' must be 'proximity'")
     if(regular){
         # make a regionmask from regiontraps

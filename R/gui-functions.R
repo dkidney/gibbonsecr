@@ -513,7 +513,7 @@ welcome_message = function(){
     }
     paste0("\n",
            "Welcome to gibbonsecr version ", utils::packageVersion("gibbonsecr"), "\n\n",
-           R.Version()$version, "\n", running, "\n\n",
+           R.Version()$version.string, "\n", running, "\n\n",
            stringr::str_wrap("This software was developed in partnership with the IUCN SSC Primate Specialist Group Section on Small Apes and the Centre for Research into Ecological and Environmental Modelling (CREEM) at the University of St Andrews, UK.", 60), "\n\n",
            stringr::str_wrap("To view the online manual go to Help > User manual, or visit 'http://dkidney.github.io/gibbonsecr'.", 60),
            "\n\n",

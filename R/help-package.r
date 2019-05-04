@@ -96,6 +96,7 @@
 #   \item plots for GAM models
 #   \item option to use known locations
 # }
+#' @example inst/examples/example-N.annamensis.R
 #' @importFrom Rcpp sourceCpp
 # @import dplyr
 #' @import ggplot2

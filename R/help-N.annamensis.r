@@ -28,6 +28,5 @@
 #'   Kidney D., Rawson B.M., Borchers D.L., Stevenson B.C., Marques T.A., & Thomas L.
 #'   2016. An Efficient Acoustic Density Estimation Method with Human Detectors Applied to
 #'   Gibbons in Cambodia. \emph{PLoS ONE} 11(5): e0155066.
-#@example inst/examples/examples-N.annamensis-analysis.r
 
 NULL
