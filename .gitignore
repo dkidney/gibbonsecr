@@ -5,7 +5,7 @@
 .RData
 *.Rproj
 binaries
-data_prep
+data_raw
 data/N.Siki.rda
 inst/extdata/N.siki
 src/*.dll
