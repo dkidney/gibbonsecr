@@ -121,13 +121,14 @@ plot(fit3, "bearings", ci = TRUE, method = "boot")
 plot(fit3, "detsurf", session = 7)
 points(fit3$capthist, session = 7)
 
+plot(fit3, "densurf", session = 7)
+points(fit3$capthist, session = 7)
+
 
 # get predictions ----
 
 newdata = data.frame(habitat = c("primary", "secondary"))
 predict(fit3, submodels = "D", newdata = newdata)
-
-
 }
 }
 \references{

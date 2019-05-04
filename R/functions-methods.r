@@ -408,8 +408,8 @@ predict_2D_point = function(fit, mask, traps, which = "detsurf", session = 1, be
         which,
         "densurf" = "D",
         "detsurf"    = switch(fit$model.options$detfunc + 1,
-                           c("g0","sigma","pcall"),
-                           c("g0","sigma","z","pcall"))
+                              c("g0","sigma","pcall"),
+                              c("g0","sigma","z","pcall"))
     )
     # design matrices -------------------------------------------------------- #
     if(which == "densurf"){
@@ -1095,9 +1095,12 @@ trapcov = function(traps){
     }else{
         # covariates(traps)
         if(is.null(covariates(traps))){
-            as.data.frame(traps)
+            structure(traps, class = "data.frame")
         }else{
-            cbind(as.data.frame(traps), covariates(traps))
+            cbind(
+                structure(traps, class = "data.frame"),
+                covariates(traps)
+            )
         }
     }
 }
