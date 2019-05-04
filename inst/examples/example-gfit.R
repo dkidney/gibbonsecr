@@ -79,8 +79,5 @@ ggplot() + coord_fixed() +
     scale_fill_distiller(palette = "Spectral") +
     labs(x = "Longitude", y = "Latitude")
 
-# predict density for each habitat
-newdata = data.frame(habitat = c("primary", "secondary"))
-predict(fit, submodels = "D", newdata = newdata)
 }
 

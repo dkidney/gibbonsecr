@@ -11,11 +11,11 @@ par(mar = c(2,2,1,1))
 plot(mask)
 points(capthist, cex = 0.5)
 
-plot(mask, covariate = "x", legend = FALSE)
-points(capthist, cex = 0.5)
+# plot(mask, covariate = "x", legend = FALSE)
+# points(capthist, cex = 0.5)
 
-plot(mask, covariate = "y", legend = FALSE)
-points(capthist, cex = 0.5)
+# plot(mask, covariate = "y", legend = FALSE)
+# points(capthist, cex = 0.5)
 
 plot(mask, covariate = "habitat", legend = FALSE)
 points(capthist, cex = 0.5)

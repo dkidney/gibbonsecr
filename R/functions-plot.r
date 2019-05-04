@@ -250,7 +250,7 @@ plot_mask = function(x, covariate = NULL, sessions = NULL, add = FALSE, contour 
     # data = make_regular_regionmask(subset(x, sessions))
     data = make_regionmask(subset(x, sessions), ms = FALSE)
     if(ggplot){
-            dots$data = data
+        dots$data = data
         if(is.null(covariate)){
             dots$mapping = aes_string(x = "x", y = "y", z = NULL, fill = NULL)
             FUN = geom_point
