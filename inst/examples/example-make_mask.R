@@ -7,7 +7,7 @@ summary(mask)
 class(mask)
 
 head(mask[[1]])
-head(covariates(mask)[[1]])
+head(secr::covariates(mask)[[1]])
 
 plot(mask)
 points(N.annamensis.capthist)

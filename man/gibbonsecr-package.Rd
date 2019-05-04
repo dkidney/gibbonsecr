@@ -89,7 +89,7 @@ points(capthist)
 
 mask3 = add_covariates(mask2, habitat)
 summary(mask3)
-plot(mask3, covariate = "habitat")
+plot(mask3, covariate = "habitat", col = c("darkgreen","lightgreen"))
 points(capthist)
 
 
@@ -121,8 +121,8 @@ plot(fit3, "bearings", ci = TRUE, method = "boot")
 plot(fit3, "detsurf", session = 7)
 points(fit3$capthist, session = 7)
 
-plot(fit3, "densurf", session = 7)
-points(fit3$capthist, session = 7)
+plot(fit3, "densurf")
+points(fit3$capthist)
 
 
 # get predictions ----
